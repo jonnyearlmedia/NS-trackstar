@@ -7,7 +7,7 @@
   "poll_minutes": 1440,
   "options": {
     "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Parcels_Public/FeatureServer/0",
-    "id_field": "OBJECTID",
+    "id_field": "globalid",
     "out_fields": "*",
     "where": "1=1",
     "page_size": 1000

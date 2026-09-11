@@ -15,6 +15,9 @@ dependencies = [
   "tenacity>=9.0"
 ]
 
+[project.scripts]
+ns-trackstar-ingest = "ns_trackstar.cli:main"
+
 [project.optional-dependencies]
 browser = ["playwright>=1.50"]
 dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.8"]

@@ -17,15 +17,15 @@ Government sources → normalized source records → assertions + typed relation
 - Napa County
 - Solano County
 
-## Phase 0 goals
+## What works now
 
-- establish the canonical evidence/project model
-- preserve field-level provenance
-- model typed project relationships before merging
-- support multidimensional project status
-- track collector health and schema drift
-- provide a PostGIS-ready local development stack
-- create a Next.js web shell and Python ingestion service
+- PostGIS canonical schema
+- source run + source health model
+- reusable collector interface
+- ArcGIS FeatureServer collector
+- config-driven collector registry
+- real MapLibre + OpenFreeMap web map
+- persistence path for source records and snapshots
 
 ## Local development
 
@@ -33,6 +33,8 @@ Government sources → normalized source records → assertions + typed relation
 2. Start PostGIS with `docker compose up -d db`.
 3. Apply `db/migrations/0001_core.sql` to the database.
 4. Install Node dependencies with `pnpm install`.
-5. Install the Python ingestion service with `uv sync --project services/ingest`.
+5. Install the Python ingestion service with `pip install -e "services/ingest[dev]"`.
+6. Dry-run a source: `ns-trackstar-ingest collect config/sources/napa-county.parcels.json`.
+7. Persist it: `ns-trackstar-ingest collect config/sources/napa-county.parcels.json --write`.
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.
