@@ -1,0 +1,23 @@
+[project]
+name = "ns-trackstar-ingest"
+version = "0.1.0"
+description = "Collector and normalization service for NS Trackstar"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx>=0.28",
+  "pydantic>=2.9",
+  "psycopg[binary]>=3.2",
+  "shapely>=2.0",
+  "tenacity>=9.0"
+]
+
+[project.optional-dependencies]
+browser = ["playwright>=1.50"]
+dev = ["pytest>=8.3", "ruff>=0.8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

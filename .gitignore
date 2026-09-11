@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Build/test
+coverage/
+dist/
+build/
+
+# Runtime artifacts
+artifacts/
+playwright-report/
+test-results/
