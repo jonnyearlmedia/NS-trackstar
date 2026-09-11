@@ -1,0 +1,15 @@
+{
+  "key": "napa-county.parcels",
+  "name": "Napa County Public Parcels",
+  "jurisdiction": "Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.napacounty.gov",
+  "poll_minutes": 1440,
+  "options": {
+    "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Parcels_Public/FeatureServer/0",
+    "id_field": "OBJECTID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000
+  }
+}
