@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "maplibre-gl": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"

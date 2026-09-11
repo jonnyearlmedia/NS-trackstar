@@ -10,27 +10,28 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+body { min-height: 100vh; }
 button { font: inherit; }
 
-.shell { min-height: 100vh; overflow: hidden; background: radial-gradient(circle at 20% 10%, #152025 0, transparent 34%), var(--bg); }
-.topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); position: relative; z-index: 3; }
+.shell { min-height: 100vh; overflow: hidden; background: var(--bg); }
+.topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); position: relative; z-index: 3; background: rgba(8,11,13,.92); backdrop-filter: blur(18px); }
 .eyebrow, .cardMeta { margin: 0 0 4px; color: var(--muted); font-size: 10px; letter-spacing: .18em; font-weight: 700; }
 h1 { margin: 0; font-size: 24px; letter-spacing: -.04em; }
 .searchButton { border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text); border-radius: 999px; padding: 10px 16px; }
-.filters { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); overflow-x: auto; position: relative; z-index: 3; backdrop-filter: blur(14px); }
+.filters { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); overflow-x: auto; position: relative; z-index: 3; background: rgba(8,11,13,.82); backdrop-filter: blur(14px); }
 .filter { border: 1px solid var(--line); background: rgba(255,255,255,.04); color: #c7d0d5; border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
 .filter.active { background: var(--accent); color: #151900; border-color: var(--accent); font-weight: 700; }
-.mapStage { position: relative; min-height: calc(100vh - 131px); overflow: hidden; background: linear-gradient(150deg, #132025, #0b1012 55%, #172126); }
-.mapGrid { position: absolute; inset: -15%; opacity: .35; transform: rotate(-9deg) scale(1.15); background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 44px 44px; }
-.regionLabel { position: absolute; top: 9%; left: 7%; color: rgba(255,255,255,.35); font-size: 12px; letter-spacing: .15em; text-transform: uppercase; }
-.project { position: absolute; width: 38px; height: 38px; border: 1px solid rgba(215,255,88,.75); border-radius: 50%; display: grid; place-items: center; box-shadow: 0 0 30px rgba(215,255,88,.15); }
-.project span { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 20px rgba(215,255,88,.8); }
-.projectA { top: 28%; left: 28%; }.projectB { top: 42%; right: 22%; }.projectC { top: 18%; right: 40%; }
-.projectCard { position: absolute; left: 16px; right: 16px; bottom: 18px; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 24px 80px rgba(0,0,0,.35); backdrop-filter: blur(18px); }
+.mapStage { position: relative; height: calc(100vh - 131px); min-height: 520px; overflow: hidden; background: #0c1113; }
+.mapCanvas { position: absolute; inset: 0; }
+.mapShade { pointer-events: none; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,8,9,.06), transparent 55%, rgba(5,8,9,.5)); }
+.projectCard { position: absolute; left: 16px; right: 16px; bottom: 18px; z-index: 2; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 24px 80px rgba(0,0,0,.35); backdrop-filter: blur(18px); }
 .projectCard h2 { margin: 0 0 8px; letter-spacing: -.035em; font-size: 24px; }
 .projectCard p:not(.cardMeta) { margin: 0; color: #c0c9ce; line-height: 1.5; font-size: 14px; }
 .cardFooter { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 .cardFooter span { color: #cbd4d8; font-size: 11px; border: 1px solid var(--line); padding: 7px 9px; border-radius: 999px; }
+.maplibregl-ctrl-group { background: rgba(16,21,24,.9) !important; border: 1px solid var(--line); }
+.maplibregl-ctrl-group button + button { border-top-color: var(--line) !important; }
+.maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(1); }
 
 @media (min-width: 900px) {
   .topbar { padding-inline: 30px; }
