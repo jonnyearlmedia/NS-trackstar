@@ -130,9 +130,6 @@ async def collect(config_path: str, *, write: bool) -> int:
                     project_mapping=config.options.get("project_mapping"),
                 )
 
-                # Parcel-derived geometry is intentionally rerun when either side of the
-                # join changes. That makes a new project APN useful immediately without
-                # waiting for the relatively slow county parcel refresh interval.
                 if config.key in {
                     "napa-county.parcels",
                     "california.ceqanet.napa-solano",
@@ -197,6 +194,26 @@ async def collect(config_path: str, *, write: bool) -> int:
     return 0
 
 
+async def enrich_all() -> int:
+    """Run all local, idempotent enrichments without re-crawling upstream sources."""
+
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is required for enrichment")
+
+    async with connect(database_url) as conn:
+        async with conn.transaction():
+            summary = {
+                "napa_projects_enriched_from_parcels": await enrich_napa_projects_from_parcels(conn),
+                "solano_projects_enriched_from_parcels": await enrich_solano_projects_from_parcels(conn),
+                "corridors_enriched": await enrich_sr37_sears_point_corridor(conn),
+                "project_relationships_enriched": await enrich_one_lake_relationships(conn),
+            }
+
+    print(json.dumps({"enrichment": "complete", **summary}, indent=2))
+    return 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="ns-trackstar-ingest")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -204,10 +221,13 @@ def main() -> None:
     collect_parser = subparsers.add_parser("collect")
     collect_parser.add_argument("config")
     collect_parser.add_argument("--write", action="store_true")
+    subparsers.add_parser("enrich")
 
     args = parser.parse_args()
     if args.command == "collect":
         raise SystemExit(asyncio.run(collect(args.config, write=args.write)))
+    if args.command == "enrich":
+        raise SystemExit(asyncio.run(enrich_all()))
 
 
 if __name__ == "__main__":
