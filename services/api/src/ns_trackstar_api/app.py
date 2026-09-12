@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -26,7 +25,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="NS Trackstar API", version="0.1.0", lifespan=lifespan)
 
-origins = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",") if origin.strip()]
+origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -51,8 +54,13 @@ async def map_projects(
 ) -> dict:
     params: dict[str, float] = {}
     bbox_filter = ""
-    if None not in (west, south, east, north):
-        params = {"west": west, "south": south, "east": east, "north": north}  # type: ignore[dict-item]
+    if all(value is not None for value in (west, south, east, north)):
+        params = {
+            "west": float(west),
+            "south": float(south),
+            "east": float(east),
+            "north": float(north),
+        }
         bbox_filter = """
           AND p.primary_geometry && ST_MakeEnvelope(%(west)s, %(south)s, %(east)s, %(north)s, 4326)
         """
@@ -65,10 +73,7 @@ async def map_projects(
           p.project_type,
           p.last_activity_at,
           ST_AsGeoJSON(p.primary_geometry)::json AS geometry,
-          COALESCE(
-            jsonb_object_agg(psd.dimension, psd.value) FILTER (WHERE psd.dimension IS NOT NULL),
-            '{{}}'::jsonb
-          ) AS statuses
+          MAX(psd.value) FILTER (WHERE psd.dimension = 'delivery_stage') AS delivery_stage
         FROM project p
         LEFT JOIN project_status_dimension psd ON psd.project_id = p.id
         WHERE p.primary_geometry IS NOT NULL
@@ -91,8 +96,10 @@ async def map_projects(
                     "id": str(row["id"]),
                     "name": row["canonical_name"],
                     "project_type": row["project_type"],
-                    "last_activity_at": row["last_activity_at"].isoformat() if row["last_activity_at"] else None,
-                    "statuses": row["statuses"],
+                    "delivery_stage": row["delivery_stage"],
+                    "last_activity_at": (
+                        row["last_activity_at"].isoformat() if row["last_activity_at"] else None
+                    ),
                 },
             }
             for row in rows
@@ -138,7 +145,9 @@ async def project_detail(project_id: UUID) -> dict:
         "id": str(row["id"]),
         "name": row["canonical_name"],
         "project_type": row["project_type"],
-        "last_activity_at": row["last_activity_at"].isoformat() if row["last_activity_at"] else None,
+        "last_activity_at": (
+            row["last_activity_at"].isoformat() if row["last_activity_at"] else None
+        ),
         "geometry": row["geometry"],
         "statuses": row["statuses"],
         "assertions": row["assertions"],
@@ -160,7 +169,11 @@ async def project_events(project_id: UUID) -> list[dict]:
     rows = await cursor.fetchall()
     return [
         {
-            **{key: value for key, value in row.items() if key not in {"id", "occurred_at", "observed_at"}},
+            **{
+                key: value
+                for key, value in row.items()
+                if key not in {"id", "occurred_at", "observed_at"}
+            },
             "id": str(row["id"]),
             "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
             "observed_at": row["observed_at"].isoformat(),

@@ -1,4 +1,4 @@
-import { MapCanvas } from "@/components/map-canvas";
+import { MapExplorer } from "@/components/map-explorer";
 
 const filters = ["Today", "This Week", "Upcoming", "All"];
 
@@ -21,20 +21,7 @@ export default function HomePage() {
         ))}
       </nav>
 
-      <section className="mapStage" aria-label="Napa and Solano intelligence map">
-        <MapCanvas />
-        <div className="mapShade" />
-
-        <article className="projectCard">
-          <p className="cardMeta">PROJECT INTELLIGENCE</p>
-          <h2>NS Trackstar is live</h2>
-          <p>The real Napa–Solano basemap is wired. Government-backed project geometry and the first data layers plug into this surface next.</p>
-          <div className="cardFooter">
-            <span>Exact geometry when known</span>
-            <span>Source-backed</span>
-          </div>
-        </article>
-      </section>
+      <MapExplorer />
     </main>
   );
 }
