@@ -159,15 +159,36 @@ else
   echo "Using saved deployment settings. Run './scripts/deploy-oracle.sh configure' to change them without editing files."
 fi
 
-docker compose --env-file "$env_file" -f docker-compose.production.yml up --detach --build
-docker compose --env-file "$env_file" -f docker-compose.production.yml ps
+# Vercel owns apps/web. Do not tear down or rebuild the persistent backend when
+# an autodeploy contains only frontend/docs changes; restarting the collector on
+# every UI iteration can starve later sources in its sequential startup sweep.
+backend_deploy=1
+if git rev-parse 'HEAD@{1}' >/dev/null 2>&1; then
+  backend_paths=$(git diff --name-only 'HEAD@{1}' HEAD -- \
+    services config db infra docker-compose.production.yml Dockerfile scripts 2>/dev/null || true)
+  if [ -z "$backend_paths" ]; then
+    backend_deploy=0
+  fi
+fi
+
+if [ "$backend_deploy" -eq 1 ]; then
+  echo "Backend-impacting changes detected; rebuilding the Trackstar stack."
+  docker compose --env-file "$env_file" -f docker-compose.production.yml up --detach --build
+  docker compose --env-file "$env_file" -f docker-compose.production.yml ps
+else
+  echo "Frontend/docs-only update detected; leaving API, database, and collector containers running."
+fi
 
 api_domain=$(read_setting API_DOMAIN)
-echo "Waiting for the public API health check at https://$api_domain/health"
+echo "Checking the public API at https://$api_domain/health"
 if curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 \
   "https://$api_domain/health"; then
   echo
-  echo "NS Trackstar backend is healthy."
+  if [ "$backend_deploy" -eq 1 ]; then
+    echo "NS Trackstar backend is healthy."
+  else
+    echo "NS Trackstar backend stayed healthy without a collector restart."
+  fi
 else
   echo "The stack is running, but public HTTPS is not healthy yet." >&2
   echo "Confirm the API DNS A/AAAA record points to this VM and ports 80/443 are open." >&2
