@@ -104,9 +104,11 @@ def normalize_lifecycle(statuses: dict[str, str]) -> tuple[LifecycleStage, str |
     # "under review" after it has already advanced to another stage.
     for dimension, raw_value, value in normalized:
         dimension_name = _normalized(dimension)
-        if dimension_name in {"planning", "entitlement", "environmental", "building permit"}:
-            if value in {"pending", "active", "open", "current"}:
-                return "review", dimension, raw_value
+        if (
+            dimension_name in {"planning", "entitlement", "environmental", "building permit"}
+            and value in {"pending", "active", "open", "current"}
+        ):
+            return "review", dimension, raw_value
 
     return "unknown", None, None
 
