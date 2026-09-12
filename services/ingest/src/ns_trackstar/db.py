@@ -29,8 +29,43 @@ class PersistSummary:
     projects_touched: int
 
 
+POSTGRES_JSON_REPLACEMENT_CHARACTER = "\ufffd"
+
+
+def sanitize_postgres_json(value: object) -> object:
+    """Replace Unicode code points that PostgreSQL jsonb cannot represent.
+
+    PostgreSQL rejects U+0000 in jsonb text, while unpaired UTF-16 surrogate code
+    points cannot be encoded as valid UTF-8. U+FFFD keeps the location of invalid
+    source text visible without dropping the surrounding government record content.
+    """
+
+    if isinstance(value, str):
+        return "".join(
+            POSTGRES_JSON_REPLACEMENT_CHARACTER
+            if character == "\x00" or 0xD800 <= ord(character) <= 0xDFFF
+            else character
+            for character in value
+        )
+    if isinstance(value, dict):
+        return {
+            sanitize_postgres_json(key) if isinstance(key, str) else key: sanitize_postgres_json(
+                item
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [sanitize_postgres_json(item) for item in value]
+    return value
+
+
 def canonical_json(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(
+        sanitize_postgres_json(value),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
 
 
 def record_content_hash(record: NormalizedRecord) -> str:
