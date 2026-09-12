@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
+import "./ux-polish.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
