@@ -4,7 +4,7 @@
   "jurisdiction": "City of Vallejo",
   "adapter": "civicclerk",
   "base_url": "https://vallejoca.api.civicclerk.com/v1",
-  "poll_minutes": 120,
+  "poll_minutes": 60,
   "options": {
     "api_base": "https://vallejoca.api.civicclerk.com/v1",
     "portal_url": "https://vallejoca.portal.civicclerk.com",
