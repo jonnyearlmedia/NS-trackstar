@@ -223,6 +223,20 @@ async def briefing(
         WHERE p.primary_geometry IS NOT NULL
         {consumer_filter}
         {window_filter}
+          AND (
+            COALESCE(sc.source_count, 0) >= 2
+            OR COALESCE(p.importance_score, 0) >= 0.2
+            OR EXISTS (
+              SELECT 1
+              FROM project_status_dimension meaningful_status
+              WHERE meaningful_status.project_id = p.id
+            )
+            OR (
+              le.event_type IS NOT NULL
+              AND le.event_type <> 'project_discovered'
+              AND COALESCE(le.significance, 0) >= 0.6
+            )
+          )
         ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
         LIMIT %(limit)s
         """,
