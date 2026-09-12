@@ -10,10 +10,12 @@ export type MapProject = {
   name: string;
   projectType: string;
   deliveryStage: string | null;
+  geometry: Geometry | null;
 };
 
 type MapCanvasProps = {
   onSelectProject: (project: MapProject) => void;
+  selectedProject: MapProject | null;
   timeWindow: TimeWindow;
 };
 
@@ -73,11 +75,13 @@ function frameFeature(
   }
 }
 
-export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
+export function MapCanvas({ onSelectProject, selectedProject, timeWindow }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
   const timeWindowRef = useRef(timeWindow);
+  const selectedProjectRef = useRef(selectedProject);
   const refreshProjectsRef = useRef<(() => void) | null>(null);
+  const focusProjectRef = useRef<((project: MapProject | null) => void) | null>(null);
 
   useEffect(() => {
     onSelectRef.current = onSelectProject;
@@ -87,6 +91,11 @@ export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
     timeWindowRef.current = timeWindow;
     refreshProjectsRef.current?.();
   }, [timeWindow]);
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+    focusProjectRef.current?.(selectedProject);
+  }, [selectedProject]);
 
   useEffect(() => {
     let disposed = false;
@@ -165,6 +174,28 @@ export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
             "fill-opacity": 0.28,
           },
         });
+
+        focusProjectRef.current = (project) => {
+          if (!map) return;
+          const selectedSource = map.getSource(
+            SELECTED_SOURCE,
+          ) as import("maplibre-gl").GeoJSONSource;
+          if (!project?.geometry) {
+            selectedSource.setData(emptyCollection());
+            return;
+          }
+          selectedSource.setData({
+            type: "Feature",
+            geometry: project.geometry,
+            properties: {
+              id: project.id,
+              name: project.name,
+              project_type: project.projectType,
+              delivery_stage: project.deliveryStage,
+            },
+          });
+          frameFeature(map, project.geometry, maplibregl);
+        };
         map.addLayer({
           id: "projects-line",
           type: "line",
@@ -239,22 +270,14 @@ export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
               deliveryStage: feature.properties.delivery_stage
                 ? String(feature.properties.delivery_stage)
                 : null,
+              geometry: feature.geometry as Geometry,
             };
             onSelectRef.current(project);
-
-            const selectedSource = map.getSource(
-              SELECTED_SOURCE,
-            ) as import("maplibre-gl").GeoJSONSource;
-            selectedSource.setData({
-              type: "Feature",
-              geometry: feature.geometry,
-              properties: feature.properties,
-            });
-            frameFeature(map, feature.geometry as Geometry, maplibregl);
           });
         }
 
         void refreshProjects();
+        focusProjectRef.current?.(selectedProjectRef.current);
       });
 
       map.on("moveend", () => void refreshProjects());
@@ -264,6 +287,7 @@ export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
     return () => {
       disposed = true;
       refreshProjectsRef.current = null;
+      focusProjectRef.current = null;
       refreshAbort?.abort();
       map?.remove();
     };

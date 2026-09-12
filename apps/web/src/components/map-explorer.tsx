@@ -1,6 +1,8 @@
 "use client";
 
+import type { Geometry } from "geojson";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
 import { MapCanvas, type MapProject, type TimeWindow } from "@/components/map-canvas";
 
@@ -23,6 +25,7 @@ type ProjectDetail = {
   id: string;
   name: string;
   project_type: string;
+  geometry: Geometry | null;
   statuses: Record<string, string>;
   assertions: Assertion[];
 };
@@ -32,6 +35,16 @@ type ProjectEvent = {
   title: string;
   occurred_at: string | null;
   observed_at: string;
+};
+
+type SearchResult = {
+  id: string;
+  name: string;
+  project_type: string;
+  geometry: Geometry | null;
+  statuses: Record<string, string>;
+  summary: string | null;
+  matched_on: string;
 };
 
 function readableField(field: string) {
@@ -48,32 +61,117 @@ function readableValue(value: unknown) {
 export function MapExplorer() {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("week");
   const [selected, setSelected] = useState<MapProject | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [events, setEvents] = useState<ProjectEvent[]>([]);
+  const [detailState, setDetailState] = useState<"idle" | "loading" | "error">("idle");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchState, setSearchState] = useState<"idle" | "loading" | "done" | "error">(
+    "idle",
+  );
 
   useEffect(() => {
-    if (!selected) return;
+    const initialProjectId = new URLSearchParams(window.location.search).get("project");
+    if (initialProjectId) setSelectedProjectId(initialProjectId);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedProjectId) return;
     const controller = new AbortController();
 
     async function loadProject() {
-      const [detailResponse, eventsResponse] = await Promise.all([
-        fetch(`${API_BASE}/projects/${selected!.id}`, { signal: controller.signal }),
-        fetch(`${API_BASE}/projects/${selected!.id}/events`, { signal: controller.signal }),
-      ]);
-      if (!detailResponse.ok || !eventsResponse.ok) return;
-      setDetail(await detailResponse.json());
-      setEvents(await eventsResponse.json());
+      setDetailState("loading");
+      try {
+        const [detailResponse, eventsResponse] = await Promise.all([
+          fetch(`${API_BASE}/projects/${selectedProjectId}`, { signal: controller.signal }),
+          fetch(`${API_BASE}/projects/${selectedProjectId}/events`, { signal: controller.signal }),
+        ]);
+        if (!detailResponse.ok || !eventsResponse.ok) {
+          throw new Error("Project evidence could not be loaded");
+        }
+        const nextDetail: ProjectDetail = await detailResponse.json();
+        setDetail(nextDetail);
+        setEvents(await eventsResponse.json());
+        setSelected({
+          id: nextDetail.id,
+          name: nextDetail.name,
+          projectType: nextDetail.project_type,
+          deliveryStage:
+            nextDetail.statuses.delivery_stage ??
+            nextDetail.statuses.official_tracker_stage ??
+            null,
+          geometry: nextDetail.geometry,
+        });
+        setDetailState("idle");
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setDetailState("error");
+      }
     }
 
     void loadProject();
     return () => controller.abort();
-  }, [selected]);
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setSearchOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [searchOpen]);
+
+  function selectProject(project: MapProject) {
+    setSelected(project);
+    setSelectedProjectId(project.id);
+    setDetail(null);
+    setEvents([]);
+    const url = new URL(window.location.href);
+    url.searchParams.set("project", project.id);
+    window.history.replaceState({}, "", url);
+  }
+
+  async function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    if (query.length < 2) return;
+    setSearchState("loading");
+    try {
+      const response = await fetch(
+        `${API_BASE}/search/projects?${new URLSearchParams({ q: query })}`,
+      );
+      if (!response.ok) throw new Error(`Search API returned ${response.status}`);
+      setSearchResults(await response.json());
+      setSearchState("done");
+    } catch {
+      setSearchState("error");
+    }
+  }
+
+  function chooseSearchResult(result: SearchResult) {
+    selectProject({
+      id: result.id,
+      name: result.name,
+      projectType: result.project_type,
+      deliveryStage:
+        result.statuses.delivery_stage ?? result.statuses.official_tracker_stage ?? null,
+      geometry: result.geometry,
+    });
+    setSearchOpen(false);
+  }
 
   function changeWindow(next: TimeWindow) {
     setTimeWindow(next);
     setSelected(null);
+    setSelectedProjectId(null);
     setDetail(null);
     setEvents([]);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("project");
+    window.history.replaceState({}, "", url);
   }
 
   const assertions =
@@ -82,6 +180,22 @@ export function MapExplorer() {
 
   return (
     <>
+      <header className="topbar">
+        <div>
+          <p className="eyebrow">NAPA · SOLANO</p>
+          <h1>NS Trackstar</h1>
+        </div>
+        <button
+          aria-controls="project-search"
+          aria-expanded={searchOpen}
+          className="searchButton"
+          onClick={() => setSearchOpen(true)}
+          type="button"
+        >
+          Search
+        </button>
+      </header>
+
       <nav className="filters" aria-label="Time filters">
         {FILTERS.map((filter) => (
           <button
@@ -97,8 +211,79 @@ export function MapExplorer() {
       </nav>
 
       <section className="mapStage" aria-label="Napa and Solano intelligence map">
-        <MapCanvas onSelectProject={setSelected} timeWindow={timeWindow} />
+        <MapCanvas
+          onSelectProject={selectProject}
+          selectedProject={selected}
+          timeWindow={timeWindow}
+        />
         <div className="mapShade" />
+
+        {searchOpen ? (
+          <aside className="searchPanel" id="project-search" aria-label="Project search">
+            <div className="searchPanelHeader">
+              <div>
+                <p className="cardMeta">DETERMINISTIC SEARCH</p>
+                <h2>Find what is changing</h2>
+              </div>
+              <button
+                aria-label="Close search"
+                className="iconButton"
+                onClick={() => setSearchOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <form className="searchForm" onSubmit={submitSearch} role="search">
+              <label htmlFor="project-query">Project, business, address, permit, case, APN, or road</label>
+              <div>
+                <input
+                  autoFocus
+                  id="project-query"
+                  minLength={2}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Try Dutch Bros or Highway 12"
+                  type="search"
+                  value={searchQuery}
+                />
+                <button disabled={searchQuery.trim().length < 2 || searchState === "loading"} type="submit">
+                  {searchState === "loading" ? "Searching…" : "Search"}
+                </button>
+              </div>
+            </form>
+
+            <div className="searchResults" aria-live="polite">
+              {searchState === "done" && searchResults.length === 0 ? (
+                <p className="emptyMessage">No source-backed projects matched that search.</p>
+              ) : null}
+              {searchState === "error" ? (
+                <p className="errorMessage">Search is temporarily unavailable. Please try again.</p>
+              ) : null}
+              {searchResults.map((result) => {
+                const stage =
+                  result.statuses.delivery_stage ?? result.statuses.official_tracker_stage;
+                return (
+                  <button
+                    className="searchResult"
+                    key={result.id}
+                    onClick={() => chooseSearchResult(result)}
+                    type="button"
+                  >
+                    <span className="searchResultTopline">
+                      <strong>{result.name}</strong>
+                      {stage ? <em>{readableValue(stage).replaceAll("_", " ")}</em> : null}
+                    </span>
+                    {result.summary ? <span>{result.summary}</span> : null}
+                    <small>
+                      Matched {result.matched_on.replaceAll("_", " ")}
+                      {result.geometry ? " · mapped geometry" : " · location not mapped yet"}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        ) : null}
 
         <article className="projectCard" aria-live="polite">
           {selected ? (
@@ -106,10 +291,18 @@ export function MapExplorer() {
               <div className="cardTopline">
                 <p className="cardMeta">SOURCE-BACKED PROJECT</p>
                 {selected.deliveryStage ? (
-                  <span className="stagePill">{selected.deliveryStage}</span>
+                  <span className="stagePill">
+                    {selected.deliveryStage.replaceAll("_", " ")}
+                  </span>
                 ) : null}
               </div>
               <h2>{detail?.name ?? selected.name}</h2>
+              {!selected.geometry ? (
+                <p className="locationNotice">Location is described by the source but has not been mapped precisely.</p>
+              ) : null}
+              {detailState === "error" ? (
+                <p className="errorMessage">Project evidence could not be loaded.</p>
+              ) : null}
               {assertions.length ? (
                 <dl className="facts">
                   {assertions.slice(0, 4).map((assertion) => (
@@ -120,7 +313,7 @@ export function MapExplorer() {
                   ))}
                 </dl>
               ) : (
-                <p>Loading source-backed project details…</p>
+                <p>{detailState === "loading" ? "Loading source-backed project details…" : "No project facts loaded."}</p>
               )}
               {events[0] ? (
                 <div className="latestEvent">
