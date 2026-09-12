@@ -181,15 +181,22 @@ export function MapCanvas({
 
       function setContextOpacity(hasSelection: boolean) {
         if (!map) return;
-        const safeSet = (layer: string, property: string, value: number) => {
-          if (map?.getLayer(layer)) map.setPaintProperty(layer, property, value);
-        };
-        safeSet("projects-fill", "fill-opacity", hasSelection ? 0.07 : 0.3);
-        safeSet("projects-line", "line-opacity", hasSelection ? 0.14 : 0.78);
-        safeSet("projects-points", "circle-opacity", hasSelection ? 0.18 : 0.96);
-        safeSet("projects-points", "circle-stroke-opacity", hasSelection ? 0.22 : 1);
-        safeSet("project-clusters", "circle-opacity", hasSelection ? 0.14 : 0.9);
-        safeSet("project-cluster-count", "text-opacity", hasSelection ? 0.18 : 1);
+        if (map.getLayer("projects-fill")) {
+          map.setPaintProperty("projects-fill", "fill-opacity", hasSelection ? 0.07 : 0.3);
+        }
+        if (map.getLayer("projects-line")) {
+          map.setPaintProperty("projects-line", "line-opacity", hasSelection ? 0.14 : 0.78);
+        }
+        if (map.getLayer("projects-points")) {
+          map.setPaintProperty("projects-points", "circle-opacity", hasSelection ? 0.18 : 0.96);
+          map.setPaintProperty("projects-points", "circle-stroke-opacity", hasSelection ? 0.22 : 1);
+        }
+        if (map.getLayer("project-clusters")) {
+          map.setPaintProperty("project-clusters", "circle-opacity", hasSelection ? 0.14 : 0.9);
+        }
+        if (map.getLayer("project-cluster-count")) {
+          map.setPaintProperty("project-cluster-count", "text-opacity", hasSelection ? 0.18 : 1);
+        }
       }
 
       async function refreshProjects() {
