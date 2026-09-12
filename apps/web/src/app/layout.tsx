@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./ux-polish.css";
@@ -16,6 +16,14 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Trackstar",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#06100c",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
