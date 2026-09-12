@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from ns_trackstar.adapters.accela_aca import AccelaAcaAdapter
 from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
@@ -20,6 +21,7 @@ from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxA
 AdapterFactory = Callable[[SourceConfig], CollectorAdapter]
 
 ADAPTERS: dict[str, AdapterFactory] = {
+    "accela_aca": AccelaAcaAdapter,
     "arcgis_rest": ArcGISRestAdapter,
     "civicclerk": CivicClerkAdapter,
     "courtlistener": CourtListenerAdapter,
