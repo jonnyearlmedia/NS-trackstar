@@ -131,7 +131,6 @@ export function MapCanvas({
   locateNonce,
   briefingActive = false,
 }: MapCanvasProps) {
-  const [areaMoved, setAreaMoved] = useState(false);
   const [mapState, setMapState] = useState<"loading" | "ready" | "error">("loading");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
@@ -164,6 +163,7 @@ export function MapCanvas({
     let map: import("maplibre-gl").Map | undefined;
     let refreshAbort: AbortController | undefined;
     let pulseFrame: number | undefined;
+    let moveRefreshTimer: number | undefined;
     let ignoreMoveEndUntil = performance.now() + 1000;
 
     async function mount() {
@@ -267,7 +267,6 @@ export function MapCanvas({
       resetRegionRef.current = () => {
         if (!map) return;
         ignoreMoveEndUntil = performance.now() + 1100;
-        setAreaMoved(false);
         map.fitBounds(NAPA_SOLANO_BOUNDS, {
           padding: { top: 120, right: 18, bottom: 145, left: 18 },
           pitch: displayModeRef.current === "perspective" ? 45 : 0,
@@ -275,6 +274,7 @@ export function MapCanvas({
           duration: 850,
           essential: true,
         });
+        window.setTimeout(() => refreshProjectsRef.current?.(), 900);
       };
 
       async function refreshProjects() {
@@ -295,13 +295,16 @@ export function MapCanvas({
           const response = await fetch(`${API_BASE}/map/projects?${params}`, { signal: refreshAbort.signal });
           if (!response.ok) throw new Error(`Project API returned ${response.status}`);
           const data = (await response.json()) as ProjectCollection;
-          const pointFeatures = data.features.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
-          const shapeFeatures = data.features.filter((feature) => feature.geometry?.type !== "Point");
+          const displayFeatures = projectTypeRef.current
+            ? data.features
+            : data.features.filter((feature) => feature.properties?.project_type !== "environmental_review");
+          const pointFeatures = displayFeatures.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
+          const shapeFeatures = displayFeatures.filter((feature) => feature.geometry?.type !== "Point");
           (map.getSource(PROJECT_SOURCE) as import("maplibre-gl").GeoJSONSource)?.setData({ type: "FeatureCollection", features: shapeFeatures });
           (map.getSource(POINT_SOURCE) as import("maplibre-gl").GeoJSONSource)?.setData({ type: "FeatureCollection", features: pointFeatures });
           (map.getSource(DENSITY_SOURCE) as import("maplibre-gl").GeoJSONSource)?.setData({ type: "FeatureCollection", features: pointFeatures });
 
-          const highlights = data.features
+          const highlights = displayFeatures
             .map(featureProject)
             .filter((project): project is MapProject => project !== null)
             .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || String(b.lastActivityAt ?? "").localeCompare(String(a.lastActivityAt ?? "")))
@@ -311,13 +314,12 @@ export function MapCanvas({
           const metadata = data.metadata;
           if (metadata) {
             onCoverageRef.current?.({
-              visibleMapped: Number(metadata.visible_mapped ?? data.features.length),
-              mappedMatching: Number(metadata.mapped_matching ?? data.features.length),
+              visibleMapped: displayFeatures.length,
+              mappedMatching: Number(metadata.mapped_matching ?? displayFeatures.length),
               locationPending: Number(metadata.location_pending ?? 0),
-              totalMatching: Number(metadata.total_matching ?? data.features.length),
+              totalMatching: Number(metadata.total_matching ?? displayFeatures.length),
             });
           }
-          setAreaMoved(false);
         } catch (error) {
           if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Failed to refresh NS Trackstar projects", error);
@@ -431,7 +433,9 @@ export function MapCanvas({
       });
 
       map.on("moveend", () => {
-        if (performance.now() >= ignoreMoveEndUntil && !briefingActiveRef.current) setAreaMoved(true);
+        if (performance.now() < ignoreMoveEndUntil || briefingActiveRef.current || selectedProjectRef.current) return;
+        if (moveRefreshTimer !== undefined) window.clearTimeout(moveRefreshTimer);
+        moveRefreshTimer = window.setTimeout(() => refreshProjectsRef.current?.(), 220);
       });
     }
 
@@ -439,6 +443,7 @@ export function MapCanvas({
     return () => {
       disposed = true;
       if (pulseFrame !== undefined) cancelAnimationFrame(pulseFrame);
+      if (moveRefreshTimer !== undefined) window.clearTimeout(moveRefreshTimer);
       refreshProjectsRef.current = null;
       focusProjectRef.current = null;
       applyDisplayModeRef.current = null;
@@ -457,7 +462,6 @@ export function MapCanvas({
           {mapState === "error" ? <><strong>Map could not load</strong><button onClick={() => window.location.reload()} type="button">Retry</button></> : "Loading what’s changing around you…"}
         </div>
       ) : null}
-      {areaMoved && !briefingActive ? <button className="searchAreaButton" onClick={() => refreshProjectsRef.current?.()} type="button">Search this area</button> : null}
     </>
   );
 }
