@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, AsyncIterator
+from typing import Any
 
 import psycopg
 from psycopg.rows import dict_row

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ns_trackstar.health import RunSignal, classify_health
 from ns_trackstar.models import SourceHealthState
@@ -17,7 +17,7 @@ def test_failed_request_is_broken() -> None:
 
 
 def test_schema_change_is_not_reported_as_no_new_records() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     signal = RunSignal(
         success=True,
         parse_ok=False,
@@ -31,7 +31,7 @@ def test_schema_change_is_not_reported_as_no_new_records() -> None:
 
 
 def test_clean_run_is_healthy() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     signal = RunSignal(
         success=True,
         parse_ok=True,

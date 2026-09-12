@@ -5,6 +5,9 @@ import asyncio
 import json
 import os
 
+import psycopg
+
+from ns_trackstar.adapters.base import SourceConfig
 from ns_trackstar.config import load_source_config
 from ns_trackstar.db import (
     connect,
@@ -16,7 +19,7 @@ from ns_trackstar.db import (
 from ns_trackstar.registry import build_adapter
 
 
-async def _dry_run(adapter_name: str, config) -> int:
+async def _dry_run(adapter_name: str, config: SourceConfig) -> int:
     adapter = build_adapter(adapter_name, config)
     canary_ok = await adapter.canary()
     if not canary_ok:
@@ -40,6 +43,28 @@ async def _dry_run(adapter_name: str, config) -> int:
     return 0
 
 
+async def _start_run(
+    conn: psycopg.AsyncConnection,
+    *,
+    adapter_name: str,
+    config: SourceConfig,
+) -> tuple[str, str]:
+    async with conn.transaction():
+        source_id = await ensure_source(
+            conn,
+            source_key=config.key,
+            name=config.name,
+            source_family=adapter_name,
+            jurisdiction=config.jurisdiction,
+            base_url=config.base_url,
+            poll_interval_minutes=config.poll_minutes,
+            collector_type=adapter_name,
+            config=config.options,
+        )
+        run_id = await start_source_run(conn, source_id)
+    return source_id, run_id
+
+
 async def collect(config_path: str, *, write: bool) -> int:
     adapter_name, config = load_source_config(config_path)
     if not write:
@@ -51,19 +76,7 @@ async def collect(config_path: str, *, write: bool) -> int:
 
     adapter = build_adapter(adapter_name, config)
     async with connect(database_url) as conn:
-        async with conn.transaction():
-            source_id = await ensure_source(
-                conn,
-                source_key=config.key,
-                name=config.name,
-                source_family=adapter_name,
-                jurisdiction=config.jurisdiction,
-                base_url=config.base_url,
-                poll_interval_minutes=config.poll_minutes,
-                collector_type=adapter_name,
-                config=config.options,
-            )
-            run_id = await start_source_run(conn, source_id)
+        source_id, run_id = await _start_run(conn, adapter_name=adapter_name, config=config)
 
         canary_ok: bool | None = None
         try:

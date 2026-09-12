@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from ns_trackstar.models import SourceHealthState
 
@@ -23,7 +21,7 @@ def classify_health(signal: RunSignal, *, now: datetime | None = None) -> Source
 
     A zero-record run is not considered healthy unless request, parse, and canary all succeed.
     """
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
 
     if signal.blocked:
         return SourceHealthState.BLOCKED

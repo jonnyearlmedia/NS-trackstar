@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 from uuid import UUID
 
 import psycopg
@@ -62,15 +62,13 @@ async def source_health() -> list[dict]:
         """
     )
     rows = await cursor.fetchall()
-    output = []
-    for row in rows:
-        output.append(
-            {
-                key: (value.isoformat() if hasattr(value, "isoformat") else value)
-                for key, value in row.items()
-            }
-        )
-    return output
+    return [
+        {
+            key: (value.isoformat() if hasattr(value, "isoformat") else value)
+            for key, value in row.items()
+        }
+        for row in rows
+    ]
 
 
 @app.get("/map/projects")

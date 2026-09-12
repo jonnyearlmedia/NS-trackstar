@@ -1,8 +1,8 @@
 import json
 
+from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 from ns_trackstar.config import load_source_config
 from ns_trackstar.registry import build_adapter
-from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 
 
 def test_config_builds_registered_adapter(tmp_path) -> None:

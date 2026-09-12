@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -15,10 +15,10 @@ def _arcgis_datetime(value: Any) -> datetime | None:
     if value is None:
         return None
     if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+        return datetime.fromtimestamp(value / 1000, tz=UTC)
     if isinstance(value, str):
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return datetime.fromisoformat(value)
         except ValueError:
             return None
     return None
