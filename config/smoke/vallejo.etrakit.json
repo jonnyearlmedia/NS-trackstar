@@ -9,7 +9,22 @@
     "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
     "canary_kinds": ["permit", "project"],
     "explicit_records": [],
-    "searches": [],
+    "searches": [
+      {
+        "kind": "project",
+        "search_by_value": "Project_Main.PROJECT_NO",
+        "operator_value": "EQUALS",
+        "value": "AP26-0001",
+        "max_pages": 1
+      },
+      {
+        "kind": "permit",
+        "search_by_value": "Permit_Main.PERMIT_NO",
+        "operator_value": "EQUALS",
+        "value": "BP26-00001",
+        "max_pages": 1
+      }
+    ],
     "min_request_interval_seconds": 1.0,
     "timezone": "America/Los_Angeles"
   }

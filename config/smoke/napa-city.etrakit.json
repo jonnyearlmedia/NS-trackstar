@@ -11,7 +11,22 @@
     "explicit_records": [
       {"kind": "project", "id": "PL23-0135"}
     ],
-    "searches": [],
+    "searches": [
+      {
+        "kind": "project",
+        "search_by_value": "Project_Main.PROJECT_NO",
+        "operator_value": "EQUALS",
+        "value": "PL26-0001",
+        "max_pages": 1
+      },
+      {
+        "kind": "permit",
+        "search_by_value": "Permit_Main.PERMIT_NO",
+        "operator_value": "EQUALS",
+        "value": "B2609-0001",
+        "max_pages": 1
+      }
+    ],
     "min_request_interval_seconds": 1.0,
     "timezone": "America/Los_Angeles"
   }
