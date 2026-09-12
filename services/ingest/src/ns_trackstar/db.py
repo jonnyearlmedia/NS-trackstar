@@ -205,7 +205,8 @@ async def persist_record(
                 %(source_id)s, %(external_id)s, %(canonical_url)s,
                 %(source_created_at)s, %(source_updated_at)s,
                 %(raw_payload)s::jsonb, %(normalized_payload)s::jsonb, %(content_hash)s,
-                CASE WHEN %(geometry)s IS NULL THEN NULL ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326) END,
+                CASE WHEN %(geometry)s::text IS NULL THEN NULL
+                     ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s::text), 4326) END,
                 %(geometry_source)s, %(location_accuracy)s::location_accuracy
             ) RETURNING id
             """,
@@ -227,7 +228,8 @@ async def persist_record(
                 raw_payload = %(raw_payload)s::jsonb,
                 normalized_payload = %(normalized_payload)s::jsonb,
                 content_hash = %(content_hash)s,
-                geometry = CASE WHEN %(geometry)s IS NULL THEN NULL ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326) END,
+                geometry = CASE WHEN %(geometry)s::text IS NULL THEN NULL
+                                ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s::text), 4326) END,
                 geometry_source = %(geometry_source)s,
                 location_accuracy = %(location_accuracy)s::location_accuracy
             WHERE id = %(id)s
@@ -243,7 +245,8 @@ async def persist_record(
             ) VALUES (
                 %(source_record_id)s, %(content_hash)s,
                 %(raw_payload)s::jsonb, %(normalized_payload)s::jsonb,
-                CASE WHEN %(geometry)s IS NULL THEN NULL ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326) END
+                CASE WHEN %(geometry)s::text IS NULL THEN NULL
+                     ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s::text), 4326) END
             ) ON CONFLICT (source_record_id, content_hash) DO NOTHING
             """,
             {
