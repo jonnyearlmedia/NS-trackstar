@@ -1,0 +1,36 @@
+{
+  "key": "american-canyon.construction-development-updates",
+  "name": "American Canyon Construction & Development Updates",
+  "jurisdiction": "City of American Canyon",
+  "adapter": "opencities_map",
+  "base_url": "https://www.americancanyon.gov/Work/Community-Infrastructure-Development/Construction-Development-Updates",
+  "poll_minutes": 1440,
+  "options": {
+    "map_id": "e42c1677-01ae-404b-aade-6379c240ae6e",
+    "bounds": "38.05,-122.5,38.35,-122.05",
+    "language_code": "en-US",
+    "expected_map_name": "Construction & Development Updates",
+    "expected_layer_names": [
+      "Under Review",
+      "Active Construction",
+      "Approved"
+    ],
+    "expected_project_count": 30,
+    "min_request_interval_seconds": 0.1,
+    "project_mapping": {
+      "name_field": "name",
+      "project_type": "municipal_development",
+      "description_field": "description",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "official_tracker_stage",
+      "status_field": "tracker_stage",
+      "assertions": {
+        "description": "description",
+        "address": "address",
+        "official_status_text": "tracker_stage",
+        "project_page": "project_url",
+        "official_additional_info": "additional_info"
+      }
+    }
+  }
+}

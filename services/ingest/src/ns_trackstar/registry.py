@@ -9,6 +9,7 @@ from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
+from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
 
@@ -21,6 +22,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "etrakit": ETrakitAdapter,
     "federal_register": FederalRegisterAdapter,
     "legistar": LegistarAdapter,
+    "opencities_map": OpenCitiesMapAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
 }
