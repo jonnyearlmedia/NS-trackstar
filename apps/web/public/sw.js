@@ -59,7 +59,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const destination = event.request.destination;
-  if (["style", "script", "font", "image"].includes(destination)) {
+  if (["style", "script", "worker", "font", "image"].includes(destination)) {
     event.respondWith(staleWhileRevalidate(event.request));
   }
 });
