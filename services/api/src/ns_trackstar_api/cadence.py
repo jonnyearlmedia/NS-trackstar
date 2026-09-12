@@ -5,6 +5,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
+from ns_trackstar_api.source_policy import source_freshness_policy
+
 router = APIRouter()
 
 
@@ -43,6 +45,33 @@ def _missed_expected_check(
     expected_by = last_attempt_at + timedelta(minutes=poll_interval_minutes + grace_minutes)
     overdue_minutes = max(0, int((now - expected_by).total_seconds() // 60))
     return now > expected_by, expected_by, overdue_minutes
+
+
+def _policy_state(source_key: str, poll_interval_minutes: int) -> dict:
+    policy = source_freshness_policy(source_key)
+    if policy is None:
+        return {
+            "freshness_class": "unclassified",
+            "meaningful_change_window": None,
+            "recommended_min_minutes": None,
+            "recommended_max_minutes": None,
+            "cadence_policy_state": "unclassified",
+            "rationale": None,
+        }
+    if poll_interval_minutes < policy.recommended_min_minutes:
+        policy_state = "faster_than_needed"
+    elif poll_interval_minutes > policy.recommended_max_minutes:
+        policy_state = "slower_than_recommended"
+    else:
+        policy_state = "within_policy"
+    return {
+        "freshness_class": policy.freshness_class,
+        "meaningful_change_window": policy.meaningful_change_window,
+        "recommended_min_minutes": policy.recommended_min_minutes,
+        "recommended_max_minutes": policy.recommended_max_minutes,
+        "cadence_policy_state": policy_state,
+        "rationale": policy.rationale,
+    }
 
 
 @router.get("/admin/sources/cadence")
@@ -135,6 +164,7 @@ async def source_cadence_audit(
             poll_interval_minutes=poll_interval_minutes,
             now=now,
         )
+        policy = _policy_state(str(row["source_key"]), poll_interval_minutes)
         items.append(
             {
                 "source_key": row["source_key"],
@@ -144,6 +174,7 @@ async def source_cadence_audit(
                 "authority_class": row["authority_class"],
                 "collector_type": row["collector_type"],
                 "poll_interval_minutes": poll_interval_minutes,
+                **policy,
                 "enabled": bool(row["enabled"]),
                 "health_state": row["health_state"],
                 "stability_state": stability_state,
@@ -198,9 +229,18 @@ async def source_cadence_audit(
             "missed_expected_checks": sum(1 for item in items if item["missed_expected_check"]),
             "unstable_sources": sum(1 for item in items if item["stability_state"] == "unstable"),
             "watch_sources": sum(1 for item in items if item["stability_state"] == "watch"),
+            "unclassified_sources": sum(
+                1 for item in items if item["cadence_policy_state"] == "unclassified"
+            ),
+            "slower_than_recommended": sum(
+                1 for item in items if item["cadence_policy_state"] == "slower_than_recommended"
+            ),
+            "faster_than_needed": sum(
+                1 for item in items if item["cadence_policy_state"] == "faster_than_needed"
+            ),
             "note": (
-                "Descriptive audit only. Polling changes require source-by-source review of "
-                "change frequency, source cost/restrictions, and public freshness value."
+                "Cadence policy describes how quickly the underlying source can meaningfully "
+                "change. Actual polling still requires source-specific health and cost review."
             ),
         },
     }
