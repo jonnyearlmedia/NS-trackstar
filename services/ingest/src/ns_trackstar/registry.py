@@ -9,6 +9,7 @@ from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
+from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
 
 AdapterFactory = Callable[[SourceConfig], CollectorAdapter]
 
@@ -19,6 +20,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "etrakit": ETrakitAdapter,
     "legistar": LegistarAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
+    "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
 }
 
 
