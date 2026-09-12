@@ -54,6 +54,8 @@ type MapCanvasProps = {
   resetNonce: number;
   locateNonce: number;
   briefingActive?: boolean;
+  restoreBounds?: ViewportBounds | null;
+  restoreNonce?: number;
 };
 
 type ProjectCollection = FeatureCollection & {
@@ -219,6 +221,8 @@ export function MapCanvasV2({
   resetNonce,
   locateNonce,
   briefingActive = false,
+  restoreBounds = null,
+  restoreNonce = 0,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
@@ -265,13 +269,23 @@ export function MapCanvasV2({
       },
     });
 
-    if (briefingRef.current) return;
+    const pointZoom = briefingRef.current ? Math.max(map.getZoom(), 13.2) : Math.max(map.getZoom(), 14);
+    const duration = briefingRef.current ? 900 : 650;
     if (selectedProject.geometry.type === "Point") {
-      map.easeTo({ center: selectedProject.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 14), duration: 650, essential: true });
+      map.easeTo({ center: selectedProject.geometry.coordinates as [number, number], zoom: pointZoom, duration, essential: true });
       return;
     }
     const bounds = geometryBounds(selectedProject.geometry);
-    if (bounds) map.fitBounds(bounds, { padding: { top: 105, right: 42, bottom: 250, left: 42 }, maxZoom: 15, duration: 650, essential: true });
+    if (bounds) {
+      map.fitBounds(bounds, {
+        padding: briefingRef.current
+          ? { top: 105, right: 44, bottom: 210, left: 44 }
+          : { top: 105, right: 42, bottom: 250, left: 42 },
+        maxZoom: briefingRef.current ? 14.2 : 15,
+        duration,
+        essential: true,
+      });
+    }
   }, [selectedProject]);
 
   useEffect(() => {
@@ -285,6 +299,16 @@ export function MapCanvasV2({
     if (locateNonce === 0) return;
     geolocateRef.current?.trigger();
   }, [locateNonce]);
+
+  useEffect(() => {
+    if (restoreNonce === 0 || !restoreBounds) return;
+    const map = mapRef.current;
+    if (!map) return;
+    map.fitBounds(
+      [[restoreBounds.west, restoreBounds.south], [restoreBounds.east, restoreBounds.north]],
+      { padding: { top: 105, right: 18, bottom: 130, left: 18 }, duration: 750, essential: true },
+    );
+  }, [restoreBounds, restoreNonce]);
 
   useEffect(() => {
     let disposed = false;
