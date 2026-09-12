@@ -83,6 +83,7 @@ export function MapCanvas({
   projectType,
 }: MapCanvasProps) {
   const [areaMoved, setAreaMoved] = useState(false);
+  const [mapState, setMapState] = useState<"loading" | "ready" | "error">("loading");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
   const timeWindowRef = useRef(timeWindow);
@@ -128,6 +129,10 @@ export function MapCanvas({
         center: NAPA_SOLANO_CENTER,
         zoom: 9,
         attributionControl: false,
+      });
+
+      map.on("error", () => {
+        if (!map?.isStyleLoaded()) setMapState("error");
       });
 
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
@@ -176,6 +181,7 @@ export function MapCanvas({
 
       map.on("load", () => {
         if (!map) return;
+        setMapState("ready");
         map.addSource(PROJECT_SOURCE, { type: "geojson", data: emptyCollection() });
         map.addSource(SELECTED_SOURCE, { type: "geojson", data: emptyCollection() });
 
@@ -323,6 +329,18 @@ export function MapCanvas({
   return (
     <>
       <div className="mapCanvas" ref={containerRef} />
+      {mapState !== "ready" ? (
+        <div className={mapState === "error" ? "mapStatus error" : "mapStatus"} role="status">
+          {mapState === "error" ? (
+            <>
+              <strong>Map could not load</strong>
+              <button onClick={() => window.location.reload()} type="button">Retry</button>
+            </>
+          ) : (
+            "Loading map and project geometry…"
+          )}
+        </div>
+      ) : null}
       {areaMoved ? (
         <button
           className="searchAreaButton"
