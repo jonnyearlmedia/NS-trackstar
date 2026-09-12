@@ -1,0 +1,19 @@
+{
+  "key": "courtlistener.recap.napa-solano-smoke",
+  "name": "CourtListener RECAP Napa Solano Smoke Test",
+  "jurisdiction": "Napa and Solano Counties",
+  "adapter": "courtlistener",
+  "base_url": "https://www.courtlistener.com/",
+  "poll_minutes": 1440,
+  "options": {
+    "search_url": "https://www.courtlistener.com/api/rest/v4/search/",
+    "token_env": "COURTLISTENER_API_TOKEN",
+    "query_terms": [
+      "\"Scotts Valley Band of Pomo Indians\"",
+      "\"Scotts Valley Casino\" Vallejo",
+      "\"Napa County\" development",
+      "\"Solano County\" development"
+    ],
+    "max_pages_per_query": 1
+  }
+}
