@@ -16,10 +16,52 @@ type MapCanvasProps = {
 const NAPA_SOLANO_CENTER: [number, number] = [-122.2708, 38.218];
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const PROJECT_SOURCE = "trackstar-projects";
+const SELECTED_SOURCE = "trackstar-selected-project";
 const PROJECT_LAYERS = ["projects-fill", "projects-line", "projects-points"] as const;
 
 function emptyCollection() {
   return { type: "FeatureCollection" as const, features: [] };
+}
+
+function visitCoordinates(value: unknown, visit: (coordinate: [number, number]) => void) {
+  if (!Array.isArray(value) || value.length === 0) return;
+  if (
+    value.length >= 2 &&
+    typeof value[0] === "number" &&
+    typeof value[1] === "number"
+  ) {
+    visit([value[0], value[1]]);
+    return;
+  }
+  for (const child of value) visitCoordinates(child, visit);
+}
+
+function frameFeature(map: import("maplibre-gl").Map, geometry: GeoJSON.Geometry) {
+  if (geometry.type === "Point") {
+    map.flyTo({
+      center: geometry.coordinates as [number, number],
+      zoom: 15.5,
+      pitch: 42,
+      duration: 1100,
+      essential: true,
+    });
+    return;
+  }
+
+  const maplibregl = require("maplibre-gl") as typeof import("maplibre-gl");
+  const bounds = new maplibregl.LngLatBounds();
+  visitCoordinates("coordinates" in geometry ? geometry.coordinates : [], (coordinate) => {
+    bounds.extend(coordinate);
+  });
+  if (!bounds.isEmpty()) {
+    map.fitBounds(bounds, {
+      padding: { top: 110, right: 55, bottom: 260, left: 55 },
+      maxZoom: 15.5,
+      pitch: 38,
+      duration: 1200,
+      essential: true,
+    });
+  }
 }
 
 export function MapCanvas({ onSelectProject }: MapCanvasProps) {
@@ -80,6 +122,7 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
       map.on("load", () => {
         if (!map) return;
         map.addSource(PROJECT_SOURCE, { type: "geojson", data: emptyCollection() });
+        map.addSource(SELECTED_SOURCE, { type: "geojson", data: emptyCollection() });
 
         map.addLayer({
           id: "projects-fill",
@@ -94,16 +137,16 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
               "Design", "#ffb38a",
               "Planning", "#b6a7ff",
               "Completed", "#8fd18a",
-              "#d7ff58",
+              "#d7ff58"
             ],
-            "fill-opacity": 0.35,
+            "fill-opacity": 0.28,
           },
         });
         map.addLayer({
           id: "projects-line",
           type: "line",
           source: PROJECT_SOURCE,
-          paint: { "line-color": "#efffb6", "line-width": 2.5, "line-opacity": 0.9 },
+          paint: { "line-color": "#efffb6", "line-width": 2, "line-opacity": 0.7 },
         });
         map.addLayer({
           id: "projects-points",
@@ -111,10 +154,42 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
           source: PROJECT_SOURCE,
           filter: ["==", ["geometry-type"], "Point"],
           paint: {
-            "circle-radius": 7,
+            "circle-radius": 6,
             "circle-color": "#d7ff58",
             "circle-stroke-color": "#101416",
             "circle-stroke-width": 2,
+          },
+        });
+        map.addLayer({
+          id: "selected-fill",
+          type: "fill",
+          source: SELECTED_SOURCE,
+          filter: ["==", ["geometry-type"], "Polygon"],
+          paint: { "fill-color": "#d7ff58", "fill-opacity": 0.5 },
+        });
+        map.addLayer({
+          id: "selected-line-glow",
+          type: "line",
+          source: SELECTED_SOURCE,
+          paint: { "line-color": "#d7ff58", "line-width": 9, "line-opacity": 0.18, "line-blur": 4 },
+        });
+        map.addLayer({
+          id: "selected-line",
+          type: "line",
+          source: SELECTED_SOURCE,
+          paint: { "line-color": "#f5ffc9", "line-width": 3.5, "line-opacity": 1 },
+        });
+        map.addLayer({
+          id: "selected-point",
+          type: "circle",
+          source: SELECTED_SOURCE,
+          filter: ["==", ["geometry-type"], "Point"],
+          paint: {
+            "circle-radius": 10,
+            "circle-color": "#d7ff58",
+            "circle-blur": 0.08,
+            "circle-stroke-color": "#f7ffd7",
+            "circle-stroke-width": 3,
           },
         });
 
@@ -126,8 +201,9 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
             if (map) map.getCanvas().style.cursor = "";
           });
           map.on("click", layer, (event) => {
+            if (!map) return;
             const feature = event.features?.[0];
-            if (!feature?.properties) return;
+            if (!feature?.properties || !feature.geometry) return;
             const project: MapProject = {
               id: String(feature.properties.id),
               name: String(feature.properties.name),
@@ -138,10 +214,13 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
             };
             onSelectRef.current(project);
 
-            const geometry = feature.geometry;
-            if (geometry.type === "Point") {
-              map?.flyTo({ center: geometry.coordinates as [number, number], zoom: 15, pitch: 42 });
-            }
+            const selectedSource = map.getSource(SELECTED_SOURCE) as import("maplibre-gl").GeoJSONSource;
+            selectedSource.setData({
+              type: "Feature",
+              geometry: feature.geometry,
+              properties: feature.properties,
+            });
+            frameFeature(map, feature.geometry as GeoJSON.Geometry);
           });
         }
 

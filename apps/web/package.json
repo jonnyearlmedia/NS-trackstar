@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/geojson": "latest",
     "maplibre-gl": "latest",
     "next": "latest",
     "react": "latest",

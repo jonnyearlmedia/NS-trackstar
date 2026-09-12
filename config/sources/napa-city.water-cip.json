@@ -1,0 +1,42 @@
+{
+  "key": "napa-city.water-cip",
+  "name": "City of Napa Water Capital Improvement Projects",
+  "jurisdiction": "City of Napa",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.cityofnapa.org",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://gis.cityofnapa.org/arcgis/rest/services/External/Water_CIP/FeatureServer/10",
+    "id_field": "GlobalID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "created_at_field": "created_date",
+    "updated_at_field": "last_edited_date",
+    "canonical_url_field": "LINK",
+    "project_mapping": {
+      "name_field": "PROJNAME",
+      "project_type": "water_infrastructure",
+      "description_field": "Description",
+      "authority_type": "issuing_agency_gis",
+      "status_dimension": "delivery_stage",
+      "status_field": "CIPSTATUS",
+      "assertions": {
+        "project_number": "CIPID",
+        "source_project_type": "PROJTYPE",
+        "description": "Description",
+        "estimated_cost": "TOTCOST",
+        "expected_start_date": "DATESTART",
+        "completion_date": "DATECOMP",
+        "funding": "FUNDSOURCE",
+        "fiscal_year": "CIPFISCALYEAR",
+        "improvement_type": "CIP_IMPROVEMENT_TYPE",
+        "budget_fund": "BudgetFund",
+        "construction_method": "CIPMethod",
+        "design_year": "Design_Year",
+        "construction_year": "Construction_Year",
+        "project_manager": "PRJMAN"
+      }
+    }
+  }
+}
