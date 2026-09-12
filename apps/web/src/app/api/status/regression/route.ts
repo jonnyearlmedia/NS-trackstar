@@ -12,11 +12,16 @@ type SearchResult = {
   matched_on: string;
 };
 
+type ProjectDetail = {
+  sources?: Array<{ source_key?: string }>;
+};
+
 type Fixture = {
   key: string;
   label: string;
   queries: string[];
   expectedNames: string[];
+  requiredSourceKeys?: string[];
 };
 
 const FIXTURES: Fixture[] = [
@@ -46,12 +51,14 @@ const FIXTURES: Fixture[] = [
     label: "One Lake / Canon Station",
     queries: ["One Lake", "Canon Station"],
     expectedNames: ["one lake", "canon station"],
+    requiredSourceKeys: ["fairfield.one-lake-council-goals"],
   },
   {
     key: "dutch-bros-suisun",
     label: "Dutch Bros Suisun",
     queries: ["Dutch Bros", "Suisun"],
-    expectedNames: ["dutch bros", "dutch bros - restaurant with dual drive-through"],
+    expectedNames: ["dutch bros"],
+    requiredSourceKeys: ["suisun-city.development-calendar"],
   },
 ];
 
@@ -62,6 +69,15 @@ async function search(query: string): Promise<SearchResult[]> {
   );
   if (!response.ok) throw new Error(`search ${query} returned ${response.status}`);
   return response.json() as Promise<SearchResult[]>;
+}
+
+async function sourceKeys(projectId: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE}/projects/${projectId}`, { cache: "no-store" });
+  if (!response.ok) return [];
+  const detail = (await response.json()) as ProjectDetail;
+  return (detail.sources ?? [])
+    .map((source) => source.source_key)
+    .filter((key): key is string => Boolean(key));
 }
 
 export async function GET() {
@@ -75,24 +91,33 @@ export async function GET() {
           for (const result of batch) unique.set(result.id, result);
         }
         const matches = [...unique.values()].slice(0, 12);
-        const canonicalMatches = matches.filter((match) => {
+        const nameMatches = matches.filter((match) => {
           const name = match.name.toLocaleLowerCase();
           return fixture.expectedNames.some(
             (expected) => name === expected || name.includes(expected) || expected.includes(name),
           );
         });
+        const candidates = await Promise.all(
+          nameMatches.map(async (match) => ({ match, source_keys: await sourceKeys(match.id) })),
+        );
+        const canonicalMatches = candidates.filter(({ source_keys }) => {
+          if (!fixture.requiredSourceKeys?.length) return true;
+          return fixture.requiredSourceKeys.every((required) => source_keys.includes(required));
+        });
         return {
           key: fixture.key,
           label: fixture.label,
           found: canonicalMatches.length > 0,
-          map_ready: canonicalMatches.some((match) => match.geometry !== null),
+          map_ready: canonicalMatches.some(({ match }) => match.geometry !== null),
           evidence_found: matches.length > 0,
-          canonical_matches: canonicalMatches.map((match) => ({
+          required_source_keys: fixture.requiredSourceKeys ?? [],
+          canonical_matches: canonicalMatches.map(({ match, source_keys }) => ({
             id: match.id,
             name: match.name,
             project_type: match.project_type,
             mapped: match.geometry !== null,
             matched_on: match.matched_on,
+            source_keys,
           })),
           search_matches: matches.map((match) => ({
             id: match.id,
