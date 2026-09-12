@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from infra.collector_scheduler import ScheduledSource, seconds_until_due
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from infra.collector_scheduler import ScheduledSource, seconds_until_due  # noqa: E402
 
 
 def test_scheduler_preserves_remaining_poll_interval_after_restart() -> None:
