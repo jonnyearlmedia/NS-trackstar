@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import httpx
 import pytest
 
@@ -122,8 +125,84 @@ async def test_arcgis_canary_requires_all_configured_source_fields() -> None:
         assert await ArcGISRestAdapter(config, client=client).canary() is False
 
 
+@pytest.mark.asyncio
+async def test_arcgis_canary_checks_geometry_and_plausible_filtered_count() -> None:
+    config = SourceConfig(
+        key="test.transportation",
+        name="Test transportation projects",
+        jurisdiction="Test County",
+        base_url="https://example.test",
+        poll_minutes=1440,
+        options={
+            "layer_url": "https://example.test/FeatureServer/0",
+            "id_field": "ProjectID",
+            "where": "CountyName = 'Test'",
+            "expected_geometry_type": "esriGeometryMultipoint",
+            "min_expected_records": 10,
+            "max_expected_records": 100,
+        },
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/query"):
+            assert request.url.params["where"] == "CountyName = 'Test'"
+            assert request.url.params["returnCountOnly"] == "true"
+            return httpx.Response(200, json={"count": 25})
+        return httpx.Response(
+            200,
+            json={
+                "type": "Feature Layer",
+                "geometryType": "esriGeometryMultipoint",
+                "fields": [{"name": "ProjectID", "type": "esriFieldTypeString"}],
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert await ArcGISRestAdapter(config, client=client).canary() is True
+
+    too_many = config.options | {"max_expected_records": 20}
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = ArcGISRestAdapter(
+            SourceConfig(
+                key=config.key,
+                name=config.name,
+                jurisdiction=config.jurisdiction,
+                base_url=config.base_url,
+                poll_minutes=config.poll_minutes,
+                options=too_many,
+            ),
+            client=client,
+        )
+        assert await adapter.canary() is False
+
+
 def test_arcgis_ignores_placeholder_canonical_urls() -> None:
     assert ArcGISRestAdapter._canonical_url(" N/A ") is None
     assert ArcGISRestAdapter._canonical_url("https://example.test/project") == (
         "https://example.test/project"
     )
+
+
+def test_caltrans_building_ca_config_preserves_identifiers_without_construction_inference() -> None:
+    config_path = (
+        Path(__file__).parents[3]
+        / "config"
+        / "sources"
+        / "caltrans.building-ca.napa-solano.json"
+    )
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    options = payload["options"]
+    mapping = options["project_mapping"]
+
+    assert payload["adapter"] == "arcgis_rest"
+    assert options["id_field"] == "BCAProjectID"
+    assert {"BCAProjectID", "ProjectID", "SB1Funds", "IIJAFunds"}.issubset(
+        options["canary_fields"]
+    )
+    assert mapping["assertions"]["building_california_project_id"] == "BCAProjectID"
+    assert mapping["assertions"]["project_number"] == "ProjectID"
+    assert mapping["assertions"]["total_cost"] == "TotalCost"
+    assert mapping["status_dimension"] == "official_program_status"
+    assert mapping["status_dimension"] != "construction"
+    assert options["expected_geometry_type"] == "esriGeometryMultipoint"
+    assert options["min_expected_records"] > 0

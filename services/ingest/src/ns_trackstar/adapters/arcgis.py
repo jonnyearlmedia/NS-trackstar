@@ -43,6 +43,9 @@ class ArcGISRestAdapter(CollectorAdapter):
         self.updated_at_field = config.options.get("updated_at_field")
         self.canonical_url_field = config.options.get("canonical_url_field")
         self.canary_fields = {str(value) for value in config.options.get("canary_fields", [])}
+        self.expected_geometry_type = config.options.get("expected_geometry_type")
+        self.min_expected_records = int(config.options.get("min_expected_records", 0))
+        self.max_expected_records = config.options.get("max_expected_records")
 
     async def _get_json(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         owns_client = self._client is None
@@ -70,11 +73,28 @@ class ArcGISRestAdapter(CollectorAdapter):
     async def canary(self) -> bool:
         metadata = await self._get_json(self.layer_url, {"f": "json"})
         field_names = {field.get("name") for field in metadata.get("fields", [])}
-        return (
+        metadata_ok = (
             bool(metadata.get("type"))
             and self.id_field in field_names
             and self.canary_fields.issubset(field_names)
+            and (
+                self.expected_geometry_type is None
+                or metadata.get("geometryType") == self.expected_geometry_type
+            )
         )
+        if not metadata_ok:
+            return False
+        if self.min_expected_records <= 0 and self.max_expected_records is None:
+            return True
+
+        count_payload = await self._get_json(
+            f"{self.layer_url}/query",
+            {"f": "json", "where": self.where, "returnCountOnly": "true"},
+        )
+        count = count_payload.get("count")
+        if not isinstance(count, int) or count < self.min_expected_records:
+            return False
+        return self.max_expected_records is None or count <= int(self.max_expected_records)
 
     @staticmethod
     def _canonical_url(value: Any) -> str | None:
