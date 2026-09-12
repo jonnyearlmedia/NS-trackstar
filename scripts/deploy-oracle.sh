@@ -176,8 +176,10 @@ if [ "$backend_deploy" -eq 1 ]; then
   docker compose --env-file "$env_file" -f docker-compose.production.yml up --detach --build
   docker compose --env-file "$env_file" -f docker-compose.production.yml ps
   echo "Applying local project enrichment without re-crawling upstream sources."
-  docker compose --env-file "$env_file" -f docker-compose.production.yml run --rm --no-deps \
-    collector ns-trackstar-ingest enrich
+  if ! docker compose --env-file "$env_file" -f docker-compose.production.yml run --rm --no-deps \
+    collector ns-trackstar-ingest enrich; then
+    echo "Project enrichment needs follow-up; keeping the newly deployed healthy API online." >&2
+  fi
 else
   echo "Frontend/docs-only update detected; leaving API, database, and collector containers running."
 fi
