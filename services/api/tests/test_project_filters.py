@@ -1,6 +1,6 @@
 import pytest
 
-from ns_trackstar_api.app import app, changes, map_projects
+from ns_trackstar_api.app import _display_priority, app, changes, map_projects
 
 
 class EmptyCursor:
@@ -18,6 +18,36 @@ class RecordingDatabase:
     async def execute(self, query: str, params: dict[str, object]):
         self.calls.append((query, params))
         return EmptyCursor()
+
+
+def test_display_priority_surfaces_large_review_only_projects() -> None:
+    priority = _display_priority(
+        {
+            "importance_score": 0,
+            "project_type": "environmental_review",
+            "source_count": 1,
+            "status_count": 1,
+            "relationship_count": 0,
+            "scale_acres": 160,
+            "delivery_stage": None,
+        }
+    )
+    assert priority >= 0.4
+
+
+def test_display_priority_keeps_small_single_source_reviews_quiet() -> None:
+    priority = _display_priority(
+        {
+            "importance_score": 0,
+            "project_type": "environmental_review",
+            "source_count": 1,
+            "status_count": 1,
+            "relationship_count": 0,
+            "scale_acres": 1,
+            "delivery_stage": None,
+        }
+    )
+    assert priority < 0.4
 
 
 @pytest.mark.asyncio
