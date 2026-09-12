@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 from typing import Annotated, Literal
+from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request
+
+from ns_trackstar_api.area import normalize_lifecycle
 
 router = APIRouter()
 ConsumerCategory = Literal["development", "roads", "utilities", "places"]
@@ -186,6 +189,72 @@ def normalize_consumer_category(
         return "places", "default", project_type
 
     return "development", "default", project_type
+
+
+async def _semantic_values(request: Request, project_id: UUID) -> list[str]:
+    cursor = await request.app.state.db.execute(
+        """
+        SELECT DISTINCT ON (field, value)
+          field,
+          value #>> '{}' AS semantic_value,
+          observed_at
+        FROM assertion
+        WHERE project_id = %(project_id)s
+          AND field = ANY(%(semantic_fields)s)
+          AND jsonb_typeof(value) = 'string'
+        ORDER BY field, value, observed_at DESC
+        """,
+        {"project_id": project_id, "semantic_fields": list(SEMANTIC_FIELDS)},
+    )
+    rows = await cursor.fetchall()
+    return [str(row["semantic_value"]) for row in rows if row["semantic_value"]]
+
+
+@router.get("/projects/{project_id}/classification")
+async def project_classification(request: Request, project_id: UUID) -> dict:
+    """Return one canonical consumer classification contract for project UI surfaces."""
+
+    cursor = await request.app.state.db.execute(
+        """
+        SELECT
+          p.canonical_name,
+          p.project_type,
+          COALESCE(
+            (SELECT jsonb_object_agg(dimension, value)
+             FROM project_status_dimension psd
+             WHERE psd.project_id = p.id),
+            '{}'::jsonb
+          ) AS statuses
+        FROM project p
+        WHERE p.id = %s
+        """,
+        (project_id,),
+    )
+    row = await cursor.fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    semantic_values = await _semantic_values(request, project_id)
+    category, basis, category_evidence = normalize_consumer_category(
+        project_type=str(row["project_type"]),
+        semantic_values=semantic_values,
+        project_name=str(row["canonical_name"]),
+    )
+    lifecycle_stage, lifecycle_dimension, lifecycle_value = normalize_lifecycle(row["statuses"] or {})
+
+    return {
+        "project_id": str(project_id),
+        "consumer_category": category,
+        "category_basis": basis,
+        "category_evidence": category_evidence,
+        "semantic_values": semantic_values,
+        "lifecycle_stage": lifecycle_stage,
+        "lifecycle_evidence": {
+            "dimension": lifecycle_dimension,
+            "value": lifecycle_value,
+        },
+        "statuses": row["statuses"] or {},
+    }
 
 
 @router.get("/map/category-truth")
