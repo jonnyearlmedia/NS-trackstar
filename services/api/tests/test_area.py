@@ -34,9 +34,28 @@ def test_lifecycle_keeps_ambiguous_status_unknown() -> None:
     assert value is None
 
 
+def test_lifecycle_keeps_combined_entitled_or_construction_unknown() -> None:
+    stage, dimension, value = normalize_lifecycle(
+        {"official_tracker_stage": "entitled_or_under_construction"}
+    )
+    assert stage == "unknown"
+    assert dimension is None
+    assert value is None
+
+
 def test_lifecycle_does_not_misclassify_preconstruction() -> None:
     stage, _, _ = normalize_lifecycle({"delivery_stage": "Pre-Construction"})
     assert stage == "unknown"
+
+
+def test_lifecycle_does_not_match_words_inside_other_words() -> None:
+    assert normalize_lifecycle({"delivery_stage": "Incomplete"})[0] == "unknown"
+    assert normalize_lifecycle({"planning": "Disapproved"})[0] == "inactive"
+
+
+def test_lifecycle_does_not_promote_negated_status() -> None:
+    assert normalize_lifecycle({"delivery_stage": "Not under construction"})[0] == "unknown"
+    assert normalize_lifecycle({"planning": "Not yet approved"})[0] == "unknown"
 
 
 def test_lifecycle_marks_terminal_statuses() -> None:
