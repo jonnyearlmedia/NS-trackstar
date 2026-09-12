@@ -1,0 +1,38 @@
+name: Accela Live Smoke (one-off)
+
+on:
+  push:
+    paths:
+      - .github/workflows/accela-live-smoke.yml
+
+concurrency:
+  group: accela-live-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "services/ingest[dev]"
+      - name: Run conservative Solano and Napa Accela smokes
+        shell: bash
+        run: |
+          set +e
+          ns-trackstar-ingest collect config/smoke/solano-county.accela.json > /tmp/solano.out 2>&1
+          solano_status=$?
+          echo "===== SOLANO COUNTY ====="
+          cat /tmp/solano.out
+
+          ns-trackstar-ingest collect config/smoke/napa-county.accela.json > /tmp/napa.out 2>&1
+          napa_status=$?
+          echo "===== NAPA COUNTY ====="
+          cat /tmp/napa.out
+
+          if [ "$solano_status" -ne 0 ] || [ "$napa_status" -ne 0 ]; then
+            exit 1
+          fi
