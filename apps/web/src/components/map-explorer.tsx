@@ -136,6 +136,23 @@ const TIME_OPTIONS: Array<{ label: string; value: TimeWindow; description: strin
   { label: "Coming up", value: "upcoming", description: "Published future hearings, milestones and events." },
 ];
 
+const HUMAN_VALUES: Record<string, string> = {
+  under_review_or_in_process: "Under review / in process",
+  document_type_eir: "Environmental impact report on file",
+  document_type_nod: "Decision notice filed",
+  document_type_noe: "Exemption notice filed",
+  document_type_mnd: "Mitigated negative declaration on file",
+  document_type_nd: "Negative declaration on file",
+  document_type_fon: "Environmental review document filed",
+  trust_acquisition_approved: "Federal trust acquisition approved",
+  restored_lands_exception_approved: "Federal gaming eligibility approved",
+  restored_lands_exception_disapproved: "Federal gaming eligibility disapproved",
+  temporarily_rescinded_for_reconsideration: "Federal gaming eligibility under reconsideration",
+  in_progress: "In progress",
+  complete: "Complete",
+  completed: "Completed",
+};
+
 function readableField(field: string) {
   return field.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
@@ -143,7 +160,7 @@ function readableField(field: string) {
 function readableValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "number") return new Intl.NumberFormat("en-US").format(value);
-  if (typeof value === "string") return value.replaceAll("_", " ");
+  if (typeof value === "string") return HUMAN_VALUES[value.toLowerCase()] ?? value.replaceAll("_", " ");
   if (Array.isArray(value)) return value.map(readableValue).join(", ");
   return JSON.stringify(value);
 }
@@ -158,8 +175,15 @@ function consumerType(projectType: string) {
   if (projectType === "transportation_project") return "Roads & transportation";
   if (projectType === "public_works") return "Public project";
   if (projectType === "water_infrastructure") return "Water project";
-  if (projectType === "environmental_review") return "Project review";
+  if (projectType === "environmental_review") return "Development & public review";
   return "Local project";
+}
+
+function humanEventHeadline(event: ProjectEvent) {
+  if (event.event_type === "ceqa_document_received") return "A new environmental review document was filed.";
+  if (event.event_type?.endsWith("_changed")) return event.title.replaceAll("_", " ");
+  if (event.summary && event.summary !== event.title) return event.summary;
+  return event.title;
 }
 
 function humanStatus(statuses: Record<string, string>) {
@@ -172,7 +196,10 @@ function humanStatus(statuses: Record<string, string>) {
     ["building_permit", "Building permit"],
     ["planning", "Planning"],
     ["entitlement", "Approval"],
-    ["environmental", "Review"],
+    ["gaming_eligibility", "Federal gaming eligibility"],
+    ["federal_authorization", "Federal authorization"],
+    ["land_status", "Land status"],
+    ["environmental", "Public review"],
   ] as const;
   for (const [key, label] of preferred) {
     if (statuses[key]) return { label, value: readableValue(statuses[key]) };
@@ -202,7 +229,7 @@ function plainSummary(detail: ProjectDetail | null, context: ProjectContext | nu
         : detail.project_type === "water_infrastructure"
           ? "a water-system project"
           : detail.project_type === "environmental_review"
-            ? "a project moving through public review"
+            ? "a development or infrastructure project moving through public review"
             : "a local project";
   const locationFact = firstAssertion(detail.assertions, ["location_description", "address"]);
   const status = humanStatus(detail.statuses);
@@ -582,7 +609,6 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   const summary = plainSummary(detail, context);
   const facts = useMemo(() => humanFacts(detail?.assertions ?? []), [detail]);
   const currentBriefing = briefingItems[briefingIndex];
-  const latestEvent = events[0];
   const latestMeaningfulEvent = events.find((item) => item.event_type !== "project_discovered");
   const briefingLabel = briefingWindow === "today" ? "TODAY" : briefingWindow === "week" ? "THIS WEEK" : "LOCAL BRIEFING";
 
@@ -651,7 +677,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           {changesState === "done" && changes.length === 0 ? <p className="emptyMessage">Nothing new matches these filters right now.</p> : null}
           <ol className="updatesList">
             {changes.map((change) => (
-              <li key={change.id}><button onClick={() => { setView("explore"); selectProject({ id: change.project_id, name: change.project_name, projectType: change.project_type, deliveryStage: null, geometry: null }); }} type="button"><span><small>{consumerType(change.project_type)} · {eventDate(change.occurred_at ?? change.observed_at)}</small><strong>{change.project_name}</strong><em>{change.summary ?? change.title}</em></span><b>›</b></button></li>
+              <li key={change.id}><button onClick={() => { setView("explore"); selectProject({ id: change.project_id, name: change.project_name, projectType: change.project_type, deliveryStage: null, geometry: null }); }} type="button"><span><small>{consumerType(change.project_type)} · {eventDate(change.occurred_at ?? change.observed_at)}</small><strong>{change.project_name}</strong><em>{humanEventHeadline(change)}</em></span><b>›</b></button></li>
             ))}
           </ol>
         </section>
@@ -691,7 +717,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
         <section className="briefingHud">
           <div className="briefingProgress"><i style={{ width: `${((briefingIndex + 1) / briefingItems.length) * 100}%` }} /></div>
           <p>{briefingLabel} · {briefingIndex + 1}/{briefingItems.length}</p>
-          <strong>{currentBriefing.event?.title ?? currentBriefing.name}</strong>
+          <strong>{currentBriefing.event ? humanEventHeadline(currentBriefing.event) : currentBriefing.name}</strong>
           <div className="briefingControls"><button disabled={briefingIndex === 0} onClick={() => setBriefingIndex((index) => Math.max(0, index - 1))} type="button">‹</button><button onClick={() => setBriefingPaused((value) => !value)} type="button">{briefingPaused ? <PlayIcon /> : <PauseIcon />}</button><button disabled={briefingIndex === briefingItems.length - 1} onClick={() => setBriefingIndex((index) => Math.min(briefingItems.length - 1, index + 1))} type="button">›</button><button className="briefingDone" onClick={stopBriefing} type="button">Done</button></div>
         </section>
       ) : null}
@@ -702,7 +728,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           <div className="humanCardTop"><div><p>{consumerType(selected.projectType).toUpperCase()}</p><h2>{detail?.name ?? selected.name}</h2>{context?.aliases.length ? <small>also known as {context.aliases.map((item) => item.alias).join(" · ")}</small> : null}</div><div className="sheetActions"><button className="iconButton" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button className="roundClose small" onClick={clearSelection} type="button">×</button></div></div>
           <div className="humanCardBody">
             {detailState === "loading" ? <p className="projectLead">Figuring out what this is and what’s happening…</p> : <p className="projectLead">{summary}</p>}
-            {latestMeaningfulEvent ? <section className="whatsHappening"><small>LATEST UPDATE</small><strong>{latestMeaningfulEvent.summary ?? latestMeaningfulEvent.title}</strong><span>{eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}</span></section> : status ? <section className="whatsHappening"><small>CURRENT STATUS</small><strong>{status.value}</strong><span>{status.label}</span></section> : null}
+            {latestMeaningfulEvent ? <section className="whatsHappening"><small>LATEST UPDATE</small><strong>{humanEventHeadline(latestMeaningfulEvent)}</strong><span>{eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}</span></section> : status ? <section className="whatsHappening"><small>CURRENT STATUS</small><strong>{status.value}</strong><span>{status.label}</span></section> : null}
             {facts.length ? <div className="humanFacts">{facts.map((fact) => <div key={fact.field}><small>{readableField(fact.field)}</small><strong>{readableValue(fact.value)}</strong></div>)}</div> : null}
             <div className="humanTrust"><span>{detail?.sources.length ? `Verified from ${detail.sources.length} official source${detail.sources.length === 1 ? "" : "s"}` : "Official-source details loading"}</span><span>{latestMeaningfulEvent ? `Updated ${eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}` : detail?.last_activity_at ? `Updated ${eventDate(detail.last_activity_at)}` : ""}</span>{shareState === "copied" ? <b>Link copied</b> : null}</div>
             {!detail?.geometry && detailState === "idle" ? <p className="locationNotice">Trackstar knows this project exists, but the exact map location is still being verified. No fake pin.</p> : null}
