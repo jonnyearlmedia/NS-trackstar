@@ -85,6 +85,12 @@ function featureProject(feature: Feature): MapProject | null {
   };
 }
 
+function minimumPriorityForZoom(zoom: number) {
+  if (zoom < 9) return 0.18;
+  if (zoom < 10.5) return 0.1;
+  return 0;
+}
+
 function frameFeature(
   map: import("maplibre-gl").Map,
   geometry: Geometry,
@@ -295,9 +301,13 @@ export function MapCanvas({
           const response = await fetch(`${API_BASE}/map/projects?${params}`, { signal: refreshAbort.signal });
           if (!response.ok) throw new Error(`Project API returned ${response.status}`);
           const data = (await response.json()) as ProjectCollection;
-          const displayFeatures = projectTypeRef.current
+          const consumerFeatures = projectTypeRef.current
             ? data.features
             : data.features.filter((feature) => feature.properties?.project_type !== "environmental_review");
+          const priorityFloor = projectTypeRef.current ? 0 : minimumPriorityForZoom(map.getZoom());
+          const displayFeatures = consumerFeatures.filter(
+            (feature) => Number(feature.properties?.display_priority ?? 0) >= priorityFloor,
+          );
           const pointFeatures = displayFeatures.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
           const shapeFeatures = displayFeatures.filter((feature) => feature.geometry?.type !== "Point");
           (map.getSource(PROJECT_SOURCE) as import("maplibre-gl").GeoJSONSource)?.setData({ type: "FeatureCollection", features: shapeFeatures });
@@ -315,9 +325,9 @@ export function MapCanvas({
           if (metadata) {
             onCoverageRef.current?.({
               visibleMapped: displayFeatures.length,
-              mappedMatching: Number(metadata.mapped_matching ?? displayFeatures.length),
+              mappedMatching: Number(metadata.mapped_matching ?? consumerFeatures.length),
               locationPending: Number(metadata.location_pending ?? 0),
-              totalMatching: Number(metadata.total_matching ?? displayFeatures.length),
+              totalMatching: Number(metadata.total_matching ?? consumerFeatures.length),
             });
           }
         } catch (error) {
