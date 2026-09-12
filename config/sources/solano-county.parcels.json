@@ -1,0 +1,40 @@
+{
+  "key": "solano-county.parcels",
+  "name": "Solano County Public Parcels",
+  "jurisdiction": "Solano County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/ParcelsPublic/FeatureServer/1",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/ParcelsPublic/FeatureServer/1",
+    "id_field": "OBJECTID",
+    "out_fields": [
+      "OBJECTID",
+      "lowparceli",
+      "parcelid",
+      "taxmapno",
+      "gis_acre",
+      "situs",
+      "p_address",
+      "sitecity",
+      "subdiv",
+      "p_create",
+      "p_inactive",
+      "last_edate"
+    ],
+    "where": "1=1",
+    "page_size": 2000,
+    "created_at_field": "p_create",
+    "updated_at_field": "last_edate",
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 10000,
+    "max_expected_records": 500000,
+    "canary_fields": [
+      "OBJECTID",
+      "lowparceli",
+      "parcelid",
+      "situs",
+      "subdiv"
+    ]
+  }
+}
