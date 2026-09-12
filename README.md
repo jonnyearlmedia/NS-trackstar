@@ -6,35 +6,27 @@ NS Trackstar is a Napa–Solano local intelligence map that turns fragmented pub
 
 Government sources → normalized source records → assertions + typed relationships → canonical projects → events/timelines → map + feed.
 
-## Initial coverage
-
-- American Canyon
-- Vallejo
-- Napa
-- Fairfield
-- Benicia
-- Suisun City
-- Napa County
-- Solano County
-
 ## What works now
 
 - PostGIS canonical schema
 - source run + source health model
 - reusable collector interface
 - ArcGIS FeatureServer collector
-- config-driven collector registry
+- source-record persistence + change snapshots
+- config-driven promotion of authoritative source records into canonical projects
+- City of Napa Public Works CIP source configuration
+- read API for map projects, project detail and project events
 - real MapLibre + OpenFreeMap web map
-- persistence path for source records and snapshots
 
 ## Local development
 
 1. Copy `.env.example` to `.env`.
 2. Start PostGIS with `docker compose up -d db`.
 3. Apply `db/migrations/0001_core.sql` to the database.
-4. Install Node dependencies with `pnpm install`.
-5. Install the Python ingestion service with `pip install -e "services/ingest[dev]"`.
-6. Dry-run a source: `ns-trackstar-ingest collect config/sources/napa-county.parcels.json`.
-7. Persist it: `ns-trackstar-ingest collect config/sources/napa-county.parcels.json --write`.
+4. Install the ingestion service: `pip install -e "services/ingest[dev]"`.
+5. Install the API: `pip install -e "services/api[dev]"`.
+6. Ingest real Napa CIP projects: `ns-trackstar-ingest collect config/sources/napa-city.public-works-cip.json --write`.
+7. Start the API: `python -m ns_trackstar_api`.
+8. Install/start the web app: `pnpm install && pnpm dev`.
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -10,12 +11,24 @@ from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.models import CollectorResult, LocationAccuracy, NormalizedRecord
 
 
-class ArcGISRestAdapter(CollectorAdapter):
-    """Generic ArcGIS FeatureServer layer collector.
+def _arcgis_datetime(value: Any) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return None
 
-    Jurisdictions supply the layer URL and field configuration. The adapter keeps the
-    complete feature payload so source-specific fields are never lost just because the
-    transport is shared.
+
+class ArcGISRestAdapter(CollectorAdapter):
+    """Generic ArcGIS FeatureServer/MapServer layer collector.
+
+    Jurisdictions supply layer and field configuration. Complete feature properties are
+    retained so a reusable transport layer never flattens city-specific fields.
     """
 
     def __init__(self, config: SourceConfig, *, client: httpx.AsyncClient | None = None) -> None:
@@ -26,6 +39,9 @@ class ArcGISRestAdapter(CollectorAdapter):
         self.where = str(config.options.get("where", "1=1"))
         self.out_fields = config.options.get("out_fields", "*")
         self.page_size = int(config.options.get("page_size", 1000))
+        self.created_at_field = config.options.get("created_at_field")
+        self.updated_at_field = config.options.get("updated_at_field")
+        self.canonical_url_field = config.options.get("canonical_url_field")
 
     async def _get_json(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         owns_client = self._client is None
@@ -97,6 +113,21 @@ class ArcGISRestAdapter(CollectorAdapter):
                     NormalizedRecord(
                         source_key=self.config.key,
                         external_id=str(external_id),
+                        canonical_url=(
+                            str(properties.get(self.canonical_url_field))
+                            if self.canonical_url_field and properties.get(self.canonical_url_field)
+                            else None
+                        ),
+                        source_created_at=(
+                            _arcgis_datetime(properties.get(self.created_at_field))
+                            if self.created_at_field
+                            else None
+                        ),
+                        source_updated_at=(
+                            _arcgis_datetime(properties.get(self.updated_at_field))
+                            if self.updated_at_field
+                            else None
+                        ),
                         raw_payload=feature,
                         normalized_payload=properties,
                         geometry_geojson=geometry,

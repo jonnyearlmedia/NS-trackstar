@@ -4,7 +4,7 @@ import hashlib
 import json
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 import psycopg
 from psycopg.rows import dict_row
@@ -13,11 +13,19 @@ from ns_trackstar.models import CollectorResult, NormalizedRecord
 
 
 @dataclass(frozen=True, slots=True)
+class PersistedRecord:
+    id: str
+    changed: bool
+
+
+@dataclass(frozen=True, slots=True)
 class PersistSummary:
     source_id: str
     run_id: str
     records_seen: int
     records_changed: int
+    projects_created: int
+    projects_touched: int
 
 
 def canonical_json(value: object) -> str:
@@ -55,7 +63,7 @@ async def ensure_source(
     collector_type: str,
     config: dict,
 ) -> str:
-    row = await conn.execute(
+    cursor = await conn.execute(
         """
         INSERT INTO source (
             source_key, name, source_family, jurisdiction, base_url,
@@ -85,10 +93,10 @@ async def ensure_source(
             "config": canonical_json(config),
         },
     )
-    result = await row.fetchone()
-    if result is None:
+    row = await cursor.fetchone()
+    if row is None:
         raise RuntimeError(f"Failed to upsert source {source_key}")
-    return str(result["id"])
+    return str(row["id"])
 
 
 async def start_source_run(conn: psycopg.AsyncConnection, source_id: str) -> str:
@@ -107,21 +115,31 @@ async def persist_record(
     *,
     source_id: str,
     record: NormalizedRecord,
-) -> bool:
+) -> PersistedRecord:
     content_hash = record_content_hash(record)
     geometry_json = canonical_json(record.geometry_geojson) if record.geometry_geojson else None
     location_accuracy = record.location_accuracy.value if record.location_accuracy else None
 
     cursor = await conn.execute(
-        """
-        SELECT id, content_hash
-        FROM source_record
-        WHERE source_id = %s AND external_id = %s
-        """,
+        "SELECT id, content_hash FROM source_record WHERE source_id = %s AND external_id = %s",
         (source_id, record.external_id),
     )
     existing = await cursor.fetchone()
     changed = existing is None or existing["content_hash"] != content_hash
+
+    params = {
+        "source_id": source_id,
+        "external_id": record.external_id,
+        "canonical_url": record.canonical_url,
+        "source_created_at": record.source_created_at,
+        "source_updated_at": record.source_updated_at,
+        "raw_payload": canonical_json(record.raw_payload),
+        "normalized_payload": canonical_json(record.normalized_payload),
+        "content_hash": content_hash,
+        "geometry": geometry_json,
+        "geometry_source": record.geometry_source,
+        "location_accuracy": location_accuracy,
+    }
 
     if existing is None:
         cursor = await conn.execute(
@@ -131,31 +149,19 @@ async def persist_record(
                 source_created_at, source_updated_at,
                 raw_payload, normalized_payload, content_hash,
                 geometry, geometry_source, location_accuracy
-            )
-            VALUES (
+            ) VALUES (
                 %(source_id)s, %(external_id)s, %(canonical_url)s,
                 %(source_created_at)s, %(source_updated_at)s,
                 %(raw_payload)s::jsonb, %(normalized_payload)s::jsonb, %(content_hash)s,
                 CASE WHEN %(geometry)s IS NULL THEN NULL ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326) END,
                 %(geometry_source)s, %(location_accuracy)s::location_accuracy
-            )
-            RETURNING id
+            ) RETURNING id
             """,
-            {
-                "source_id": source_id,
-                "external_id": record.external_id,
-                "canonical_url": record.canonical_url,
-                "source_created_at": record.source_created_at,
-                "source_updated_at": record.source_updated_at,
-                "raw_payload": canonical_json(record.raw_payload),
-                "normalized_payload": canonical_json(record.normalized_payload),
-                "content_hash": content_hash,
-                "geometry": geometry_json,
-                "geometry_source": record.geometry_source,
-                "location_accuracy": location_accuracy,
-            },
+            params,
         )
         row = await cursor.fetchone()
+        if row is None:
+            raise RuntimeError("Failed to insert source record")
         record_id = str(row["id"])
     else:
         record_id = str(existing["id"])
@@ -165,8 +171,7 @@ async def persist_record(
                 canonical_url = %(canonical_url)s,
                 source_created_at = COALESCE(%(source_created_at)s, source_created_at),
                 source_updated_at = COALESCE(%(source_updated_at)s, source_updated_at),
-                last_seen_at = now(),
-                fetched_at = now(),
+                last_seen_at = now(), fetched_at = now(),
                 raw_payload = %(raw_payload)s::jsonb,
                 normalized_payload = %(normalized_payload)s::jsonb,
                 content_hash = %(content_hash)s,
@@ -175,18 +180,7 @@ async def persist_record(
                 location_accuracy = %(location_accuracy)s::location_accuracy
             WHERE id = %(id)s
             """,
-            {
-                "id": record_id,
-                "canonical_url": record.canonical_url,
-                "source_created_at": record.source_created_at,
-                "source_updated_at": record.source_updated_at,
-                "raw_payload": canonical_json(record.raw_payload),
-                "normalized_payload": canonical_json(record.normalized_payload),
-                "content_hash": content_hash,
-                "geometry": geometry_json,
-                "geometry_source": record.geometry_source,
-                "location_accuracy": location_accuracy,
-            },
+            {**params, "id": record_id},
         )
 
     if changed:
@@ -198,8 +192,7 @@ async def persist_record(
                 %(source_record_id)s, %(content_hash)s,
                 %(raw_payload)s::jsonb, %(normalized_payload)s::jsonb,
                 CASE WHEN %(geometry)s IS NULL THEN NULL ELSE ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326) END
-            )
-            ON CONFLICT (source_record_id, content_hash) DO NOTHING
+            ) ON CONFLICT (source_record_id, content_hash) DO NOTHING
             """,
             {
                 "source_record_id": record_id,
@@ -210,7 +203,7 @@ async def persist_record(
             },
         )
 
-    return changed
+    return PersistedRecord(id=record_id, changed=changed)
 
 
 async def finish_source_run(
@@ -225,13 +218,11 @@ async def finish_source_run(
     await conn.execute(
         """
         UPDATE source_run SET
-            finished_at = now(),
-            success = true,
+            finished_at = now(), success = true,
             records_returned = %(records_returned)s,
             records_changed = %(records_changed)s,
             schema_fingerprint = %(schema_fingerprint)s,
-            parser_yield = %(parser_yield)s,
-            canary_ok = %(canary_ok)s
+            parser_yield = %(parser_yield)s, canary_ok = %(canary_ok)s
         WHERE id = %(run_id)s
         """,
         {
@@ -252,8 +243,7 @@ async def finish_source_run(
             consecutive_failures, schema_fingerprint, parser_yield,
             expected_poll_interval_minutes, health_state, health_reason
         )
-        SELECT
-            s.id, now(), now(), now(),
+        SELECT s.id, now(), now(), now(),
             CASE WHEN %(records_returned)s > 0 THEN now() ELSE NULL END,
             CASE WHEN %(records_changed)s > 0 THEN now() ELSE NULL END,
             %(records_returned)s, 0, %(schema_fingerprint)s, %(parser_yield)s,
@@ -271,8 +261,7 @@ async def finish_source_run(
             parser_yield = EXCLUDED.parser_yield,
             expected_poll_interval_minutes = EXCLUDED.expected_poll_interval_minutes,
             health_state = EXCLUDED.health_state,
-            health_reason = NULL,
-            updated_at = now()
+            health_reason = NULL, updated_at = now()
         """,
         {
             "source_id": source_id,
@@ -291,11 +280,29 @@ async def persist_collection(
     run_id: str,
     result: CollectorResult,
     canary_ok: bool,
+    project_mapping: dict[str, Any] | None = None,
 ) -> PersistSummary:
+    from ns_trackstar.projects import materialize_project
+
     changed = 0
+    projects_created = 0
+    projects_touched = 0
+
     for record in result.records:
-        if await persist_record(conn, source_id=source_id, record=record):
-            changed += 1
+        persisted = await persist_record(conn, source_id=source_id, record=record)
+        changed += int(persisted.changed)
+
+        if project_mapping:
+            project = await materialize_project(
+                conn,
+                source_id=source_id,
+                source_record_id=persisted.id,
+                record=record,
+                mapping=project_mapping,
+            )
+            if project:
+                projects_touched += 1
+                projects_created += int(project.created)
 
     await finish_source_run(
         conn,
@@ -310,4 +317,6 @@ async def persist_collection(
         run_id=run_id,
         records_seen=len(result.records),
         records_changed=changed,
+        projects_created=projects_created,
+        projects_touched=projects_touched,
     )

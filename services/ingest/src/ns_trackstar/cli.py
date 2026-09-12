@@ -55,12 +55,15 @@ async def collect(config_path: str, *, write: bool) -> int:
                     run_id=run_id,
                     result=result,
                     canary_ok=canary_ok,
+                    project_mapping=config.options.get("project_mapping"),
                 )
         output["persisted"] = {
             "source_id": summary.source_id,
             "run_id": summary.run_id,
             "records_seen": summary.records_seen,
             "records_changed": summary.records_changed,
+            "projects_created": summary.projects_created,
+            "projects_touched": summary.projects_touched,
         }
 
     print(json.dumps(output, indent=2))
