@@ -1,9 +1,9 @@
-import { MapExplorerV2 } from "@/components/map-explorer-v2";
+import { MapExplorerV3 } from "@/components/map-explorer-v3";
 
 export default function HomePage() {
   return (
     <main className="shell">
-      <MapExplorerV2 />
+      <MapExplorerV3 />
     </main>
   );
 }
