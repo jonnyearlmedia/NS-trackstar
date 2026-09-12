@@ -190,92 +190,91 @@ async def briefing(
     limit: Annotated[int, Query(ge=1, le=20)] = 8,
     include_reviews: Annotated[bool, Query()] = False,
 ) -> list[dict]:
-    window_filter, params = _briefing_window_sql(window)
-    params["limit"] = limit
-    params["terminal_statuses"] = list(TERMINAL_STATUS_VALUES)
     consumer_filter = "" if include_reviews else "AND p.project_type <> 'environmental_review'"
-    cursor = await request.app.state.db.execute(
-        f"""
-        WITH latest_event AS (
-          SELECT DISTINCT ON (pe.project_id)
-            pe.project_id,
-            pe.id,
-            pe.title,
-            pe.summary,
-            pe.event_type,
-            pe.occurred_at,
-            pe.observed_at,
-            pe.significance
-          FROM project_event pe
-          ORDER BY pe.project_id, COALESCE(pe.occurred_at, pe.observed_at) DESC
-        ),
-        source_counts AS (
-          SELECT psr.project_id, COUNT(DISTINCT psr.source_record_id)::int AS source_count
-          FROM project_source_record psr
-          GROUP BY psr.project_id
-        )
-        SELECT
-          p.id,
-          p.canonical_name,
-          p.project_type,
-          p.last_activity_at,
-          p.importance_score,
-          ST_AsGeoJSON(p.primary_geometry)::json AS geometry,
-          COALESCE(
-            (SELECT jsonb_object_agg(dimension, value)
-             FROM project_status_dimension psd
-             WHERE psd.project_id = p.id),
-            '{{}}'::jsonb
-          ) AS statuses,
-          COALESCE(
-            p.summary_cache,
-            (SELECT a.value #>> '{{}}'
-             FROM assertion a
-             WHERE a.project_id = p.id AND a.field = 'description'
-             ORDER BY a.observed_at DESC LIMIT 1)
-          ) AS project_summary,
-          COALESCE(sc.source_count, 0) AS source_count,
-          le.id AS event_id,
-          le.title AS event_title,
-          le.summary AS event_summary,
-          le.event_type,
-          le.occurred_at,
-          le.observed_at,
-          COALESCE(le.significance, 0) AS event_significance,
-          (
-            LEAST(1, GREATEST(0, COALESCE(p.importance_score, 0))) * 0.45
-            + COALESCE(le.significance, 0) * 0.45
-            + LEAST(COALESCE(sc.source_count, 0), 5) / 5.0 * 0.10
-          ) AS briefing_score
-        FROM project p
-        LEFT JOIN latest_event le ON le.project_id = p.id
-        LEFT JOIN source_counts sc ON sc.project_id = p.id
-        WHERE p.primary_geometry IS NOT NULL
-        {consumer_filter}
-        {window_filter}
-          AND le.event_type IS NOT NULL
-          AND le.event_type <> 'project_discovered'
-          AND (
-            COALESCE(sc.source_count, 0) >= 2
-            OR COALESCE(p.importance_score, 0) >= 0.2
-            OR EXISTS (
-              SELECT 1
-              FROM project_status_dimension meaningful_status
-              WHERE meaningful_status.project_id = p.id
-                AND lower(meaningful_status.value) <> ALL(%(terminal_statuses)s)
-            )
-            OR COALESCE(le.significance, 0) >= 0.6
-          )
-        ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
-        LIMIT %(limit)s
-        """,
-        params,
-    )
-    changed_rows = await cursor.fetchall()
-    results = [_briefing_row(row, kind="change") for row in changed_rows]
 
-    if window != "all" or len(results) >= limit:
-        return results
+    if window != "all":
+        window_filter, params = _briefing_window_sql(window)
+        params["limit"] = limit
+        params["terminal_statuses"] = list(TERMINAL_STATUS_VALUES)
+        cursor = await request.app.state.db.execute(
+            f"""
+            WITH latest_event AS (
+              SELECT DISTINCT ON (pe.project_id)
+                pe.project_id,
+                pe.id,
+                pe.title,
+                pe.summary,
+                pe.event_type,
+                pe.occurred_at,
+                pe.observed_at,
+                pe.significance
+              FROM project_event pe
+              ORDER BY pe.project_id, COALESCE(pe.occurred_at, pe.observed_at) DESC
+            ),
+            source_counts AS (
+              SELECT psr.project_id, COUNT(DISTINCT psr.source_record_id)::int AS source_count
+              FROM project_source_record psr
+              GROUP BY psr.project_id
+            )
+            SELECT
+              p.id,
+              p.canonical_name,
+              p.project_type,
+              p.last_activity_at,
+              p.importance_score,
+              ST_AsGeoJSON(p.primary_geometry)::json AS geometry,
+              COALESCE(
+                (SELECT jsonb_object_agg(dimension, value)
+                 FROM project_status_dimension psd
+                 WHERE psd.project_id = p.id),
+                '{{}}'::jsonb
+              ) AS statuses,
+              COALESCE(
+                p.summary_cache,
+                (SELECT a.value #>> '{{}}'
+                 FROM assertion a
+                 WHERE a.project_id = p.id AND a.field = 'description'
+                 ORDER BY a.observed_at DESC LIMIT 1)
+              ) AS project_summary,
+              COALESCE(sc.source_count, 0) AS source_count,
+              le.id AS event_id,
+              le.title AS event_title,
+              le.summary AS event_summary,
+              le.event_type,
+              le.occurred_at,
+              le.observed_at,
+              COALESCE(le.significance, 0) AS event_significance,
+              (
+                LEAST(1, GREATEST(0, COALESCE(p.importance_score, 0))) * 0.45
+                + COALESCE(le.significance, 0) * 0.45
+                + LEAST(COALESCE(sc.source_count, 0), 5) / 5.0 * 0.10
+              ) AS briefing_score
+            FROM project p
+            LEFT JOIN latest_event le ON le.project_id = p.id
+            LEFT JOIN source_counts sc ON sc.project_id = p.id
+            WHERE p.primary_geometry IS NOT NULL
+            {consumer_filter}
+            {window_filter}
+              AND le.event_type IS NOT NULL
+              AND le.event_type <> 'project_discovered'
+              AND (
+                COALESCE(sc.source_count, 0) >= 2
+                OR COALESCE(p.importance_score, 0) >= 0.2
+                OR EXISTS (
+                  SELECT 1
+                  FROM project_status_dimension meaningful_status
+                  WHERE meaningful_status.project_id = p.id
+                    AND lower(meaningful_status.value) <> ALL(%(terminal_statuses)s)
+                )
+                OR COALESCE(le.significance, 0) >= 0.6
+              )
+            ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
+            LIMIT %(limit)s
+            """,
+            params,
+        )
+        changed_rows = await cursor.fetchall()
+        return [_briefing_row(row, kind="change") for row in changed_rows]
 
     fallback_cursor = await request.app.state.db.execute(
         f"""
@@ -342,13 +341,4 @@ async def briefing(
         {"limit": limit, "terminal_statuses": list(TERMINAL_STATUS_VALUES)},
     )
     fallback_rows = await fallback_cursor.fetchall()
-    seen = {item["id"] for item in results}
-    for row in fallback_rows:
-        item = _briefing_row(row, kind="current_context")
-        if item["id"] in seen:
-            continue
-        results.append(item)
-        seen.add(item["id"])
-        if len(results) >= limit:
-            break
-    return results
+    return [_briefing_row(row, kind="current_context") for row in fallback_rows]
