@@ -45,7 +45,7 @@ def _find_control(soup: BeautifulSoup, suffix: str) -> Tag | None:
 def _form_values(soup: BeautifulSoup) -> dict[str, str]:
     form = soup.find("form", id="aspnetForm") or soup.find("form")
     if not isinstance(form, Tag):
-        raise RuntimeError("Accela ACA response is missing its ASP.NET form")
+        raise TypeError("Accela ACA response is missing its ASP.NET form")
 
     data: dict[str, str] = {}
     for field in form.find_all("input"):
@@ -139,7 +139,10 @@ def _parse_result_rows(soup: BeautifulSoup, base_url: str) -> list[dict[str, Any
         labels = [_text(cell) for cell in cells]
         if any(label.casefold() == "record number" for label in labels):
             header_index = index
-            headers = [_normalize_header(label) or f"column_{position}" for position, label in enumerate(labels)]
+            headers = [
+                _normalize_header(label) or f"column_{position}"
+                for position, label in enumerate(labels)
+            ]
             break
     if header_index is None:
         return []
@@ -149,7 +152,10 @@ def _parse_result_rows(soup: BeautifulSoup, base_url: str) -> list[dict[str, Any
         cells = row.find_all("td")
         if not cells or len(cells) != len(headers):
             continue
-        detail_link = row.find("a", href=lambda value: isinstance(value, str) and "CapDetail.aspx" in value)
+        detail_link = row.find(
+            "a",
+            href=lambda value: isinstance(value, str) and "CapDetail.aspx" in value,
+        )
         if not isinstance(detail_link, Tag):
             continue
         values = [_text(cell) for cell in cells]
@@ -212,7 +218,9 @@ def _parse_detail(soup: BeautifulSoup) -> dict[str, str]:
 def _schema_fingerprint(records: list[dict[str, Any]]) -> str | None:
     if not records:
         return None
-    keys = sorted({key for record in records[:25] for key in record if not key.startswith("_")})
+    keys = sorted(
+        {key for record in records[:25] for key in record if not key.startswith("_")}
+    )
     return hashlib.sha256(json.dumps(keys, separators=(",", ":")).encode()).hexdigest()
 
 
@@ -460,7 +468,9 @@ class AccelaAcaAdapter(CollectorAdapter):
             "licensed_professionals": detail.get("licensed_professionals"),
             "cap_id_parts": row.get("_cap_id_parts"),
         }
-        normalized = {key: value for key, value in normalized.items() if value not in (None, "", [])}
+        normalized = {
+            key: value for key, value in normalized.items() if value not in (None, "", [])
+        }
         raw_row = {key: value for key, value in row.items() if not key.startswith("_")}
         return NormalizedRecord(
             source_key=self.config.key,
