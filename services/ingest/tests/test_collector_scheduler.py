@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-
 from infra.collector_scheduler import ScheduledSource, seconds_until_due
 
 
