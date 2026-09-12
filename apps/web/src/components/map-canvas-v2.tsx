@@ -267,7 +267,7 @@ export function MapCanvasV2({
 
     if (briefingRef.current) return;
     if (selectedProject.geometry.type === "Point") {
-      map.easeTo({ center: selectedProject.geometry.coordinates, zoom: Math.max(map.getZoom(), 14), duration: 650, essential: true });
+      map.easeTo({ center: selectedProject.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 14), duration: 650, essential: true });
       return;
     }
     const bounds = geometryBounds(selectedProject.geometry);
