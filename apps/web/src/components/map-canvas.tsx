@@ -1,7 +1,7 @@
 "use client";
 
 import type { Geometry } from "geojson";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type TimeWindow = "today" | "week" | "upcoming" | "all";
 
@@ -82,6 +82,7 @@ export function MapCanvas({
   timeWindow,
   projectType,
 }: MapCanvasProps) {
+  const [areaMoved, setAreaMoved] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
   const timeWindowRef = useRef(timeWindow);
@@ -130,6 +131,14 @@ export function MapCanvas({
       });
 
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
+      map.addControl(
+        new maplibregl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: false,
+          showUserLocation: true,
+        }),
+        "bottom-right",
+      );
       map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
       async function refreshProjects() {
@@ -156,6 +165,7 @@ export function MapCanvas({
           const data = await response.json();
           const source = map.getSource(PROJECT_SOURCE) as import("maplibre-gl").GeoJSONSource;
           source?.setData(data);
+          setAreaMoved(false);
         } catch (error) {
           if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Failed to refresh NS Trackstar projects", error);
@@ -297,7 +307,7 @@ export function MapCanvas({
         focusProjectRef.current?.(selectedProjectRef.current);
       });
 
-      map.on("moveend", () => void refreshProjects());
+      map.on("moveend", () => setAreaMoved(true));
     }
 
     void mount();
@@ -310,5 +320,18 @@ export function MapCanvas({
     };
   }, []);
 
-  return <div className="mapCanvas" ref={containerRef} />;
+  return (
+    <>
+      <div className="mapCanvas" ref={containerRef} />
+      {areaMoved ? (
+        <button
+          className="searchAreaButton"
+          onClick={() => refreshProjectsRef.current?.()}
+          type="button"
+        >
+          Search This Area
+        </button>
+      ) : null}
+    </>
+  );
 }
