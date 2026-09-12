@@ -1,6 +1,6 @@
 name: Accela Live Smoke (one-off)
 
-# Second and final live-contract check after adding WebForm_PostBackOptions support.
+# Final verification uses official known planning record numbers plus a 30-day discovery window.
 on:
   push:
     paths:
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e "services/ingest[dev]"
-      - name: Run conservative Solano and Napa Accela smokes
+      - name: Verify Solano and Napa Accela tenants
         shell: bash
         run: |
           set +e
