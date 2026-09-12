@@ -1,11 +1,10 @@
 {
   "name": "ns-trackstar",
   "private": true,
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "pnpm --filter @ns-trackstar/web dev",
     "build": "pnpm --filter @ns-trackstar/web build",
-    "lint": "pnpm --filter @ns-trackstar/web lint",
     "typecheck": "pnpm --filter @ns-trackstar/web typecheck"
   }
 }

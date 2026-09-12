@@ -1,5 +1,6 @@
 "use client";
 
+import type { Geometry } from "geojson";
 import { useEffect, useRef } from "react";
 
 export type MapProject = {
@@ -12,6 +13,8 @@ export type MapProject = {
 type MapCanvasProps = {
   onSelectProject: (project: MapProject) => void;
 };
+
+type MapLibreModule = typeof import("maplibre-gl");
 
 const NAPA_SOLANO_CENTER: [number, number] = [-122.2708, 38.218];
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -36,7 +39,7 @@ function visitCoordinates(value: unknown, visit: (coordinate: [number, number]) 
   for (const child of value) visitCoordinates(child, visit);
 }
 
-function frameFeature(map: import("maplibre-gl").Map, geometry: GeoJSON.Geometry) {
+function frameFeature(map: import("maplibre-gl").Map, geometry: Geometry, maplibregl: MapLibreModule) {
   if (geometry.type === "Point") {
     map.flyTo({
       center: geometry.coordinates as [number, number],
@@ -48,11 +51,10 @@ function frameFeature(map: import("maplibre-gl").Map, geometry: GeoJSON.Geometry
     return;
   }
 
-  const maplibregl = require("maplibre-gl") as typeof import("maplibre-gl");
+  if (geometry.type === "GeometryCollection") return;
+
   const bounds = new maplibregl.LngLatBounds();
-  visitCoordinates("coordinates" in geometry ? geometry.coordinates : [], (coordinate) => {
-    bounds.extend(coordinate);
-  });
+  visitCoordinates(geometry.coordinates, (coordinate) => bounds.extend(coordinate));
   if (!bounds.isEmpty()) {
     map.fitBounds(bounds, {
       padding: { top: 110, right: 55, bottom: 260, left: 55 },
@@ -220,7 +222,7 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
               geometry: feature.geometry,
               properties: feature.properties,
             });
-            frameFeature(map, feature.geometry as GeoJSON.Geometry);
+            frameFeature(map, feature.geometry as Geometry, maplibregl);
           });
         }
 
