@@ -51,10 +51,6 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
           SELECT
             sr.id AS source_record_id,
             sr.geometry,
-            COALESCE(
-              NULLIF(sr.normalized_payload ->> 'asmtwithdash', ''),
-              NULLIF(sr.normalized_payload ->> 'asmt', '')
-            ) AS apn,
             regexp_replace(
               lower(COALESCE(
                 NULLIF(sr.normalized_payload ->> 'asmtwithdash', ''),
@@ -119,33 +115,26 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
             AND p.primary_geometry IS NULL
           RETURNING p.id, p.primary_geometry, footprints.parcel_count
         )
-        SELECT id, primary_geometry, parcel_count FROM updated
+        INSERT INTO project_location (
+          project_id, geometry, geometry_method, geometry_source,
+          location_accuracy, geometry_confidence, is_primary, metadata
+        )
+        SELECT
+          id,
+          primary_geometry,
+          'apn_parcel_match',
+          'napa-county.parcels',
+          'exact_parcel',
+          0.99,
+          true,
+          jsonb_build_object(
+            'matched_parcels', parcel_count,
+            'method_note', 'Official project APN matched to Napa County public parcel geometry'
+          )
+        FROM updated
+        ON CONFLICT DO NOTHING
+        RETURNING project_id
         """
     )
     updated = await cursor.fetchall()
-
-    for row in updated:
-        await conn.execute(
-            """
-            INSERT INTO project_location (
-              project_id, geometry, geometry_method, geometry_source,
-              location_accuracy, geometry_confidence, is_primary, metadata
-            ) VALUES (
-              %(project_id)s, %(geometry)s,
-              'apn_parcel_match', 'napa-county.parcels',
-              'exact_parcel', 0.99, true,
-              jsonb_build_object(
-                'matched_parcels', %(parcel_count)s,
-                'method_note', 'Official project APN matched to Napa County public parcel geometry'
-              )
-            )
-            ON CONFLICT DO NOTHING
-            """,
-            {
-                "project_id": row["id"],
-                "geometry": row["primary_geometry"],
-                "parcel_count": row["parcel_count"],
-            },
-        )
-
     return len(updated)
