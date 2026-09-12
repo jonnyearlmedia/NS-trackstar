@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import styles from "./map-explorer-v2.module.css";
+import styles from "./project-freshness.module.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
