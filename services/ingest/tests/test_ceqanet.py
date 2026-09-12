@@ -137,6 +137,62 @@ async def test_collect_groups_documents_by_sch_and_excludes_statewide_rows() -> 
 
 
 @pytest.mark.asyncio
+async def test_sparse_latest_document_keeps_newest_nonempty_project_location_history() -> None:
+    latest_sparse = _row(
+        **{
+            "SCH Number": "2008122111",
+            "Lead Agency Name": "Napa County",
+            "Project Title": "Napa Pipe",
+            "Document Title": "Napa Pipe Major Amendment",
+            "Document Type": "NOD",
+            "Received": "5/7/2021",
+            "Document Portal URL": "https://ceqanet.lci.ca.gov/2008122111/9",
+            "Location Coordinates": "",
+            "Location Cross Streets": "",
+            "Location Parcel Number": "",
+        }
+    )
+    historical_with_location = _row(
+        **{
+            "SCH Number": "2008122111",
+            "Lead Agency Name": "Napa County",
+            "Project Title": "Napa Pipe",
+            "Document Title": "Napa Pipe Redevelopment Project",
+            "Document Type": "EIR",
+            "Received": "12/29/2008",
+            "Document Portal URL": "https://ceqanet.lci.ca.gov/2008122111/6",
+            "Location Coordinates": "38°15'14\"N 122°16'55\"W",
+            "Location Cross Streets": "Kaiser Road / Syar Industrial Way",
+            "Location Parcel Number": "046412005 & 046400030",
+            "Location Total Acres": "154",
+            "Cities": "Napa",
+            "Counties": "Napa",
+        }
+    )
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("Sch"):
+            rows = [_row()]
+        else:
+            rows = [latest_sparse, historical_with_location]
+        return httpx.Response(200, content=_csv_bytes(rows), request=request)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await CeqanetAdapter(_config(), client=client).collect()
+
+    assert len(result.records) == 1
+    record = result.records[0]
+    assert record.external_id == "2008122111"
+    assert record.normalized_payload["latest_document_type"] == "NOD"
+    assert record.normalized_payload["apn"] == "046412005 & 046400030"
+    assert record.normalized_payload["location_cross_streets"] == "Kaiser Road / Syar Industrial Way"
+    assert record.normalized_payload["location_acres"] == "154"
+    assert record.location_accuracy == LocationAccuracy.APPROXIMATE_AREA
+    assert record.geometry_geojson is not None
+    assert record.geometry_geojson["coordinates"] == pytest.approx([-122.2819444444, 38.2538888889])
+
+
+@pytest.mark.asyncio
 async def test_canary_rejects_changed_csv_schema() -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(

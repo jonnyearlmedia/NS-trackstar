@@ -66,6 +66,14 @@ def _split_values(value: Any) -> list[str]:
     return [item.strip() for item in text.split(",") if item.strip()] if text else []
 
 
+def _latest_nonempty(rows: list[dict[str, str]], field: str) -> str | None:
+    """Return the newest published value for a field across one SCH project's documents."""
+    for row in rows:
+        if value := _text(row.get(field)):
+            return value
+    return None
+
+
 def parse_coordinates(value: Any) -> dict[str, Any] | None:
     """Parse source coordinates without claiming that a project centroid is an exact site."""
     text = _text(value)
@@ -187,6 +195,13 @@ class CeqanetAdapter(CollectorAdapter):
         documents = [self._document(row) for row in rows]
         latest_type = _text(latest.get("Document Type"))
         project_title = _text(latest.get("Project Title")) or _text(latest.get("Document Title"))
+
+        # CEQAnet amendments often omit location fields that were present in an older
+        # document for the same SCH project. Current document/status data should come
+        # from the newest row, while each location field uses the newest non-empty
+        # authoritative value in the project's document history. This preserves source
+        # truth instead of turning a later sparse filing into a location regression.
+        location_coordinates = _latest_nonempty(rows, "Location Coordinates")
         normalized = {
             "record_kind": "environmental_review",
             "sch_number": sch_number,
@@ -201,18 +216,18 @@ class CeqanetAdapter(CollectorAdapter):
             "latest_document_type": latest_type,
             "latest_document_title": _text(latest.get("Document Title")),
             "latest_document_received": _text(latest.get("Received")),
-            "cities": _split_values(latest.get("Cities")),
-            "counties": _split_values(latest.get("Counties")),
-            "location_coordinates": _text(latest.get("Location Coordinates")),
-            "location_cross_streets": _text(latest.get("Location Cross Streets")),
-            "location_zip": _text(latest.get("Location Zip Code")),
-            "location_acres": _text(latest.get("Location Total Acres")),
-            "apn": _text(latest.get("Location Parcel Number")),
-            "state_highways": _text(latest.get("Location State Highways")),
-            "waterways": _text(latest.get("Location Waterways")),
-            "development_type": _text(latest.get("NOC Development Type")),
-            "local_action": _text(latest.get("NOC Local Action")),
-            "project_issues": _text(latest.get("NOC Project Issues")),
+            "cities": _split_values(_latest_nonempty(rows, "Cities")),
+            "counties": _split_values(_latest_nonempty(rows, "Counties")),
+            "location_coordinates": location_coordinates,
+            "location_cross_streets": _latest_nonempty(rows, "Location Cross Streets"),
+            "location_zip": _latest_nonempty(rows, "Location Zip Code"),
+            "location_acres": _latest_nonempty(rows, "Location Total Acres"),
+            "apn": _latest_nonempty(rows, "Location Parcel Number"),
+            "state_highways": _latest_nonempty(rows, "Location State Highways"),
+            "waterways": _latest_nonempty(rows, "Location Waterways"),
+            "development_type": _latest_nonempty(rows, "NOC Development Type"),
+            "local_action": _latest_nonempty(rows, "NOC Local Action"),
+            "project_issues": _latest_nonempty(rows, "NOC Project Issues"),
             "documents": documents,
             "document_count": len(documents),
             "document_events": [
@@ -243,7 +258,7 @@ class CeqanetAdapter(CollectorAdapter):
                 for document in documents
             ],
         }
-        geometry = parse_coordinates(latest.get("Location Coordinates"))
+        geometry = parse_coordinates(location_coordinates)
         return NormalizedRecord(
             source_key=self.config.key,
             external_id=sch_number,

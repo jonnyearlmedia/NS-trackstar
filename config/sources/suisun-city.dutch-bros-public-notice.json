@@ -1,0 +1,60 @@
+{
+  "key": "suisun-city.dutch-bros-public-notice",
+  "name": "City of Suisun City Dutch Bros Public Notice",
+  "jurisdiction": "City of Suisun City",
+  "adapter": "official_document_set",
+  "base_url": "https://www.suisun.com/Government/City-Clerk/Public-Notices/Miscellaneous",
+  "poll_minutes": 10080,
+  "options": {
+    "allowed_hosts": ["www.suisun.com"],
+    "canary_external_id": "dutch-bros-community-meeting-2025",
+    "documents": [
+      {
+        "external_id": "dutch-bros-community-meeting-2025",
+        "document_url": "https://www.suisun.com/files/sharedassets/suisuncity/v/1/government/clerk/public-hearing-notices/planning-commission/dutch-bros-good-neighbor-meeting-notification.pdf",
+        "action_date": "2025-07-09",
+        "agency": "City of Suisun City",
+        "title": "Dutch Bros Good Neighbor Community Meeting Notification",
+        "project_name": "Dutch Bros",
+        "record_kind": "community_meeting_public_notice",
+        "apn": "0173-390-200",
+        "location_description": "Newly created parcel east of Sunset Avenue and north of Highway 12, between Sunset Center and Tractor Supply",
+        "building_area_sqft": 1025,
+        "planned_construction_start": "spring_2026",
+        "planned_completion": "fall_2026",
+        "canary_markers": [
+          "PUBLIC NOTICE",
+          "0173-390-200",
+          "Dutch Bros Coffee"
+        ]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "municipal_development",
+      "authority_type": "official_city_public_notice",
+      "assertions": {
+        "apn": "apn",
+        "location_description": "location_description",
+        "building_area_sqft": "building_area_sqft",
+        "planned_construction_start": "planned_construction_start",
+        "planned_completion": "planned_completion"
+      },
+      "record_links": {
+        "dutch-bros-community-meeting-2025": {
+          "source_key": "suisun-city.development-calendar",
+          "external_id": "project:dutch-bros",
+          "relationship_type": "evidence_for",
+          "confidence": 1.0,
+          "evidence": {
+            "signals": [
+              "City public notice names Dutch Bros",
+              "City public notice identifies APN 0173-390-200",
+              "City public notice locates the project north of Highway 12 near Sunset Avenue"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

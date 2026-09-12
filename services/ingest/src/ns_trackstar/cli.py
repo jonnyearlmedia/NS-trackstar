@@ -143,6 +143,7 @@ async def collect(config_path: str, *, write: bool) -> int:
                 if config.key in {
                     "solano-county.parcels",
                     "fairfield.one-lake-assessor-map",
+                    "suisun-city.dutch-bros-public-notice",
                 }:
                     enriched_solano_projects = await enrich_solano_projects_from_parcels(conn)
 
