@@ -26,8 +26,23 @@ type ProjectDetail = {
   name: string;
   project_type: string;
   geometry: Geometry | null;
+  location: {
+    method: string;
+    source: string;
+    accuracy: string;
+    accuracy_meters: number | null;
+    confidence: number | null;
+  } | null;
   statuses: Record<string, string>;
   assertions: Assertion[];
+  sources: Array<{
+    source_key: string;
+    source_name: string;
+    relationship_type: string;
+    confidence: number;
+    evidence: Record<string, unknown>;
+    url: string | null;
+  }>;
 };
 
 type ProjectEvent = {
@@ -56,6 +71,12 @@ function readableValue(value: unknown) {
   if (typeof value === "number") return new Intl.NumberFormat("en-US").format(value);
   if (typeof value === "string") return value;
   return JSON.stringify(value);
+}
+
+function eventDate(value: string | null) {
+  if (!value) return "Date not published";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .format(new Date(value));
 }
 
 export function MapExplorer() {
@@ -300,6 +321,11 @@ export function MapExplorer() {
               {!selected.geometry ? (
                 <p className="locationNotice">Location is described by the source but has not been mapped precisely.</p>
               ) : null}
+              {detail?.location && detail.location.accuracy !== "exact_source_geometry" ? (
+                <p className="locationNotice">
+                  Map location: {readableValue(detail.location.accuracy).replaceAll("_", " ")} · {readableValue(detail.location.method).replaceAll("_", " ")}
+                </p>
+              ) : null}
               {detailState === "error" ? (
                 <p className="errorMessage">Project evidence could not be loaded.</p>
               ) : null}
@@ -315,11 +341,35 @@ export function MapExplorer() {
               ) : (
                 <p>{detailState === "loading" ? "Loading source-backed project details…" : "No project facts loaded."}</p>
               )}
-              {events[0] ? (
-                <div className="latestEvent">
-                  <span>Latest tracked event</span>
-                  <strong>{events[0].title}</strong>
-                </div>
+              {events.length ? (
+                <section className="timeline" aria-labelledby="project-timeline-heading">
+                  <h3 id="project-timeline-heading">Timeline</h3>
+                  <ol>
+                    {events.slice(0, 4).map((projectEvent) => (
+                      <li key={projectEvent.id}>
+                        <time dateTime={projectEvent.occurred_at ?? projectEvent.observed_at}>
+                          {eventDate(projectEvent.occurred_at ?? projectEvent.observed_at)}
+                        </time>
+                        <strong>{projectEvent.title}</strong>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
+              {detail?.sources.length ? (
+                <details className="sourceDrawer">
+                  <summary>Government sources <span>{detail.sources.length}</span></summary>
+                  <ul>
+                    {detail.sources.map((source) => (
+                      <li key={`${source.source_key}-${source.relationship_type}-${source.url}`}>
+                        {source.url ? (
+                          <a href={source.url} rel="noreferrer" target="_blank">{source.source_name}</a>
+                        ) : <span>{source.source_name}</span>}
+                        <small>{source.relationship_type.replaceAll("_", " ")}</small>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               ) : null}
             </>
           ) : (

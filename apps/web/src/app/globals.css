@@ -58,9 +58,20 @@ h1 { margin: 4px 0 0; font-size: 24px; letter-spacing: -.04em; }
 .facts div { display: grid; grid-template-columns: minmax(100px, .8fr) 1.4fr; gap: 12px; padding-top: 9px; border-top: 1px solid var(--line); }
 .facts dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
 .facts dd { margin: 0; color: #e7edef; font-size: 13px; text-align: right; overflow-wrap: anywhere; }
-.latestEvent { display: grid; gap: 4px; margin-top: 15px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.035); }
-.latestEvent span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-.latestEvent strong { font-size: 13px; }
+.timeline { margin-top: 18px; }
+.timeline h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; }
+.timeline ol { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 82px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.timeline time { color: var(--muted); font-size: 10px; line-height: 1.35; text-transform: uppercase; }
+.timeline strong { font-size: 12px; line-height: 1.4; }
+.sourceDrawer { margin-top: 12px; border-top: 1px solid var(--line); }
+.sourceDrawer summary { display: flex; justify-content: space-between; padding: 13px 0 3px; color: #dce4e7; cursor: pointer; font-size: 12px; font-weight: 700; list-style: none; }
+.sourceDrawer summary::-webkit-details-marker { display: none; }
+.sourceDrawer summary span { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: rgba(215,255,88,.12); color: var(--accent); text-align: center; }
+.sourceDrawer ul { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.sourceDrawer li { display: grid; gap: 2px; padding: 10px 11px; border-radius: 12px; background: rgba(255,255,255,.035); }
+.sourceDrawer a, .sourceDrawer li > span { color: #eff5f7; font-size: 12px; overflow-wrap: anywhere; }
+.sourceDrawer small { color: var(--muted); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
 .cardFooter { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 .cardFooter span { color: #cbd4d8; font-size: 11px; border: 1px solid var(--line); padding: 7px 9px; border-radius: 999px; }
 .maplibregl-ctrl-group { background: rgba(16,21,24,.9) !important; border: 1px solid var(--line); }

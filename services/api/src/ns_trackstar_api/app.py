@@ -34,7 +34,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise RuntimeError("DATABASE_URL is required")
-    app.state.db = await psycopg.AsyncConnection.connect(database_url, row_factory=dict_row)
+    app.state.db = await psycopg.AsyncConnection.connect(
+        database_url,
+        row_factory=dict_row,
+        autocommit=True,
+    )
     try:
         yield
     finally:
@@ -65,7 +69,9 @@ def _time_window_sql(time_window: TimeWindow) -> tuple[str, dict[str, object]]:
             {"activity_after": datetime.combine(now.date(), time.min, tzinfo=LOCAL_TIMEZONE)},
         )
     if time_window == "week":
-        return "AND p.last_activity_at >= %(activity_after)s", {"activity_after": now - timedelta(days=7)}
+        return "AND p.last_activity_at >= %(activity_after)s", {
+            "activity_after": now - timedelta(days=7)
+        }
     if time_window == "upcoming":
         return (
             """
@@ -381,7 +387,32 @@ async def project_detail(project_id: UUID) -> dict:
              LEFT JOIN source_record sr ON sr.id = a.source_record_id
              WHERE a.project_id = p.id),
             '[]'::jsonb
-          ) AS assertions
+          ) AS assertions,
+          (SELECT jsonb_build_object(
+             'method', pl.geometry_method,
+             'source', pl.geometry_source,
+             'accuracy', pl.location_accuracy,
+             'accuracy_meters', pl.geometry_accuracy_meters,
+             'confidence', pl.geometry_confidence
+           )
+           FROM project_location pl
+           WHERE pl.project_id = p.id AND pl.is_primary
+           LIMIT 1) AS location,
+          COALESCE(
+            (SELECT jsonb_agg(jsonb_build_object(
+              'source_key', s.source_key,
+              'source_name', s.name,
+              'relationship_type', psr.relationship_type,
+              'confidence', psr.confidence,
+              'evidence', psr.evidence,
+              'url', sr.canonical_url
+            ) ORDER BY s.name, sr.external_id)
+             FROM project_source_record psr
+             JOIN source_record sr ON sr.id = psr.source_record_id
+             JOIN source s ON s.id = sr.source_id
+             WHERE psr.project_id = p.id),
+            '[]'::jsonb
+          ) AS sources
         FROM project p
         WHERE p.id = %s
         """,
@@ -398,8 +429,10 @@ async def project_detail(project_id: UUID) -> dict:
             row["last_activity_at"].isoformat() if row["last_activity_at"] else None
         ),
         "geometry": row["geometry"],
+        "location": row["location"],
         "statuses": row["statuses"],
         "assertions": row["assertions"],
+        "sources": row["sources"],
     }
 
 
