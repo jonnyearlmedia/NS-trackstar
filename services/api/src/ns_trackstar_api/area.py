@@ -28,6 +28,9 @@ COMPLETED_TERMS = (
     "complete",
     "closed",
     "finished",
+    "finaled",
+    "opened for business",
+    "open for business",
 )
 CONSTRUCTION_TERMS = (
     "construction",
@@ -52,6 +55,14 @@ REVIEW_TERMS = (
     "processing",
     "environmental review",
     "planning review",
+    "review process",
+    "preliminary review",
+    "review underway",
+    "review to applicant",
+    "ceqa process",
+    "ceqa prep",
+    "ready for ceqa",
+    "application deemed complete",
 )
 NEGATION_PREFIXES = ("not ", "not yet ", "no longer ")
 
