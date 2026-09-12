@@ -7,6 +7,7 @@ from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
 from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
+from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
@@ -18,6 +19,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "civicclerk": CivicClerkAdapter,
     "ceqanet": CeqanetAdapter,
     "etrakit": ETrakitAdapter,
+    "federal_register": FederalRegisterAdapter,
     "legistar": LegistarAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
