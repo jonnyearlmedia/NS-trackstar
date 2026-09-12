@@ -71,7 +71,12 @@ def collect(source: ScheduledSource, *, dry_run: bool) -> int:
 
 
 def persisted_last_attempts(database_url: str | None) -> dict[str, datetime]:
-    """Read durable scheduler progress so a container restart is not a full re-crawl."""
+    """Read durable healthy-source progress so a restart is not a full re-crawl.
+
+    Broken and schema-changed sources are intentionally omitted so a deployment that
+    contains a collector/config fix retries them immediately. Blocked sources retain
+    their normal cadence to avoid hammering an upstream anti-bot boundary.
+    """
     if not database_url:
         return {}
     try:
@@ -82,6 +87,7 @@ def persisted_last_attempts(database_url: str | None) -> dict[str, datetime]:
                 FROM source s
                 JOIN source_health sh ON sh.source_id = s.id
                 WHERE sh.last_attempt_at IS NOT NULL
+                  AND sh.health_state IN ('healthy', 'delayed', 'blocked')
                 """
             ).fetchall()
     except psycopg.Error as exc:
@@ -168,9 +174,10 @@ def main() -> int:
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
 
-    # Persisted source_health makes deployment restarts cheap: a source that was
-    # attempted recently keeps the remaining portion of its configured interval.
-    # Brand-new sources still run immediately. ``--once`` deliberately forces all
+    # Persisted source_health makes deployment restarts cheap: successful/recent
+    # sources keep the remaining portion of their configured interval, while a
+    # previously failed source is retried immediately after a deploy that may fix it.
+    # Brand-new sources also run immediately. ``--once`` deliberately forces all
     # configs for operator smoke testing.
     next_run = initial_schedule(
         sources,
