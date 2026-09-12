@@ -42,6 +42,7 @@ class ArcGISRestAdapter(CollectorAdapter):
         self.created_at_field = config.options.get("created_at_field")
         self.updated_at_field = config.options.get("updated_at_field")
         self.canonical_url_field = config.options.get("canonical_url_field")
+        self.canary_fields = {str(value) for value in config.options.get("canary_fields", [])}
 
     async def _get_json(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         owns_client = self._client is None
@@ -69,7 +70,20 @@ class ArcGISRestAdapter(CollectorAdapter):
     async def canary(self) -> bool:
         metadata = await self._get_json(self.layer_url, {"f": "json"})
         field_names = {field.get("name") for field in metadata.get("fields", [])}
-        return bool(metadata.get("type")) and self.id_field in field_names
+        return (
+            bool(metadata.get("type"))
+            and self.id_field in field_names
+            and self.canary_fields.issubset(field_names)
+        )
+
+    @staticmethod
+    def _canonical_url(value: Any) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        if not normalized or normalized.casefold() in {"n/a", "none", "null"}:
+            return None
+        return normalized
 
     async def collect(self) -> CollectorResult:
         metadata = await self._get_json(self.layer_url, {"f": "json"})
@@ -113,9 +127,9 @@ class ArcGISRestAdapter(CollectorAdapter):
                     NormalizedRecord(
                         source_key=self.config.key,
                         external_id=str(external_id),
-                        canonical_url=(
-                            str(properties.get(self.canonical_url_field))
-                            if self.canonical_url_field and properties.get(self.canonical_url_field)
+                        canonical_url=self._canonical_url(
+                            properties.get(self.canonical_url_field)
+                            if self.canonical_url_field
                             else None
                         ),
                         source_created_at=(

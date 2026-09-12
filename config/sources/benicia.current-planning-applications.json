@@ -13,6 +13,12 @@
     "page_size": 1000,
     "created_at_field": "Date_Submi",
     "canonical_url_field": "AuxLink",
+    "canary_fields": [
+      "Record__",
+      "Descriptio",
+      "Record_Sta",
+      "Address"
+    ],
     "project_mapping": {
       "name_fields": [
         "Descriptio",

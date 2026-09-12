@@ -89,3 +89,41 @@ async def test_arcgis_canary_requires_configured_id_field(source_config: SourceC
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         adapter = ArcGISRestAdapter(source_config, client=client)
         assert await adapter.canary() is True
+
+
+@pytest.mark.asyncio
+async def test_arcgis_canary_requires_all_configured_source_fields() -> None:
+    config = SourceConfig(
+        key="test.projects",
+        name="Test projects",
+        jurisdiction=None,
+        base_url="https://example.test",
+        poll_minutes=1440,
+        options={
+            "layer_url": "https://example.test/FeatureServer/0",
+            "id_field": "OBJECTID",
+            "canary_fields": ["PROJECT_NAME", "STATUS"],
+        },
+    )
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "type": "Feature Layer",
+                "fields": [
+                    {"name": "OBJECTID", "type": "esriFieldTypeOID"},
+                    {"name": "PROJECT_NAME", "type": "esriFieldTypeString"},
+                ],
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert await ArcGISRestAdapter(config, client=client).canary() is False
+
+
+def test_arcgis_ignores_placeholder_canonical_urls() -> None:
+    assert ArcGISRestAdapter._canonical_url(" N/A ") is None
+    assert ArcGISRestAdapter._canonical_url("https://example.test/project") == (
+        "https://example.test/project"
+    )

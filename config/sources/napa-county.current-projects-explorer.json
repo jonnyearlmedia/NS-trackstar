@@ -14,6 +14,14 @@
     "created_at_field": "Project_SubDate",
     "updated_at_field": "Project_StatusDate",
     "canonical_url_field": "Project_Docs",
+    "canary_fields": [
+      "Project_Name",
+      "Project_PermitNum",
+      "Project_Desc",
+      "Project_Status",
+      "Project_Docs",
+      "Project_PublicView"
+    ],
     "project_mapping": {
       "name_field": "Project_Name",
       "project_type": "municipal_development",
