@@ -50,6 +50,10 @@ function readable(value: string | null | undefined) {
   return value?.replaceAll("_", " ") ?? "—";
 }
 
+function operationallyUnhealthy(state: string | null) {
+  return state !== null && !["healthy"].includes(state);
+}
+
 export function SourceHealthDashboard() {
   const [sources, setSources] = useState<SourceHealth[]>([]);
   const [cadence, setCadence] = useState<SourceCadence[]>([]);
@@ -59,6 +63,25 @@ export function SourceHealthDashboard() {
     () => new Map(cadence.map((item) => [item.source_key, item])),
     [cadence],
   );
+
+  const alertSummary = useMemo(() => {
+    const unhealthy = sources.filter((source) => operationallyUnhealthy(source.health_state));
+    const missed = cadence.filter((item) => item.missed_expected_check);
+    const unstable = cadence.filter((item) => item.stability_state === "unstable");
+    const watch = cadence.filter((item) => item.stability_state === "watch");
+    return {
+      unhealthy,
+      missed,
+      unstable,
+      watch,
+      total: new Set([
+        ...unhealthy.map((item) => item.source_key),
+        ...missed.map((item) => item.source_key),
+        ...unstable.map((item) => item.source_key),
+        ...watch.map((item) => item.source_key),
+      ]).size,
+    };
+  }, [cadence, sources]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -99,6 +122,22 @@ export function SourceHealthDashboard() {
       </header>
       {state === "loading" ? <p className="emptyMessage">Loading collector health…</p> : null}
       {state === "error" ? <p className="errorMessage">Collector health is unavailable.</p> : null}
+
+      {state === "done" ? (
+        <section className="healthGrid" aria-label="Source alerts">
+          <article className="healthCard">
+            <header><div><p className="cardMeta">OPERATOR ALERTS</p><h2>{alertSummary.total ? `${alertSummary.total} sources need attention` : "No active source alerts"}</h2></div></header>
+            <dl className="healthFacts">
+              <div><dt>Unhealthy now</dt><dd>{alertSummary.unhealthy.length}</dd></div>
+              <div><dt>Missed checks</dt><dd>{alertSummary.missed.length}</dd></div>
+              <div><dt>Unstable 7-day history</dt><dd>{alertSummary.unstable.length}</dd></div>
+              <div><dt>Watch</dt><dd>{alertSummary.watch.length}</dd></div>
+            </dl>
+            {alertSummary.total ? <p className="healthReason">Review the source cards below before trusting freshness-sensitive public updates from flagged sources.</p> : null}
+          </article>
+        </section>
+      ) : null}
+
       <section className="healthGrid" aria-live="polite">
         {sources.map((source) => {
           const sourceCadence = cadenceByKey.get(source.source_key);
