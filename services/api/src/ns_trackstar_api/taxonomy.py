@@ -25,7 +25,7 @@ async def source_project_type_audit(
           SELECT
             a.project_id,
             a.value #>> '{}' AS source_project_type,
-            a.source_record_id,
+            a.source_id,
             a.observed_at
           FROM assertion a
           WHERE a.field = 'source_project_type'
@@ -38,14 +38,14 @@ async def source_project_type_audit(
             p.project_type,
             p.canonical_name,
             sa.source_project_type,
-            sr.source_key,
+            s.source_key,
             ROW_NUMBER() OVER (
-              PARTITION BY p.id, sa.source_project_type, sr.source_key
+              PARTITION BY p.id, sa.source_project_type, s.source_key
               ORDER BY sa.observed_at DESC
             ) AS project_row
           FROM subtype_assertions sa
           JOIN project p ON p.id = sa.project_id
-          LEFT JOIN source_record sr ON sr.id = sa.source_record_id
+          JOIN source s ON s.id = sa.source_id
         )
         SELECT
           project_type,
