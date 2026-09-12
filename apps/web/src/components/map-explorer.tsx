@@ -17,6 +17,9 @@ const CATEGORIES = [
   { label: "All projects", value: null },
   { label: "Development", value: "municipal_development" },
   { label: "Environmental", value: "environmental_review" },
+  { label: "Public works", value: "public_works" },
+  { label: "Water", value: "water_infrastructure" },
+  { label: "Transportation", value: "transportation_project" },
 ] as const;
 
 type Assertion = {
