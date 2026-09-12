@@ -4,7 +4,7 @@
   "jurisdiction": "Napa and Solano Counties",
   "adapter": "arcgis_rest",
   "base_url": "https://build.ca.gov/",
-  "poll_minutes": 1440,
+  "poll_minutes": 720,
   "options": {
     "layer_url": "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/SB1/BuildingCA_Projects/FeatureServer/0",
     "id_field": "BCAProjectID",
