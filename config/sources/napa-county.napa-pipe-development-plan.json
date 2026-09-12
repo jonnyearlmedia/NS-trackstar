@@ -1,0 +1,53 @@
+{
+  "key": "napa-county.napa-pipe-development-plan",
+  "name": "Napa County Napa Pipe Development Plan",
+  "jurisdiction": "Napa County",
+  "adapter": "official_document_set",
+  "base_url": "https://www.countyofnapa.org/DocumentCenter/View/580/Napa-Pipe-Draft-Development-Plan-August-2013-PDF",
+  "poll_minutes": 10080,
+  "options": {
+    "allowed_hosts": ["www.countyofnapa.org"],
+    "canary_external_id": "napa-pipe-development-plan-2013",
+    "documents": [
+      {
+        "external_id": "napa-pipe-development-plan-2013",
+        "document_url": "https://www.countyofnapa.org/DocumentCenter/View/580/Napa-Pipe-Draft-Development-Plan-August-2013-PDF",
+        "action_date": "2013-08-21",
+        "agency": "Napa County",
+        "title": "Napa Pipe Draft Development Plan",
+        "project_name": "Napa Pipe",
+        "record_kind": "official_development_plan",
+        "address": "1025 Kaiser Road, Napa, CA",
+        "site_acres": 154,
+        "apns": ["046-412-005", "046-400-030"],
+        "location_description": "154-acre former industrial site at 1025 Kaiser Road in unincorporated Napa County, approximately three miles south of downtown Napa",
+        "canary_markers": ["NAPA PIPE", "1025 Kaiser Road", "046-412-005", "046-400-030"]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "municipal_development",
+      "authority_type": "official_county_development_plan",
+      "assertions": {
+        "address": "address",
+        "apn": "apns",
+        "location_acres": "site_acres",
+        "location_description": "location_description"
+      },
+      "record_links": {
+        "napa-pipe-development-plan-2013": {
+          "source_key": "california.ceqanet.napa-solano",
+          "external_id": "2008122111",
+          "relationship_type": "evidence_for",
+          "confidence": 1.0,
+          "evidence": {
+            "signals": [
+              "Napa County development plan identifies the Napa Pipe project at 1025 Kaiser Road",
+              "Napa County development plan identifies APNs 046-412-005 and 046-400-030"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

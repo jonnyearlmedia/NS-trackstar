@@ -16,7 +16,10 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
+
+import psycopg
 
 
 @dataclass(frozen=True)
@@ -67,6 +70,83 @@ def collect(source: ScheduledSource, *, dry_run: bool) -> int:
     return completed.returncode
 
 
+def persisted_last_attempts(database_url: str | None) -> dict[str, datetime]:
+    """Read durable scheduler progress so a container restart is not a full re-crawl."""
+    if not database_url:
+        return {}
+    try:
+        with psycopg.connect(database_url) as conn:
+            rows = conn.execute(
+                """
+                SELECT s.source_key, sh.last_attempt_at
+                FROM source s
+                JOIN source_health sh ON sh.source_id = s.id
+                WHERE sh.last_attempt_at IS NOT NULL
+                """
+            ).fetchall()
+    except psycopg.Error as exc:
+        print(
+            json.dumps(
+                {
+                    "event": "scheduler_state_unavailable",
+                    "reason": str(exc),
+                    "fallback": "run_sources_now",
+                }
+            ),
+            flush=True,
+        )
+        return {}
+    return {str(source_key): attempted_at for source_key, attempted_at in rows}
+
+
+def seconds_until_due(
+    source: ScheduledSource,
+    *,
+    last_attempt: datetime | None,
+    now: datetime,
+) -> float:
+    if last_attempt is None:
+        return 0.0
+    if last_attempt.tzinfo is None:
+        last_attempt = last_attempt.replace(tzinfo=UTC)
+    elapsed = max(0.0, (now.astimezone(UTC) - last_attempt.astimezone(UTC)).total_seconds())
+    return max(0.0, source.poll_seconds - elapsed)
+
+
+def initial_schedule(
+    sources: list[ScheduledSource],
+    *,
+    database_url: str | None,
+    force_now: bool,
+) -> dict[str, float]:
+    """Translate persisted wall-clock attempts into monotonic next-run deadlines."""
+    if force_now:
+        return {source.key: 0.0 for source in sources}
+
+    last_attempts = persisted_last_attempts(database_url)
+    wall_now = datetime.now(UTC)
+    monotonic_now = time.monotonic()
+    schedule: dict[str, float] = {}
+
+    for source in sources:
+        last_attempt = last_attempts.get(source.key)
+        remaining = seconds_until_due(source, last_attempt=last_attempt, now=wall_now)
+        schedule[source.key] = 0.0 if last_attempt is None else monotonic_now + remaining
+        if last_attempt is not None and remaining > 0:
+            print(
+                json.dumps(
+                    {
+                        "event": "collector_deferred_after_restart",
+                        "source": source.key,
+                        "seconds_until_due": int(remaining),
+                        "last_attempt_at": last_attempt.isoformat(),
+                    }
+                ),
+                flush=True,
+            )
+    return schedule
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="ns-trackstar-collector-scheduler")
     parser.add_argument(
@@ -88,9 +168,15 @@ def main() -> int:
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
 
-    # Running each source on startup makes a fresh deployment useful without
-    # waiting up to 24 hours. Subsequent runs honor per-source poll_minutes.
-    next_run = {source.key: 0.0 for source in sources}
+    # Persisted source_health makes deployment restarts cheap: a source that was
+    # attempted recently keeps the remaining portion of its configured interval.
+    # Brand-new sources still run immediately. ``--once`` deliberately forces all
+    # configs for operator smoke testing.
+    next_run = initial_schedule(
+        sources,
+        database_url=os.environ.get("DATABASE_URL"),
+        force_now=args.once or args.dry_run,
+    )
     tick_seconds = max(5, int(os.environ.get("SCHEDULER_TICK_SECONDS", "60")))
 
     while not stopping:

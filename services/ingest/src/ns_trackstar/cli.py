@@ -137,6 +137,7 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "napa-county.parcels",
                     "california.ceqanet.napa-solano",
                     "napa-county.current-projects-explorer",
+                    "napa-county.napa-pipe-development-plan",
                 }:
                     enriched_napa_projects = await enrich_napa_projects_from_parcels(conn)
 
