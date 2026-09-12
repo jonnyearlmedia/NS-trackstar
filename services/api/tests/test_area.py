@@ -71,8 +71,19 @@ def test_lifecycle_does_not_promote_negated_status() -> None:
     assert normalize_lifecycle({"planning": "Not yet approved"})[0] == "unknown"
 
 
+def test_lifecycle_does_not_treat_application_completeness_as_project_completion() -> None:
+    assert normalize_lifecycle({"official_tracker_stage": "Application Deemed Complete"})[0] == "review"
+    assert (
+        normalize_lifecycle(
+            {"official_tracker_stage": "Complete anticipated circulation later this year"}
+        )[0]
+        == "unknown"
+    )
+
+
 def test_lifecycle_marks_terminal_statuses() -> None:
     assert normalize_lifecycle({"delivery_stage": "Completed"})[0] == "completed"
+    assert normalize_lifecycle({"official_tracker_stage": "Complete"})[0] == "completed"
     assert normalize_lifecycle({"planning": "Withdrawn"})[0] == "inactive"
     assert normalize_lifecycle({"official_tracker_stage": "Finaled - Opened for Business"})[0] == "completed"
     assert normalize_lifecycle({"official_tracker_stage": "Building Permit Finaled"})[0] == "completed"
