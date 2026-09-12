@@ -1,5 +1,6 @@
 """Reusable source-platform adapters."""
 
+from ns_trackstar.adapters.accela_aca import AccelaAcaAdapter
 from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 from ns_trackstar.adapters.base import CollectorAdapter, SourceBlockedError, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
@@ -12,6 +13,7 @@ from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
 
 __all__ = [
+    "AccelaAcaAdapter",
     "ArcGISRestAdapter",
     "BayArea511TrafficAdapter",
     "CeqanetAdapter",
