@@ -17,6 +17,7 @@ type MapCanvasProps = {
   onSelectProject: (project: MapProject) => void;
   selectedProject: MapProject | null;
   timeWindow: TimeWindow;
+  projectType?: string | null;
 };
 
 type MapLibreModule = typeof import("maplibre-gl");
@@ -75,10 +76,16 @@ function frameFeature(
   }
 }
 
-export function MapCanvas({ onSelectProject, selectedProject, timeWindow }: MapCanvasProps) {
+export function MapCanvas({
+  onSelectProject,
+  selectedProject,
+  timeWindow,
+  projectType,
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
   const timeWindowRef = useRef(timeWindow);
+  const projectTypeRef = useRef(projectType);
   const selectedProjectRef = useRef(selectedProject);
   const refreshProjectsRef = useRef<(() => void) | null>(null);
   const focusProjectRef = useRef<((project: MapProject | null) => void) | null>(null);
@@ -91,6 +98,11 @@ export function MapCanvas({ onSelectProject, selectedProject, timeWindow }: MapC
     timeWindowRef.current = timeWindow;
     refreshProjectsRef.current?.();
   }, [timeWindow]);
+
+  useEffect(() => {
+    projectTypeRef.current = projectType;
+    refreshProjectsRef.current?.();
+  }, [projectType]);
 
   useEffect(() => {
     selectedProjectRef.current = selectedProject;
@@ -106,6 +118,8 @@ export function MapCanvas({ onSelectProject, selectedProject, timeWindow }: MapC
       if (!containerRef.current) return;
       const maplibregl = await import("maplibre-gl");
       if (disposed || !containerRef.current) return;
+
+      maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
       map = new maplibregl.Map({
         container: containerRef.current,
@@ -130,6 +144,9 @@ export function MapCanvas({ onSelectProject, selectedProject, timeWindow }: MapC
           north: String(bounds.getNorth()),
           window: timeWindowRef.current,
         });
+        if (projectTypeRef.current) {
+          params.set("project_type", projectTypeRef.current);
+        }
 
         try {
           const response = await fetch(`${API_BASE}/map/projects?${params}`, {
