@@ -33,6 +33,25 @@ def test_official_subtype_outranks_public_works_default() -> None:
     assert evidence == "Street Rehabilitation"
 
 
+def test_live_napa_public_works_subtypes_map_cleanly() -> None:
+    cases = {
+        "Streets and Sidewalks": "roads",
+        "Traffic": "roads",
+        "Stormwater and Drains": "utilities",
+        "Parks": "places",
+        "Facilities": "places",
+    }
+    for subtype, expected in cases.items():
+        category, basis, evidence = normalize_consumer_category(
+            project_type="public_works",
+            semantic_values=[subtype],
+            project_name="Generic CIP project",
+        )
+        assert category == expected
+        assert basis == "official_subtype"
+        assert evidence == subtype
+
+
 def test_official_utility_subtype_outranks_project_name() -> None:
     category, basis, _ = normalize_consumer_category(
         project_type="public_works",
@@ -51,6 +70,17 @@ def test_public_place_subtype_is_places() -> None:
     )
     assert category == "places"
     assert basis == "official_subtype"
+
+
+def test_telecom_source_subtype_is_utilities() -> None:
+    category, basis, evidence = normalize_consumer_category(
+        project_type="municipal_development",
+        semantic_values=["Telecom"],
+        project_name="840 Meadowood Ln Use Permit",
+    )
+    assert category == "utilities"
+    assert basis == "official_subtype"
+    assert evidence == "Telecom"
 
 
 def test_municipal_development_stays_development_without_stronger_semantics() -> None:
