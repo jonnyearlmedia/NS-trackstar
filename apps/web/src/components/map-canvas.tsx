@@ -57,6 +57,7 @@ const POINT_SOURCE = "trackstar-project-points";
 const DENSITY_SOURCE = "trackstar-density-points";
 const SELECTED_SOURCE = "trackstar-selected-project";
 const PROJECT_LAYERS = ["projects-fill", "projects-line", "projects-points"] as const;
+const MAJOR_REVIEW_PRIORITY = 0.4;
 
 function emptyCollection(): FeatureCollection {
   return { type: "FeatureCollection", features: [] };
@@ -303,7 +304,10 @@ export function MapCanvas({
           const data = (await response.json()) as ProjectCollection;
           const consumerFeatures = projectTypeRef.current
             ? data.features
-            : data.features.filter((feature) => feature.properties?.project_type !== "environmental_review");
+            : data.features.filter((feature) => {
+                if (feature.properties?.project_type !== "environmental_review") return true;
+                return Number(feature.properties?.display_priority ?? 0) >= MAJOR_REVIEW_PRIORITY;
+              });
           const priorityFloor = projectTypeRef.current ? 0 : minimumPriorityForZoom(map.getZoom());
           const displayFeatures = consumerFeatures.filter(
             (feature) => Number(feature.properties?.display_priority ?? 0) >= priorityFloor,
