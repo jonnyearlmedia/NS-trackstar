@@ -80,4 +80,3 @@ discovery strategies are production-ready. Martin can be added when the web app
 actually consumes its vector tiles; the current vertical slice reads project
 GeoJSON from the API, so running an unused tile service would add complexity
 without changing the deployed product.
-
