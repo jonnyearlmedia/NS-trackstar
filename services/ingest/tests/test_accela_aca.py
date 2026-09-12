@@ -3,11 +3,12 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-from ns_trackstar.adapters.accela_aca import AccelaAcaAdapter
+from ns_trackstar.adapters.accela_aca_live import AccelaAcaAdapter
 from ns_trackstar.adapters.base import SourceBlockedError, SourceConfig
 
 _SEARCH_HTML = """
-<html><body><form id="aspnetForm" method="post">
+<html><body><form id="aspnetForm" method="post"
+ action="./CapHome.aspx?module=Building&amp;TabName=Building">
 <input type="hidden" name="__VIEWSTATE" value="state-one" />
 <input type="hidden" name="__VIEWSTATEGENERATOR" value="generator-one" />
 <input type="hidden" name="ACA_CS_FIELD" value="csrf-one" />
@@ -22,12 +23,13 @@ _SEARCH_HTML = """
 <input id="ctl00_PlaceHolderMain_generalSearchForm_txtGSEndDate"
        name="ctl00$PlaceHolderMain$generalSearchForm$txtGSEndDate" />
 <a id="ctl00_PlaceHolderMain_btnNewSearch"
-   href="javascript:__doPostBack('ctl00$PlaceHolderMain$btnNewSearch','')">Search</a>
+   href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$PlaceHolderMain$btnNewSearch", "", true, "", "", false, false))'>Search</a>
 </form></body></html>
 """
 
 _PAGE_ONE = """
-<html><body><form id="aspnetForm" method="post">
+<html><body><form id="aspnetForm" method="post"
+ action="./CapHome.aspx?module=Building&amp;TabName=Building">
 <input type="hidden" name="__VIEWSTATE" value="state-two" />
 <input type="hidden" name="ACA_CS_FIELD" value="csrf-two" />
 <table id="ctl00_PlaceHolderMain_dgvPermitList_gdvPermitList">
@@ -43,7 +45,8 @@ _PAGE_ONE = """
 """
 
 _PAGE_TWO = """
-<html><body><form id="aspnetForm" method="post">
+<html><body><form id="aspnetForm" method="post"
+ action="./CapHome.aspx?module=Building&amp;TabName=Building">
 <input type="hidden" name="__VIEWSTATE" value="state-three" />
 <input type="hidden" name="ACA_CS_FIELD" value="csrf-three" />
 <table id="ctl00_PlaceHolderMain_dgvPermitList_gdvPermitList">
@@ -89,8 +92,9 @@ def _config(**options: object) -> SourceConfig:
 
 
 @pytest.mark.asyncio
-async def test_collect_preserves_webforms_state_and_paginates() -> None:
+async def test_collect_preserves_webforms_state_form_action_and_paginates() -> None:
     posts: list[dict[str, list[str]]] = []
+    post_urls: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/Cap/CapDetail.aspx"):
@@ -100,6 +104,7 @@ async def test_collect_preserves_webforms_state_and_paginates() -> None:
         if request.method == "GET":
             return httpx.Response(200, text=_SEARCH_HTML)
         if request.method == "POST":
+            post_urls.append(str(request.url))
             posted = parse_qs(request.content.decode())
             posts.append(posted)
             target = posted.get("__EVENTTARGET", [""])[0]
@@ -121,6 +126,7 @@ async def test_collect_preserves_webforms_state_and_paginates() -> None:
     assert first.normalized_payload["parcel_number"] == "0123-456-789"
     assert first.normalized_payload["cap_id_parts"] == ["26ABC", "00000", "00001"]
 
+    assert all("TabName=Building" in url for url in post_urls)
     search_post = posts[0]
     assert search_post["__VIEWSTATE"] == ["state-one"]
     assert search_post["ACA_CS_FIELD"] == ["csrf-one"]
