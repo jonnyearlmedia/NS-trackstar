@@ -13,6 +13,17 @@ def test_lifecycle_prefers_construction_over_approved() -> None:
     assert value == "Active Construction"
 
 
+def test_lifecycle_marks_explicit_proposed() -> None:
+    stage, dimension, value = normalize_lifecycle({"official_tracker_stage": "Proposed"})
+    assert stage == "proposed"
+    assert dimension == "official_tracker_stage"
+    assert value == "Proposed"
+
+
+def test_lifecycle_keeps_vague_planned_status_unknown() -> None:
+    assert normalize_lifecycle({"official_tracker_stage": "Planned"})[0] == "unknown"
+
+
 def test_lifecycle_marks_explicit_review_without_guessing() -> None:
     stage, dimension, value = normalize_lifecycle({"planning": "Under Review"})
     assert stage == "review"
