@@ -146,6 +146,8 @@ export function MapCanvas({
     let disposed = false;
     let map: import("maplibre-gl").Map | undefined;
     let refreshAbort: AbortController | undefined;
+    let pulseFrame: number | undefined;
+    let ignoreMoveEndUntil = performance.now() + 1000;
 
     async function mount() {
       if (!containerRef.current) return;
@@ -197,6 +199,40 @@ export function MapCanvas({
         if (map.getLayer("project-cluster-count")) {
           map.setPaintProperty("project-cluster-count", "text-opacity", hasSelection ? 0.18 : 1);
         }
+      }
+
+      function stopSelectionPulse() {
+        if (pulseFrame !== undefined) cancelAnimationFrame(pulseFrame);
+        pulseFrame = undefined;
+        if (!map) return;
+        if (map.getLayer("selected-point-glow")) {
+          map.setPaintProperty("selected-point-glow", "circle-radius", 18);
+          map.setPaintProperty("selected-point-glow", "circle-opacity", 0.2);
+        }
+        if (map.getLayer("selected-line-glow")) {
+          map.setPaintProperty("selected-line-glow", "line-width", 11);
+          map.setPaintProperty("selected-line-glow", "line-opacity", 0.26);
+        }
+      }
+
+      function startSelectionPulse() {
+        stopSelectionPulse();
+        if (!map || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const startedAt = performance.now();
+        const animate = (now: number) => {
+          if (!map || disposed) return;
+          const wave = (Math.sin((now - startedAt) / 420) + 1) / 2;
+          if (map.getLayer("selected-point-glow")) {
+            map.setPaintProperty("selected-point-glow", "circle-radius", 16 + wave * 9);
+            map.setPaintProperty("selected-point-glow", "circle-opacity", 0.12 + wave * 0.2);
+          }
+          if (map.getLayer("selected-line-glow")) {
+            map.setPaintProperty("selected-line-glow", "line-width", 8 + wave * 8);
+            map.setPaintProperty("selected-line-glow", "line-opacity", 0.15 + wave * 0.2);
+          }
+          pulseFrame = requestAnimationFrame(animate);
+        };
+        pulseFrame = requestAnimationFrame(animate);
       }
 
       async function refreshProjects() {
@@ -260,25 +296,24 @@ export function MapCanvas({
         });
         map.addSource(SELECTED_SOURCE, { type: "geojson", data: emptyCollection() });
 
+        const categoryColor = [
+          "match",
+          ["get", "project_type"],
+          "municipal_development", "#d9ff61",
+          "environmental_review", "#b9a7ff",
+          "transportation_project", "#ffb45f",
+          "public_works", "#67d7ff",
+          "water_infrastructure", "#59edc5",
+          "#d9ff61",
+        ] as import("maplibre-gl").ExpressionSpecification;
+
         map.addLayer({
           id: "projects-fill",
           type: "fill",
           source: PROJECT_SOURCE,
           filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
           paint: {
-            "fill-color": [
-              "match",
-              ["get", "delivery_stage"],
-              "Construction",
-              "#d7ff58",
-              "Design",
-              "#ffb38a",
-              "Planning",
-              "#b6a7ff",
-              "Completed",
-              "#8fd18a",
-              "#d7ff58",
-            ],
+            "fill-color": categoryColor,
             "fill-opacity": 0.3,
           },
         });
@@ -287,7 +322,7 @@ export function MapCanvas({
           type: "line",
           source: PROJECT_SOURCE,
           paint: {
-            "line-color": "#efffb6",
+            "line-color": categoryColor,
             "line-width": ["interpolate", ["linear"], ["zoom"], 8, 1.1, 13, 2.2, 17, 3.5],
             "line-opacity": 0.78,
           },
@@ -324,7 +359,7 @@ export function MapCanvas({
           filter: ["!", ["has", "point_count"]],
           paint: {
             "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 4, 12, 6, 16, 8],
-            "circle-color": "#d7ff58",
+            "circle-color": categoryColor,
             "circle-opacity": 0.96,
             "circle-stroke-color": "#101416",
             "circle-stroke-width": 2,
@@ -337,14 +372,14 @@ export function MapCanvas({
           type: "fill",
           source: SELECTED_SOURCE,
           filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
-          paint: { "fill-color": "#d7ff58", "fill-opacity": 0.52 },
+          paint: { "fill-color": "#d9ff61", "fill-opacity": 0.52 },
         });
         map.addLayer({
           id: "selected-line-glow",
           type: "line",
           source: SELECTED_SOURCE,
           paint: {
-            "line-color": "#d7ff58",
+            "line-color": "#d9ff61",
             "line-width": 11,
             "line-opacity": 0.26,
             "line-blur": 5,
@@ -363,7 +398,7 @@ export function MapCanvas({
           filter: ["==", ["geometry-type"], "Point"],
           paint: {
             "circle-radius": 18,
-            "circle-color": "#d7ff58",
+            "circle-color": "#d9ff61",
             "circle-opacity": 0.2,
             "circle-blur": 0.45,
           },
@@ -375,7 +410,7 @@ export function MapCanvas({
           filter: ["==", ["geometry-type"], "Point"],
           paint: {
             "circle-radius": 10,
-            "circle-color": "#d7ff58",
+            "circle-color": "#d9ff61",
             "circle-stroke-color": "#f7ffd7",
             "circle-stroke-width": 3,
           },
@@ -384,7 +419,8 @@ export function MapCanvas({
         focusProjectRef.current = (project) => {
           if (!map) return;
           const selectedSource = map.getSource(SELECTED_SOURCE) as import("maplibre-gl").GeoJSONSource;
-          setContextOpacity(Boolean(project));
+          stopSelectionPulse();
+          setContextOpacity(Boolean(project?.geometry));
           if (!project?.geometry) {
             selectedSource.setData(emptyCollection());
             return;
@@ -399,7 +435,9 @@ export function MapCanvas({
               delivery_stage: project.deliveryStage,
             },
           });
+          ignoreMoveEndUntil = performance.now() + 1500;
           frameFeature(map, project.geometry, maplibregl);
+          startSelectionPulse();
         };
 
         for (const layer of PROJECT_LAYERS) {
@@ -444,12 +482,15 @@ export function MapCanvas({
         focusProjectRef.current?.(selectedProjectRef.current);
       });
 
-      map.on("moveend", () => setAreaMoved(true));
+      map.on("moveend", () => {
+        if (performance.now() >= ignoreMoveEndUntil) setAreaMoved(true);
+      });
     }
 
     void mount();
     return () => {
       disposed = true;
+      if (pulseFrame !== undefined) cancelAnimationFrame(pulseFrame);
       refreshProjectsRef.current = null;
       focusProjectRef.current = null;
       refreshAbort?.abort();
