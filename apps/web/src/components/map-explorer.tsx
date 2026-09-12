@@ -155,7 +155,7 @@ function readableField(field: string) {
   return field.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
 
-function readableValue(value: unknown) {
+function readableValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "number") return new Intl.NumberFormat("en-US").format(value);
   if (typeof value === "string") return value.replaceAll("_", " ");
@@ -415,7 +415,8 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     setContext(null);
     setDetailTab("overview");
     setSheetSnap("half");
-    window.history[history === "push" ? "pushState" : "replaceState"]({}, "", `/projects/${project.id}`);
+    if (history === "push") window.history.pushState({}, "", `/projects/${project.id}`);
+    else window.history.replaceState({}, "", `/projects/${project.id}`);
   }
 
   function selectProjectById(projectId: string) {
