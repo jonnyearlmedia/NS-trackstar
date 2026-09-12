@@ -1,0 +1,16 @@
+{
+  "key": "vallejo.etrakit-smoke",
+  "name": "City of Vallejo eTRAKiT Smoke Test",
+  "jurisdiction": "City of Vallejo",
+  "adapter": "etrakit",
+  "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
+  "poll_minutes": 240,
+  "options": {
+    "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
+    "canary_kinds": ["permit", "project"],
+    "explicit_records": [],
+    "searches": [],
+    "min_request_interval_seconds": 1.0,
+    "timezone": "America/Los_Angeles"
+  }
+}

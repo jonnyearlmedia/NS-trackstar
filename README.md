@@ -14,6 +14,7 @@ Government sources → normalized source records → assertions + typed relation
 - shared ArcGIS FeatureServer collector
 - City of Napa Public Works CIP + Water CIP through the same ArcGIS adapter
 - CivicClerk public API adapter for Vallejo meetings + structured agenda items
+- reusable eTRAKiT adapter with ASP.NET form-state discovery and direct public record parsing
 - source-record persistence + semantic change snapshots
 - config-driven promotion of authoritative source records into canonical projects
 - read API for map projects, project detail, events and source health
@@ -30,7 +31,9 @@ Government sources → normalized source records → assertions + typed relation
 6. Ingest Napa Public Works CIP: `ns-trackstar-ingest collect config/sources/napa-city.public-works-cip.json --write`.
 7. Ingest Napa Water CIP: `ns-trackstar-ingest collect config/sources/napa-city.water-cip.json --write`.
 8. Ingest Vallejo meetings/agendas: `ns-trackstar-ingest collect config/sources/vallejo.civicclerk.json --write`.
-9. Start the API: `python -m ns_trackstar_api`.
-10. Install/start the web app: `pnpm install && pnpm dev`.
+9. Smoke-test Napa eTRAKiT: `ns-trackstar-ingest collect config/smoke/napa-city.etrakit.json`.
+10. Smoke-test Vallejo eTRAKiT: `ns-trackstar-ingest collect config/smoke/vallejo.etrakit.json`.
+11. Start the API: `python -m ns_trackstar_api`.
+12. Install/start the web app: `pnpm install && pnpm dev`.
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.
