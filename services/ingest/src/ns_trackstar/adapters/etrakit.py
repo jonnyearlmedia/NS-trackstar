@@ -5,7 +5,7 @@ import hashlib
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
-from urllib.parse import parse_qs, quote, urljoin, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -188,15 +188,14 @@ def _option_value(
 
 def _activity_numbers(soup: BeautifulSoup, kind: str) -> list[str]:
     results: list[str] = []
-    expected_path = f"/{kind}.aspx"
+    expected_path = f"{kind}.aspx"
     for link in soup.find_all("a", href=True):
         href = _attribute(link, "href")
         parsed = urlparse(href)
         if not parsed.path.casefold().endswith(expected_path.casefold()):
             continue
-        values = parse_qs(parsed.query).get("activityNo") or parse_qs(parsed.query).get(
-            "activityno"
-        )
+        query = parse_qs(parsed.query)
+        values = query.get("activityNo") or query.get("activityno")
         if not values:
             continue
         number = values[0].strip()
