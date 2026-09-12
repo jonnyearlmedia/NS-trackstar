@@ -123,6 +123,19 @@ def _time_window_sql(time_window: TimeWindow) -> tuple[str, dict[str, object]]:
     return "", {}
 
 
+def _project_scope(
+    time_window: TimeWindow,
+    project_type: str | None,
+) -> tuple[str, str, dict[str, object]]:
+    time_filter, time_params = _time_window_sql(time_window)
+    params = dict(time_params)
+    type_filter = ""
+    if project_type:
+        params["project_type"] = project_type
+        type_filter = "AND p.project_type = %(project_type)s"
+    return time_filter, type_filter, params
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     await app.state.db.execute("SELECT 1")
@@ -164,7 +177,8 @@ async def map_projects(
     time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
     project_type: Annotated[str | None, Query(max_length=80)] = None,
 ) -> dict:
-    params: dict[str, object] = {}
+    time_filter, type_filter, scope_params = _project_scope(time_window, project_type)
+    params = dict(scope_params)
     bbox_filter = ""
     if all(value is not None for value in (west, south, east, north)):
         params.update(
@@ -178,13 +192,6 @@ async def map_projects(
         bbox_filter = """
           AND p.primary_geometry && ST_MakeEnvelope(%(west)s, %(south)s, %(east)s, %(north)s, 4326)
         """
-
-    time_filter, time_params = _time_window_sql(time_window)
-    params.update(time_params)
-    type_filter = ""
-    if project_type:
-        params["project_type"] = project_type
-        type_filter = "AND p.project_type = %(project_type)s"
 
     cursor = await app.state.db.execute(
         f"""
@@ -203,11 +210,27 @@ async def map_projects(
         {type_filter}
         GROUP BY p.id
         ORDER BY p.last_activity_at DESC NULLS LAST
-        LIMIT 1000
         """,
         params,
     )
     rows = await cursor.fetchall()
+
+    coverage_cursor = await app.state.db.execute(
+        f"""
+        SELECT
+          COUNT(*)::int AS total_matching,
+          COUNT(*) FILTER (WHERE p.primary_geometry IS NOT NULL)::int AS mapped_matching
+        FROM project p
+        WHERE true
+        {time_filter}
+        {type_filter}
+        """,
+        scope_params,
+    )
+    coverage = await coverage_cursor.fetchone()
+    total_matching = int(coverage["total_matching"] if coverage else 0)
+    mapped_matching = int(coverage["mapped_matching"] if coverage else 0)
+
     return {
         "type": "FeatureCollection",
         "features": [
@@ -227,6 +250,14 @@ async def map_projects(
             }
             for row in rows
         ],
+        "metadata": {
+            "visible_mapped": len(rows),
+            "mapped_matching": mapped_matching,
+            "location_pending": max(total_matching - mapped_matching, 0),
+            "total_matching": total_matching,
+            "time_window": time_window,
+            "project_type": project_type,
+        },
     }
 
 
