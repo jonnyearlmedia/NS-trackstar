@@ -16,6 +16,7 @@ import {
   type UserLocation,
   type ViewportBounds,
 } from "@/components/map-canvas-v3";
+import { ProjectFreshnessStatus } from "./project-freshness";
 import styles from "./map-explorer-v2.module.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -687,6 +688,7 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
           {detailState === "idle" ? <p className={styles.projectLead}>{summary}</p> : null}
           {latestMeaningfulEvent ? <div className={styles.latestBlock}><small>LATEST</small><strong>{eventHeadline(latestMeaningfulEvent)}</strong><span>{eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}</span></div> : null}
           {!detail?.geometry && detailState === "idle" ? <p className={styles.locationNotice}><strong>Location not mapped yet.</strong> Trackstar has records for this project but not enough reliable location information to place it precisely.</p> : uncertain ? <p className={styles.locationNotice}>The map shows the best defensible project area from public records, not an exact footprint.</p> : null}
+          <ProjectFreshnessStatus projectId={selectedProjectId} expanded={detailExpanded} />
           {shareState === "copied" ? <p className={styles.copyNotice}>Link copied</p> : null}
           <button className={styles.detailsButton} onClick={() => setDetailExpanded((value) => !value)} type="button">{detailExpanded ? "Hide details" : "Details & official sources"}<ChevronIcon up={!detailExpanded} /></button>
           {detailExpanded ? <div className={styles.detailLayer}>{projectFacts.length ? <section><h3>Key facts</h3><dl>{projectFacts.map((fact) => <div key={fact.field}><dt>{fact.field.replaceAll("_", " ")}</dt><dd>{readableValue(fact.value)}</dd></div>)}</dl></section> : null}{events.length ? <section><h3>Recent activity</h3><ol>{events.slice(0, 8).map((event) => <li key={event.id}><time>{eventDate(event.occurred_at ?? event.observed_at)}</time><strong>{eventHeadline(event)}</strong></li>)}</ol></section> : null}{detail?.sources.length ? <section><h3>Official sources</h3><div className={styles.sourceList}>{detail.sources.map((source, index) => <article key={`${source.source_key}-${index}`}><span><strong>{source.source_name}</strong><small>{readableValue(source.relationship_type)}</small></span>{source.url ? <a href={source.url} rel="noreferrer" target="_blank">Open ↗</a> : null}</article>)}</div></section> : null}</div> : null}
