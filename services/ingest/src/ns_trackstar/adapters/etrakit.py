@@ -201,15 +201,47 @@ def _activity_numbers(soup: BeautifulSoup, kind: str) -> list[str]:
         number = values[0].strip()
         if number and number not in results:
             results.append(number)
+
+    # Current eTRAKiT tenants render Telerik search results as plain table cells.
+    # The record number is not a link, while a hidden RECORDID cell carries an
+    # internal database key. Keep using the public activity number from the first
+    # visible column so detail retrieval remains tenant-independent.
+    for table in soup.find_all("table"):
+        table_id = _attribute(table, "id").casefold()
+        if "rgsearchrslts" not in table_id:
+            continue
+        for row in table.find_all("tr"):
+            row_classes = {
+                str(value).casefold() for value in (row.get("class") or [])
+            }
+            if not row_classes.intersection({"rgrow", "rgaltrow"}):
+                continue
+            cells = row.find_all("td", recursive=False)
+            if not cells:
+                cells = row.find_all("td")
+            if not cells:
+                continue
+            number = _text(cells[0]).strip()
+            if number and number not in results:
+                results.append(number)
     return results
 
 
-def _more_results_control(soup: BeautifulSoup) -> Tag | None:
+def _next_results_control(soup: BeautifulSoup) -> Tag | None:
     for tag in soup.find_all(["input", "button"]):
         descriptor = " ".join(
-            [_attribute(tag, "id"), _attribute(tag, "name"), _attribute(tag, "value"), _text(tag)]
+            [
+                _attribute(tag, "id"),
+                _attribute(tag, "name"),
+                _attribute(tag, "value"),
+                " ".join(str(value) for value in (tag.get("class") or [])),
+                _text(tag),
+            ]
         ).casefold()
-        if "more result" not in descriptor and "moreresult" not in descriptor:
+        if not any(
+            marker in descriptor
+            for marker in ("more result", "moreresult", "btnpagenext", "nextpage")
+        ):
             continue
         if tag.has_attr("disabled"):
             continue
@@ -371,10 +403,10 @@ class ETrakitAdapter(CollectorAdapter):
                 if candidate not in records:
                     records.append(candidate)
 
-            more = _more_results_control(result_soup)
-            if more is None:
+            next_control = _next_results_control(result_soup)
+            if next_control is None:
                 break
-            target = _attribute(more, "name")
+            target = _attribute(next_control, "name")
             if not target:
                 break
             next_data = _form_values(result_soup)

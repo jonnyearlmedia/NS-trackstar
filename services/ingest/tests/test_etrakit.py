@@ -30,6 +30,26 @@ _RESULT_HTML = """
 </form></body></html>
 """
 
+_TELERIK_RESULT_HTML = """
+<html><body><form method="post">
+<input type="hidden" name="__VIEWSTATE" value="state-two" />
+<table id="ctl00_cplMain_rgSearchRslts_ctl00">
+  <thead><tr><th>PROJECT_NO</th><th>SITE_ADDR</th><th>RECORDID</th></tr></thead>
+  <tbody>
+    <tr class="rgPager"><td>page 1 of 5</td></tr>
+    <tr class="rgRow">
+      <td>PL23-0135</td><td>1030 KAISER RD</td><td style="display:none">internal-id</td>
+    </tr>
+    <tr class="rgNoRecords"><td>No records to display.</td></tr>
+  </tbody>
+</table>
+</form></body></html>
+"""
+
+_TELERIK_PAGE_TWO_HTML = _TELERIK_RESULT_HTML.replace(
+    "PL23-0135", "PL23-0136"
+).replace("1030 KAISER RD", "1040 KAISER RD")
+
 _DETAIL_HTML = """
 <html><body>
 <span id="ctl00_cplMain_lblPermitType">COMMERCIAL TENANT IMPROVEMENT</span>
@@ -149,3 +169,107 @@ async def test_explicit_project_record_does_not_require_search(config: SourceCon
     assert len(result.records) == 1
     assert result.records[0].external_id == "project:PL23-0135"
     assert result.records[0].normalized_payload["name"] == "Kaiser Road Warehouse"
+
+
+@pytest.mark.asyncio
+async def test_search_reads_plain_telerik_result_cells(config: SourceConfig) -> None:
+    project_html = """
+    <span id="ctl00_cplMain_lblProjectType">DESIGN REVIEW</span>
+    <span id="ctl00_cplMain_lblProjectDesc">Kaiser Rd Warehouse</span>
+    <span id="ctl00_cplMain_lblProjectStatus">ENVIRON REVIEW</span>
+    """
+    search_config = SourceConfig(
+        key=config.key,
+        name=config.name,
+        jurisdiction=config.jurisdiction,
+        base_url=config.base_url,
+        poll_minutes=config.poll_minutes,
+        options={
+            **config.options,
+            "searches": [
+                {
+                    "kind": "project",
+                    "search_by_value": "Project_Main.PROJECT_NO",
+                    "operator_value": "BEGINS WITH",
+                    "value": "PL23-0135",
+                }
+            ],
+        },
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("activityNo") == "PL23-0135":
+            return httpx.Response(200, text=project_html)
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                text=_SEARCH_HTML.replace(
+                    "Permit_Main.PERMIT_NO", "Project_Main.PROJECT_NO"
+                ),
+            )
+        if request.method == "POST":
+            return httpx.Response(200, text=_TELERIK_RESULT_HTML)
+        return httpx.Response(404)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = ETrakitAdapter(search_config, client=client)
+        result = await adapter.collect()
+
+    assert [record.external_id for record in result.records] == ["project:PL23-0135"]
+
+
+@pytest.mark.asyncio
+async def test_search_paginates_telerik_next_button(config: SourceConfig) -> None:
+    first_page = _TELERIK_RESULT_HTML.replace(
+        '<tr class="rgPager"><td>page 1 of 5</td></tr>',
+        """<tr class="rgPager"><td>page 1 of 2
+        <input class="PagerButton NextPage"
+          name="ctl00$cplMain$rgSearchRslts$ctl00$ctl03$ctl01$btnPageNext"
+          type="button" value="" />
+        </td></tr>""",
+    )
+    post_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal post_count
+        if request.url.params.get("activityNo") in {"PL23-0135", "PL23-0136"}:
+            return httpx.Response(
+                200,
+                text='<span id="ctl00_cplMain_lblProjectType">DESIGN REVIEW</span>',
+            )
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                text=_SEARCH_HTML.replace(
+                    "Permit_Main.PERMIT_NO", "Project_Main.PROJECT_NO"
+                ),
+            )
+        post_count += 1
+        return httpx.Response(200, text=first_page if post_count == 1 else _TELERIK_PAGE_TWO_HTML)
+
+    search_config = SourceConfig(
+        key=config.key,
+        name=config.name,
+        jurisdiction=config.jurisdiction,
+        base_url=config.base_url,
+        poll_minutes=config.poll_minutes,
+        options={
+            **config.options,
+            "searches": [
+                {
+                    "kind": "project",
+                    "search_by_value": "Project_Main.PROJECT_NO",
+                    "operator_value": "BEGINS WITH",
+                    "value": "PL23-",
+                }
+            ],
+        },
+    )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await ETrakitAdapter(search_config, client=client).collect()
+
+    assert [record.external_id for record in result.records] == [
+        "project:PL23-0135",
+        "project:PL23-0136",
+    ]
