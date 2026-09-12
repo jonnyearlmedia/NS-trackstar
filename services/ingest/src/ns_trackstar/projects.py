@@ -23,6 +23,16 @@ def _value(record: NormalizedRecord, field: str | None) -> Any:
     return record.normalized_payload.get(field)
 
 
+def _project_name(record: NormalizedRecord, mapping: dict[str, Any]) -> Any:
+    fields = mapping.get("name_fields")
+    if isinstance(fields, list):
+        for field in fields:
+            value = _value(record, str(field))
+            if value is not None and str(value).strip():
+                return value
+    return _value(record, mapping.get("name_field"))
+
+
 def _configured_record_link(
     record: NormalizedRecord, mapping: dict[str, Any]
 ) -> dict[str, Any] | None:
@@ -182,7 +192,7 @@ async def materialize_project(
     record: NormalizedRecord,
     mapping: dict[str, Any],
 ) -> ProjectMaterialization | None:
-    name = _value(record, mapping.get("name_field"))
+    name = _project_name(record, mapping)
     if not name:
         return None
 

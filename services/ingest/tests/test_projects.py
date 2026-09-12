@@ -3,7 +3,17 @@ from __future__ import annotations
 import pytest
 
 from ns_trackstar.models import NormalizedRecord
-from ns_trackstar.projects import _anchored_project, _insert_mapped_events
+from ns_trackstar.projects import _anchored_project, _insert_mapped_events, _project_name
+
+
+def test_project_name_uses_first_populated_configured_field() -> None:
+    record = NormalizedRecord(
+        source_key="benicia.current-planning-applications",
+        external_id="17",
+        normalized_payload={"Descriptio": None, "Record__": "PHD-26-1"},
+    )
+
+    assert _project_name(record, {"name_fields": ["Descriptio", "Record__"]}) == "PHD-26-1"
 
 
 @pytest.mark.asyncio
