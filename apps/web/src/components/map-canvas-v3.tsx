@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 export type TimeWindow = "today" | "week" | "upcoming" | "all";
 export type ConsumerCategory = "all" | "development" | "roads" | "utilities" | "places";
-export type LifecycleStage = "review" | "approved" | "construction" | "completed" | "inactive" | "unknown";
+export type LifecycleStage = "proposed" | "review" | "approved" | "construction" | "completed" | "inactive" | "unknown";
 export type LifecycleFilter = LifecycleStage | "all";
 export type UserLocation = { longitude: number; latitude: number; accuracy?: number };
 
@@ -248,6 +248,7 @@ function categoryCounts(projects: MapProject[]): Record<ConsumerCategory, number
 function lifecycleCounts(projects: MapProject[]): Record<LifecycleFilter, number> {
   const counts: Record<LifecycleFilter, number> = {
     all: projects.length,
+    proposed: 0,
     review: 0,
     approved: 0,
     construction: 0,
