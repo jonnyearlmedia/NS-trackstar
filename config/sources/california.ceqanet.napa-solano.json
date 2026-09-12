@@ -4,7 +4,7 @@
   "jurisdiction": "Napa and Solano Counties",
   "adapter": "ceqanet",
   "base_url": "https://ceqanet.lci.ca.gov/Search",
-  "poll_minutes": 1440,
+  "poll_minutes": 720,
   "options": {
     "search_url": "https://ceqanet.lci.ca.gov/Search",
     "project_url_base": "https://ceqanet.lci.ca.gov/Project",
