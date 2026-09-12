@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
+from ns_trackstar.adapters.accela_aca import AccelaAcaAdapter as BaseAccelaAcaAdapter
 from ns_trackstar.adapters.accela_aca import (
-    AccelaAcaAdapter as BaseAccelaAcaAdapter,
     _attribute,
     _find_control,
     _form_values,
