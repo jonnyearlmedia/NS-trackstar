@@ -11,6 +11,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
+*.egg-info/
+*.tsbuildinfo
 
 # Environment
 .env
@@ -31,3 +33,4 @@ build/
 artifacts/
 playwright-report/
 test-results/
+tmp/
