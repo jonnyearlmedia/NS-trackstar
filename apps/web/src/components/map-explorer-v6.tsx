@@ -99,6 +99,7 @@ const ACTIVITY_OPTIONS: Array<{ label: string; value: TimeWindow }> = [
 
 const LIFECYCLE_OPTIONS: Array<{ label: string; value: LifecycleFilter }> = [
   { label: "Any stage", value: "all" },
+  { label: "Proposed", value: "proposed" },
   { label: "Under review", value: "review" },
   { label: "Approved", value: "approved" },
   { label: "Under construction", value: "construction" },
@@ -135,6 +136,7 @@ function categoryLabel(category: Exclude<ConsumerCategory, "all">) {
 }
 
 function lifecycleLabel(stage: LifecycleStage) {
+  if (stage === "proposed") return "Proposed";
   if (stage === "review") return "Under review";
   if (stage === "approved") return "Approved";
   if (stage === "construction") return "Under construction";
