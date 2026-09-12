@@ -4,7 +4,12 @@ import type { Geometry } from "geojson";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
-import { MapCanvas, type MapProject, type TimeWindow } from "@/components/map-canvas";
+import {
+  MapCanvas,
+  type MapCoverage,
+  type MapProject,
+  type TimeWindow,
+} from "@/components/map-canvas";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const FILTERS: { label: string; value: TimeWindow }[] = [
@@ -113,10 +118,17 @@ function LayersIcon() {
   );
 }
 
+function routeProjectId() {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/^\/projects\/([^/]+)$/);
+  return match?.[1] ?? new URLSearchParams(window.location.search).get("project");
+}
+
 export function MapExplorer({ initialProjectId }: { initialProjectId?: string }) {
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>("week");
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [projectType, setProjectType] = useState<string | null>(null);
   const [view, setView] = useState<"map" | "changes">("map");
+  const [coverage, setCoverage] = useState<MapCoverage | null>(null);
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [changesState, setChangesState] = useState<"loading" | "done" | "error">("loading");
   const [selected, setSelected] = useState<MapProject | null>(null);
@@ -130,9 +142,35 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   const [searchState, setSearchState] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   useEffect(() => {
-    const projectId = initialProjectId ?? new URLSearchParams(window.location.search).get("project");
+    const projectId = initialProjectId ?? routeProjectId();
     if (projectId) setSelectedProjectId(projectId);
   }, [initialProjectId]);
+
+  useEffect(() => {
+    function syncRouteSelection() {
+      const projectId = routeProjectId();
+      setSelectedProjectId(projectId);
+      if (!projectId) {
+        setSelected(null);
+        setDetail(null);
+        setEvents([]);
+      }
+    }
+    window.addEventListener("popstate", syncRouteSelection);
+    return () => window.removeEventListener("popstate", syncRouteSelection);
+  }, []);
+
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+      if (event.key === "Escape" && searchOpen) setSearchOpen(false);
+    }
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [searchOpen]);
 
   useEffect(() => {
     if (!selectedProjectId) return;
@@ -168,15 +206,6 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (!searchOpen) return;
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setSearchOpen(false);
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [searchOpen]);
-
-  useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams({ window: timeWindow, limit: "100" });
     if (projectType) params.set("project_type", projectType);
@@ -202,7 +231,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     setSelectedProjectId(project.id);
     setDetail(null);
     setEvents([]);
-    window.history.replaceState({}, "", `/projects/${project.id}`);
+    window.history.pushState({}, "", `/projects/${project.id}`);
   }
 
   function clearSelection() {
@@ -241,15 +270,23 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
 
   function changeWindow(next: TimeWindow) {
     setTimeWindow(next);
+    setCoverage(null);
+    clearSelection();
+  }
+
+  function changeProjectType(next: string | null) {
+    setProjectType(next);
+    setCoverage(null);
     clearSelection();
   }
 
   const assertions = detail?.assertions.filter((assertion) => !assertion.field.startsWith("status.")) ?? [];
-  const activeFilter = FILTERS.find((filter) => filter.value === timeWindow)?.label ?? "This Week";
+  const activeFilter = FILTERS.find((filter) => filter.value === timeWindow)?.label ?? "All";
 
   return (
     <section className="trackstarApp" aria-label="NS Trackstar Napa and Solano intelligence map">
       <MapCanvas
+        onCoverageChange={setCoverage}
         onSelectProject={selectProject}
         projectType={projectType}
         selectedProject={selected}
@@ -295,7 +332,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
             aria-pressed={category.value === projectType}
             className={category.value === projectType ? "categoryChip active" : "categoryChip"}
             key={category.label}
-            onClick={() => setProjectType(category.value)}
+            onClick={() => changeProjectType(category.value)}
             type="button"
           >
             {category.label}
@@ -332,6 +369,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
                 <button
                   onClick={() => {
                     setSelectedProjectId(change.project_id);
+                    window.history.pushState({}, "", `/projects/${change.project_id}`);
                     setView("map");
                   }}
                   type="button"
@@ -453,7 +491,16 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       ) : null}
 
       {view === "map" && !selected ? (
-        <div className="discoveryHint"><i /> <span><strong>{activeFilter}</strong> · tap a highlighted project</span></div>
+        <div className="discoveryHint">
+          <i />
+          <span>
+            {coverage ? (
+              <><strong>{coverage.visibleMapped.toLocaleString()} visible</strong> · {coverage.mappedMatching.toLocaleString()} mapped · {coverage.locationPending.toLocaleString()} location pending</>
+            ) : (
+              <><strong>{activeFilter}</strong> · loading project coverage…</>
+            )}
+          </span>
+        </div>
       ) : null}
     </section>
   );
