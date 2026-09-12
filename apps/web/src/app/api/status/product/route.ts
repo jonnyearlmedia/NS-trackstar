@@ -80,6 +80,7 @@ export async function GET() {
       briefing.every(
         (item) =>
           item.project_type !== "environmental_review" &&
+          item.briefing_kind === "change" &&
           item.event?.event_type !== "project_discovered",
       );
     const truthfulFallbackBriefing =
@@ -88,8 +89,8 @@ export async function GET() {
       fallbackBriefing.every(
         (item) =>
           item.project_type !== "environmental_review" &&
-          (item.briefing_kind === "change" || item.briefing_kind === "current_context") &&
-          (item.briefing_kind !== "current_context" || item.event == null),
+          item.briefing_kind === "current_context" &&
+          item.event == null,
       );
     const consumerUpdates =
       Array.isArray(changes) &&
