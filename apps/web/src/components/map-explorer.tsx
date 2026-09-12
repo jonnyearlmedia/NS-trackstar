@@ -108,6 +108,7 @@ type BriefingItem = {
   statuses: Record<string, string>;
   summary: string | null;
   source_count: number;
+  briefing_kind?: "change" | "current_context";
   event: {
     id: string;
     title: string;
@@ -167,6 +168,7 @@ function humanStatus(statuses: Record<string, string>) {
     ["operations", "Operations"],
     ["delivery_stage", "Current stage"],
     ["official_tracker_stage", "Current stage"],
+    ["official_program_status", "Current status"],
     ["building_permit", "Building permit"],
     ["planning", "Planning"],
     ["entitlement", "Approval"],
@@ -179,6 +181,10 @@ function humanStatus(statuses: Record<string, string>) {
   return first ? { label: readableField(first[0]), value: readableValue(first[1]) } : null;
 }
 
+function firstAssertion(assertions: Assertion[], fields: string[]) {
+  return assertions.find((item) => fields.includes(item.field));
+}
+
 function plainSummary(detail: ProjectDetail | null, context: ProjectContext | null) {
   const description = context?.summary ?? detail?.summary ?? detail?.assertions.find((item) => item.field === "description")?.value;
   if (typeof description === "string" && description.trim()) {
@@ -186,8 +192,25 @@ function plainSummary(detail: ProjectDetail | null, context: ProjectContext | nu
     return cleaned.length > 340 ? `${cleaned.slice(0, 337).trimEnd()}…` : cleaned;
   }
   if (!detail) return "Loading what this project is and what is happening here…";
-  const type = consumerType(detail.project_type).toLowerCase();
-  return `A ${type} Trackstar is following from official public information.`;
+
+  const kind = detail.project_type === "municipal_development"
+    ? "a local construction or development project"
+    : detail.project_type === "transportation_project"
+      ? "a road or transportation project"
+      : detail.project_type === "public_works"
+        ? "a public infrastructure project"
+        : detail.project_type === "water_infrastructure"
+          ? "a water-system project"
+          : detail.project_type === "environmental_review"
+            ? "a project moving through public review"
+            : "a local project";
+  const locationFact = firstAssertion(detail.assertions, ["location_description", "address"]);
+  const status = humanStatus(detail.statuses);
+  const relationship = context?.relationships[0];
+  const parts = [`This is ${kind}${locationFact ? ` at ${readableValue(locationFact.value)}` : ""}.`];
+  if (status) parts.push(`The latest official status Trackstar has is ${status.value}.`);
+  if (relationship) parts.push(`It is connected to ${relationship.project_name}.`);
+  return parts.join(" ");
 }
 
 function humanFacts(assertions: Assertion[]) {
@@ -274,7 +297,8 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   const [briefingActive, setBriefingActive] = useState(false);
   const [briefingPaused, setBriefingPaused] = useState(false);
   const [briefingLoading, setBriefingLoading] = useState(false);
-  const [briefingWindow, setBriefingWindow] = useState<"today" | "week">("today");
+  const [briefingWindow, setBriefingWindow] = useState<"today" | "week" | "all">("today");
+  const [briefingNotice, setBriefingNotice] = useState<string | null>(null);
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
 
   useEffect(() => {
@@ -491,11 +515,12 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
 
   async function startBriefing() {
     setBriefingLoading(true);
+    setBriefingNotice(null);
     setView("explore");
     setSearchOpen(false);
     setFilterOpen(false);
     try {
-      let windowName: "today" | "week" = "today";
+      let windowName: "today" | "week" | "all" = "today";
       let response = await fetch(`${API_BASE}/briefing?window=today&limit=8`);
       let items = response.ok ? await response.json() as BriefingItem[] : [];
       if (items.length < 2) {
@@ -504,12 +529,23 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
         if (!response.ok) throw new Error("Briefing unavailable");
         items = await response.json();
       }
-      if (!items.length) throw new Error("No briefing items");
+      if (items.length < 2) {
+        windowName = "all";
+        response = await fetch(`${API_BASE}/briefing?window=all&limit=8`);
+        if (!response.ok) throw new Error("Briefing unavailable");
+        items = await response.json();
+      }
+      if (!items.length) {
+        setBriefingNotice("Nothing meaningful needs a briefing right now. The map still has the full project picture.");
+        return;
+      }
       setBriefingItems(items);
       setBriefingIndex(0);
       setBriefingWindow(windowName);
       setBriefingPaused(false);
       setBriefingActive(true);
+    } catch {
+      setBriefingNotice("The briefing is temporarily unavailable. You can still explore every project on the map.");
     } finally {
       setBriefingLoading(false);
     }
@@ -547,6 +583,8 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   const facts = useMemo(() => humanFacts(detail?.assertions ?? []), [detail]);
   const currentBriefing = briefingItems[briefingIndex];
   const latestEvent = events[0];
+  const latestMeaningfulEvent = events.find((item) => item.event_type !== "project_discovered");
+  const briefingLabel = briefingWindow === "today" ? "TODAY" : briefingWindow === "week" ? "THIS WEEK" : "LOCAL BRIEFING";
 
   return (
     <section className="trackstarApp" aria-label="NS Trackstar local project map">
@@ -583,8 +621,9 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
         <section className="aroundCard">
           <div className="aroundHeading">
             <div><p>AROUND HERE</p><h2>{coverage ? `${coverage.visibleMapped.toLocaleString()} things on this map` : "What’s changing nearby"}</h2></div>
-            <button onClick={() => void startBriefing()} type="button"><PlayIcon />{briefingLoading ? "Loading" : "Play today"}</button>
+            <button onClick={() => void startBriefing()} type="button"><PlayIcon />{briefingLoading ? "Loading" : "Play briefing"}</button>
           </div>
+          {briefingNotice ? <p className="emptyMessage">{briefingNotice}</p> : null}
           <div className="aroundList">
             {highlights.length ? highlights.map((project, index) => (
               <button key={project.id} onClick={() => selectProject(project)} type="button">
@@ -651,7 +690,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       {briefingActive && currentBriefing ? (
         <section className="briefingHud">
           <div className="briefingProgress"><i style={{ width: `${((briefingIndex + 1) / briefingItems.length) * 100}%` }} /></div>
-          <p>{briefingWindow === "today" ? "TODAY" : "THIS WEEK"} · {briefingIndex + 1}/{briefingItems.length}</p>
+          <p>{briefingLabel} · {briefingIndex + 1}/{briefingItems.length}</p>
           <strong>{currentBriefing.event?.title ?? currentBriefing.name}</strong>
           <div className="briefingControls"><button disabled={briefingIndex === 0} onClick={() => setBriefingIndex((index) => Math.max(0, index - 1))} type="button">‹</button><button onClick={() => setBriefingPaused((value) => !value)} type="button">{briefingPaused ? <PlayIcon /> : <PauseIcon />}</button><button disabled={briefingIndex === briefingItems.length - 1} onClick={() => setBriefingIndex((index) => Math.min(briefingItems.length - 1, index + 1))} type="button">›</button><button className="briefingDone" onClick={stopBriefing} type="button">Done</button></div>
         </section>
@@ -663,9 +702,9 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           <div className="humanCardTop"><div><p>{consumerType(selected.projectType).toUpperCase()}</p><h2>{detail?.name ?? selected.name}</h2>{context?.aliases.length ? <small>also known as {context.aliases.map((item) => item.alias).join(" · ")}</small> : null}</div><div className="sheetActions"><button className="iconButton" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button className="roundClose small" onClick={clearSelection} type="button">×</button></div></div>
           <div className="humanCardBody">
             {detailState === "loading" ? <p className="projectLead">Figuring out what this is and what’s happening…</p> : <p className="projectLead">{summary}</p>}
-            {status ? <section className="whatsHappening"><small>WHAT’S HAPPENING</small><strong>{status.value}</strong><span>{status.label}</span></section> : null}
+            {latestMeaningfulEvent ? <section className="whatsHappening"><small>LATEST UPDATE</small><strong>{latestMeaningfulEvent.summary ?? latestMeaningfulEvent.title}</strong><span>{eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}</span></section> : status ? <section className="whatsHappening"><small>CURRENT STATUS</small><strong>{status.value}</strong><span>{status.label}</span></section> : null}
             {facts.length ? <div className="humanFacts">{facts.map((fact) => <div key={fact.field}><small>{readableField(fact.field)}</small><strong>{readableValue(fact.value)}</strong></div>)}</div> : null}
-            <div className="humanTrust"><span>{detail?.sources.length ? `Verified from ${detail.sources.length} official source${detail.sources.length === 1 ? "" : "s"}` : "Official-source details loading"}</span><span>{latestEvent ? `Updated ${eventDate(latestEvent.occurred_at ?? latestEvent.observed_at)}` : detail?.last_activity_at ? `Updated ${eventDate(detail.last_activity_at)}` : ""}</span>{shareState === "copied" ? <b>Link copied</b> : null}</div>
+            <div className="humanTrust"><span>{detail?.sources.length ? `Verified from ${detail.sources.length} official source${detail.sources.length === 1 ? "" : "s"}` : "Official-source details loading"}</span><span>{latestMeaningfulEvent ? `Updated ${eventDate(latestMeaningfulEvent.occurred_at ?? latestMeaningfulEvent.observed_at)}` : detail?.last_activity_at ? `Updated ${eventDate(detail.last_activity_at)}` : ""}</span>{shareState === "copied" ? <b>Link copied</b> : null}</div>
             {!detail?.geometry && detailState === "idle" ? <p className="locationNotice">Trackstar knows this project exists, but the exact map location is still being verified. No fake pin.</p> : null}
             <button className="technicalToggle" onClick={() => { setTechnicalOpen((value) => !value); setSheetSnap("full"); }} type="button">{technicalOpen ? "Hide details" : "Details & sources"}<span>{technicalOpen ? "−" : "+"}</span></button>
 
