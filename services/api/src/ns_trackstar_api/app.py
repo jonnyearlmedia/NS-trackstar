@@ -45,6 +45,34 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/admin/sources/health")
+async def source_health() -> list[dict]:
+    cursor = await app.state.db.execute(
+        """
+        SELECT
+          s.source_key, s.name, s.source_family, s.jurisdiction,
+          sh.health_state, sh.health_reason, sh.last_attempt_at,
+          sh.last_success_at, sh.last_content_change_at,
+          sh.records_returned, sh.consecutive_failures,
+          sh.schema_fingerprint, sh.parser_yield
+        FROM source s
+        LEFT JOIN source_health sh ON sh.source_id = s.id
+        WHERE s.enabled = true
+        ORDER BY s.jurisdiction NULLS LAST, s.name
+        """
+    )
+    rows = await cursor.fetchall()
+    output = []
+    for row in rows:
+        output.append(
+            {
+                key: (value.isoformat() if hasattr(value, "isoformat") else value)
+                for key, value in row.items()
+            }
+        )
+    return output
+
+
 @app.get("/map/projects")
 async def map_projects(
     west: float | None = Query(default=None),

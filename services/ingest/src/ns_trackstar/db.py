@@ -110,6 +110,57 @@ async def start_source_run(conn: psycopg.AsyncConnection, source_id: str) -> str
     return str(row["id"])
 
 
+async def fail_source_run(
+    conn: psycopg.AsyncConnection,
+    *,
+    run_id: str,
+    source_id: str,
+    error_type: str,
+    error_message: str,
+    canary_ok: bool | None,
+    health_state: str = "broken",
+) -> None:
+    await conn.execute(
+        """
+        UPDATE source_run SET
+            finished_at = now(), success = false,
+            canary_ok = %(canary_ok)s,
+            error_type = %(error_type)s,
+            error_message = %(error_message)s
+        WHERE id = %(run_id)s
+        """,
+        {
+            "run_id": run_id,
+            "canary_ok": canary_ok,
+            "error_type": error_type,
+            "error_message": error_message[:4000],
+        },
+    )
+    await conn.execute(
+        """
+        INSERT INTO source_health (
+            source_id, last_attempt_at, consecutive_failures,
+            expected_poll_interval_minutes, health_state, health_reason
+        )
+        SELECT s.id, now(), 1, s.poll_interval_minutes,
+               %(health_state)s::source_health_state, %(health_reason)s
+        FROM source s WHERE s.id = %(source_id)s
+        ON CONFLICT (source_id) DO UPDATE SET
+            last_attempt_at = now(),
+            consecutive_failures = source_health.consecutive_failures + 1,
+            expected_poll_interval_minutes = EXCLUDED.expected_poll_interval_minutes,
+            health_state = EXCLUDED.health_state,
+            health_reason = EXCLUDED.health_reason,
+            updated_at = now()
+        """,
+        {
+            "source_id": source_id,
+            "health_state": health_state,
+            "health_reason": f"{error_type}: {error_message}"[:4000],
+        },
+    )
+
+
 async def persist_record(
     conn: psycopg.AsyncConnection,
     *,
