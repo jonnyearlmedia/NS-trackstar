@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
       - run: pip install -e "services/ingest[dev]" -e "services/api[dev]"
-      - run: ruff check services/ingest/src services/ingest/tests services/api/src services/api/tests
+      - run: ruff check services/ingest/src services/ingest/tests services/api/src services/api/tests infra/collector_scheduler.py
       - run: pytest -q services/ingest/tests services/api/tests
 
   database:
@@ -57,3 +57,27 @@ jobs:
             psql -h localhost -U nstrackstar -d nstrackstar -v ON_ERROR_STOP=1 -f "$migration"
           done
       - run: psql -h localhost -U nstrackstar -d nstrackstar -c "SELECT PostGIS_Version();"
+
+  deployment:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ci-only-password
+      API_DOMAIN: api.example.com
+      CORS_ORIGINS: https://trackstar.example
+      CADDY_ACME_EMAIL: ci@example.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate production Compose file
+        run: docker compose -f docker-compose.production.yml config --quiet
+      - name: Build production backend image
+        run: docker build -f infra/backend/Dockerfile -t ns-trackstar-backend:ci .
+      - name: Build production PostGIS image
+        run: docker build -f infra/postgis/Dockerfile -t ns-trackstar-postgis:ci .
+      - name: Validate HTTPS proxy configuration
+        run: >-
+          docker run --rm
+          -e API_DOMAIN
+          -e CADDY_ACME_EMAIL
+          -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2.10.2-alpine
+          caddy validate --config /etc/caddy/Caddyfile

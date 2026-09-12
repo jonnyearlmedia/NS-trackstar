@@ -45,6 +45,14 @@ Government sources → normalized source records → assertions + typed relation
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.
 
+## Deployment
+
+Production deployment is defined in `docker-compose.production.yml` and
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The Oracle VM setup is interactive:
+it creates a protected environment file, applies tracked migrations, starts the
+API and scheduled collectors behind automatic HTTPS, and verifies `/health`.
+The Vercel project continues to use `apps/web` as its root directory.
+
 The upstream PostGIS 16 image is amd64-only as of this setup. Compose pins
 `POSTGIS_PLATFORM=linux/amd64` by default so Docker Desktop or Colima can run it on Apple
 Silicon. Override the variable only when using a compatible alternate image/platform.
