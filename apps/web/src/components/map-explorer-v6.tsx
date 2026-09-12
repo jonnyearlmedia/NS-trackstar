@@ -296,10 +296,16 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
     }).slice(0, 4);
   }, [detail]);
 
+  const visibleProjectIds = useMemo(
+    () => new Set(viewport?.projects.map((project) => project.id) ?? []),
+    [viewport],
+  );
+
   const scopedChanges = useMemo(() => changes.filter((change) => {
+    if (viewport && !visibleProjectIds.has(change.project_id)) return false;
     if (category === "all") return true;
     return categoryForRecord(change.project_type, change.project_name) === category;
-  }), [category, changes]);
+  }), [category, changes, viewport, visibleProjectIds]);
 
   const sortedViewportProjects = useMemo(() => [...(viewport?.projects ?? [])].sort((a, b) => {
     const byLifecycle = a.lifecycleStage.localeCompare(b.lifecycleStage);
