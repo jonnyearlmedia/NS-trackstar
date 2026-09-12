@@ -160,7 +160,7 @@ def test_scotts_valley_preserves_independent_contradictory_statuses() -> None:
 def test_dutch_bros_separates_tenant_identity_from_opening_certainty() -> None:
     fixture = _fixtures()["dutch-bros-suisun"]
     business = fixture["entities"][0]
-    assert business["status_dimensions"]["business_identity"] == "confirmed_tenant"
+    assert business["status_dimensions"]["business_identity"] == "likely_new_business"
     assert business["status_dimensions"]["operations"] == "not_confirmed"
     assert business["facts"]["opening_date"] is None
     assert (

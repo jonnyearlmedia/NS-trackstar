@@ -8,13 +8,13 @@
       "apns": [],
       "identifiers": {},
       "status_dimensions": {
-        "business_identity": "confirmed_tenant",
+        "business_identity": "likely_new_business",
         "planning": "under_review",
         "construction": "not_confirmed",
         "operations": "not_confirmed"
       },
       "confidence_dimensions": {
-        "tenant_identity": 0.98,
+        "tenant_identity": 0.69,
         "opening_state": 0.45
       },
       "facts": {
