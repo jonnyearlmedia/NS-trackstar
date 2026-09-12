@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 router = APIRouter()
 LOCAL_TIMEZONE = ZoneInfo("America/Los_Angeles")
 BriefingWindow = Literal["today", "week", "upcoming", "all"]
+TERMINAL_STATUS_VALUES = ("completed", "complete", "closed", "cancelled", "canceled")
 
 
 def _briefing_window_sql(window: BriefingWindow) -> tuple[str, dict[str, object]]:
@@ -163,6 +164,7 @@ async def briefing(
 ) -> list[dict]:
     window_filter, params = _briefing_window_sql(window)
     params["limit"] = limit
+    params["terminal_statuses"] = list(TERMINAL_STATUS_VALUES)
     consumer_filter = "" if include_reviews else "AND p.project_type <> 'environmental_review'"
     cursor = await request.app.state.db.execute(
         f"""
@@ -230,11 +232,23 @@ async def briefing(
               SELECT 1
               FROM project_status_dimension meaningful_status
               WHERE meaningful_status.project_id = p.id
+                AND lower(meanful_status.value) <> ALL(%(terminal_statuses)s)
             )
             OR (
               le.event_type IS NOT NULL
               AND le.event_type <> 'project_discovered'
               AND COALESCE(le.significance, 0) >= 0.6
+            )
+          )
+          AND NOT (
+            le.event_type = 'project_discovered'
+            AND COALESCE(sc.source_count, 0) < 2
+            AND COALESCE(p.importance_score, 0) < 0.2
+            AND NOT EXISTS (
+              SELECT 1
+              FROM project_status_dimension nonterminal_status
+              WHERE nonterminal_status.project_id = p.id
+                AND lower(nonterminal_status.value) <> ALL(%(terminal_statuses)s)
             )
           )
         ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
