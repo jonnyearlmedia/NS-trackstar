@@ -137,14 +137,44 @@ def _project_scope(
 
 
 def _display_priority(row: dict) -> float:
-    """Presentation prominence only; never interpreted as factual project status."""
+    """Presentation prominence only; never interpreted as factual project status.
+
+    Scale, independent evidence, status dimensions and explicit relationships can make a
+    project useful at regional zoom even when its canonical record currently comes from an
+    environmental-review source. This keeps major real-world projects visible without
+    restoring thousands of low-signal review records to the default map.
+    """
 
     explicit = float(row.get("importance_score") or 0)
     source_count = int(row.get("source_count") or 0)
-    source_signal = min(source_count, 5) / 5 * 0.55
+    status_count = int(row.get("status_count") or 0)
+    relationship_count = int(row.get("relationship_count") or 0)
+    scale_acres = float(row.get("scale_acres") or 0)
+    source_signal = min(source_count, 5) / 5 * 0.45
     type_signal = 0.12 if row.get("project_type") in {"transportation_project", "public_works"} else 0
-    stage_signal = 0.12 if row.get("delivery_stage") else 0
-    return round(min(1.0, max(explicit, source_signal) + type_signal + stage_signal), 3)
+    stage_signal = 0.10 if row.get("delivery_stage") else 0
+    status_signal = min(status_count, 3) / 3 * 0.12
+    relationship_signal = min(relationship_count, 2) / 2 * 0.16
+    if scale_acres >= 100:
+        scale_signal = 0.28
+    elif scale_acres >= 20:
+        scale_signal = 0.20
+    elif scale_acres >= 5:
+        scale_signal = 0.10
+    else:
+        scale_signal = 0
+    return round(
+        min(
+            1.0,
+            max(explicit, source_signal)
+            + type_signal
+            + stage_signal
+            + status_signal
+            + relationship_signal
+            + scale_signal,
+        ),
+        3,
+    )
 
 
 @app.get("/health")
@@ -213,21 +243,56 @@ async def map_projects(
           p.last_activity_at,
           p.importance_score,
           COALESCE(sc.source_count, 0) AS source_count,
+          COALESCE(sd.status_count, 0) AS status_count,
+          COALESCE(rd.relationship_count, 0) AS relationship_count,
+          COALESCE(ad.scale_acres, 0) AS scale_acres,
           ST_AsGeoJSON(p.primary_geometry)::json AS geometry,
-          MAX(psd.value) FILTER (WHERE psd.dimension = 'delivery_stage') AS delivery_stage
+          sd.delivery_stage
         FROM project p
-        LEFT JOIN project_status_dimension psd ON psd.project_id = p.id
         LEFT JOIN (
           SELECT project_id, COUNT(DISTINCT source_record_id)::int AS source_count
           FROM project_source_record
           GROUP BY project_id
         ) sc ON sc.project_id = p.id
+        LEFT JOIN (
+          SELECT
+            project_id,
+            COUNT(DISTINCT dimension)::int AS status_count,
+            MAX(value) FILTER (WHERE dimension = 'delivery_stage') AS delivery_stage
+          FROM project_status_dimension
+          GROUP BY project_id
+        ) sd ON sd.project_id = p.id
+        LEFT JOIN (
+          SELECT project_id, COUNT(*)::int AS relationship_count
+          FROM (
+            SELECT from_project_id AS project_id FROM project_relationship
+            UNION ALL
+            SELECT to_project_id AS project_id FROM project_relationship
+          ) relationships
+          GROUP BY project_id
+        ) rd ON rd.project_id = p.id
+        LEFT JOIN (
+          SELECT
+            project_id,
+            MAX(
+              CASE
+                WHEN jsonb_typeof(value) = 'number'
+                  THEN (value #>> '{{}}')::double precision
+                WHEN jsonb_typeof(value) = 'string'
+                  AND (value #>> '{{}}') ~ '^[0-9]+(?:\\.[0-9]+)?$'
+                  THEN (value #>> '{{}}')::double precision
+                ELSE NULL
+              END
+            ) AS scale_acres
+          FROM assertion
+          WHERE field IN ('location_acres', 'site_acres')
+          GROUP BY project_id
+        ) ad ON ad.project_id = p.id
         WHERE p.primary_geometry IS NOT NULL
         {bbox_filter}
         {time_filter}
         {type_filter}
-        GROUP BY p.id, sc.source_count
-        ORDER BY p.importance_score DESC, sc.source_count DESC, p.last_activity_at DESC NULLS LAST
+        ORDER BY p.importance_score DESC, sc.source_count DESC NULLS LAST, p.last_activity_at DESC NULLS LAST
         """,
         params,
     )
@@ -263,6 +328,9 @@ async def map_projects(
                     "delivery_stage": row["delivery_stage"],
                     "importance_score": float(row["importance_score"] or 0),
                     "source_count": int(row["source_count"] or 0),
+                    "status_count": int(row["status_count"] or 0),
+                    "relationship_count": int(row["relationship_count"] or 0),
+                    "scale_acres": float(row["scale_acres"] or 0),
                     "display_priority": _display_priority(row),
                     "last_activity_at": (
                         row["last_activity_at"].isoformat() if row["last_activity_at"] else None
