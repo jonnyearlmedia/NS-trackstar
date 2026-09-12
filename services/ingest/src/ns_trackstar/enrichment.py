@@ -138,3 +138,95 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
     )
     updated = await cursor.fetchall()
     return len(updated)
+
+
+async def enrich_sr37_sears_point_corridor(conn: psycopg.AsyncConnection) -> int:
+    """Give the known SR-37 corridor project its truthful corridor-level geometry.
+
+    SCH 2020070226 is the authoritative identity anchor. The line represents the
+    published Sears Point-to-Mare Island route limits and is intentionally stored as
+    ``street_segment`` rather than exact construction geometry.
+    """
+
+    corridor_geojson = (
+        '{"type":"LineString","coordinates":'
+        '[[-122.451,38.216],[-122.257,38.116]]}'
+    )
+    cursor = await conn.execute(
+        """
+        WITH target AS (
+          SELECT DISTINCT p.id
+          FROM project p
+          JOIN assertion a ON a.project_id = p.id
+          WHERE a.field = 'sch_number'
+            AND a.value #>> '{}' = '2020070226'
+        ),
+        updated AS (
+          UPDATE project p
+          SET
+            project_type = 'transportation_project',
+            primary_geometry = COALESCE(
+              p.primary_geometry,
+              ST_SetSRID(ST_GeomFromGeoJSON(%(geometry)s), 4326)
+            ),
+            updated_at = now()
+          FROM target
+          WHERE p.id = target.id
+          RETURNING p.id, p.primary_geometry
+        )
+        INSERT INTO project_location (
+          project_id, geometry, geometry_method, geometry_source,
+          location_accuracy, geometry_confidence, is_primary, metadata
+        )
+        SELECT
+          id,
+          primary_geometry,
+          'official_route_limits_approximation',
+          'Caltrans District 4 SR-37 corridor limits',
+          'street_segment',
+          0.90,
+          true,
+          jsonb_build_object(
+            'sch_number', '2020070226',
+            'route', 'SR-37',
+            'caltrans_ea', '04-1Q7600',
+            'efis', '0418000329',
+            'method_note', 'Corridor line follows published Sears Point-to-Mare Island project limits; it is not a surveyed construction footprint',
+            'source_url', 'https://dot.ca.gov/caltrans-near-me/district-4/d4-projects/d4-37-corridor-projects/37-projects'
+          )
+        FROM updated
+        WHERE NOT EXISTS (
+          SELECT 1 FROM project_location pl
+          WHERE pl.project_id = updated.id AND pl.is_primary
+        )
+        RETURNING project_id
+        """,
+        {"geometry": corridor_geojson},
+    )
+    locations = await cursor.fetchall()
+
+    await conn.execute(
+        """
+        WITH target AS (
+          SELECT DISTINCT a.project_id, a.source_record_id
+          FROM assertion a
+          WHERE a.field = 'sch_number'
+            AND a.value #>> '{}' = '2020070226'
+            AND a.source_record_id IS NOT NULL
+        )
+        INSERT INTO project_source_record (
+          project_id, source_record_id, relationship_type, confidence, evidence
+        )
+        SELECT
+          project_id,
+          source_record_id,
+          'environmental_review_for',
+          1,
+          jsonb_build_object('signal', 'SCH 2020070226 identifies the SR-37 Sears Point to Mare Island corridor project')
+        FROM target
+        ON CONFLICT (project_id, source_record_id, relationship_type) DO UPDATE SET
+          confidence = EXCLUDED.confidence,
+          evidence = EXCLUDED.evidence
+        """
+    )
+    return len(locations)
