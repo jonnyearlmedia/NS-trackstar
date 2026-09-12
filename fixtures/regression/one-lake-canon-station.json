@@ -1,0 +1,43 @@
+{
+  "key": "one-lake-canon-station",
+  "entities": [
+    {
+      "key": "master-development",
+      "name": "One Lake",
+      "aliases": ["Canon Station"],
+      "entity_kind": "master_development",
+      "apns": [],
+      "identifiers": {},
+      "status_dimensions": {"planning": "approved_history", "construction": "active_evidence_required"}
+    },
+    {
+      "key": "subdivision",
+      "name": "One Lake subdivision",
+      "entity_kind": "subdivision",
+      "apns": [],
+      "identifiers": {},
+      "status_dimensions": {"building_permit": "independent_subdivision_status_required"}
+    },
+    {
+      "key": "vanden-road-utilities",
+      "name": "Vanden Road utility improvements",
+      "entity_kind": "infrastructure",
+      "apns": [],
+      "identifiers": {},
+      "status_dimensions": {"construction": "active_in_2024_source_record"}
+    }
+  ],
+  "organizations": [
+    {"key": "canon-station-llc", "name": "Canon Station, LLC", "role": "developer", "is_project": false}
+  ],
+  "relationships": [
+    {"from": "master-development", "to": "subdivision", "type": "parent_child", "collapse_identities": false},
+    {"from": "vanden-road-utilities", "to": "master-development", "type": "related_infrastructure", "collapse_identities": false}
+  ],
+  "match_cases": [],
+  "required_evidence_types": ["subdivision_action", "related_infrastructure_action"],
+  "sources": [
+    "https://www.fairfield.ca.gov/government/city-departments/community-development/planning-division/long-range-plans-programs/train-station-specific-plan",
+    "https://www.fairfield.ca.gov/Home/Components/News/News/998/14"
+  ]
+}

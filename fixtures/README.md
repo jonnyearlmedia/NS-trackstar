@@ -1,6 +1,8 @@
 # Regression fixtures
 
-Research cases become executable regression fixtures as adapters and entity resolution are implemented.
+The JSON documents in `regression/` are executable regression fixtures loaded by the
+ingestion test suite. They preserve the minimum identity, relationship, geometry, status,
+and confidence invariants for five real Napa/Solano projects.
 
 Required fixtures:
 
@@ -10,4 +12,5 @@ Required fixtures:
 4. `one-lake-canon-station` — aliases, developer organization, subdivisions and related infrastructure.
 5. `dutch-bros-suisun` — business identity, permitting narrative, construction transition and unknown opening date.
 
-Fixtures must test relationship creation before merge behavior.
+Fixtures test relationship creation before merge behavior. Sources and identifiers in a
+fixture are evidence anchors, not a claim that every project fact is current.

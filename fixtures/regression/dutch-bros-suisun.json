@@ -1,0 +1,38 @@
+{
+  "key": "dutch-bros-suisun",
+  "entities": [
+    {
+      "key": "business-project",
+      "name": "Dutch Bros Suisun",
+      "entity_kind": "business_opening",
+      "apns": [],
+      "identifiers": {},
+      "status_dimensions": {
+        "business_identity": "confirmed_tenant",
+        "planning": "under_review",
+        "construction": "not_confirmed",
+        "operations": "not_confirmed"
+      },
+      "confidence_dimensions": {
+        "tenant_identity": 0.98,
+        "opening_state": 0.45
+      },
+      "facts": {
+        "opening_date": null,
+        "location_description": "North of Highway 12 and directly east of the Sunset Center",
+        "applicant": "Hilbers Inc."
+      }
+    }
+  ],
+  "relationships": [],
+  "match_cases": [],
+  "required_event_types": [
+    "business_identified",
+    "planning_application_filed",
+    "construction_started",
+    "business_opened"
+  ],
+  "sources": [
+    "https://www.suisun.com/files/sharedassets/suisuncity/v/1/training/resources/images/michaels-images/development-calendar-update-final.pdf"
+  ]
+}
