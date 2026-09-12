@@ -13,6 +13,11 @@ const FILTERS: { label: string; value: TimeWindow }[] = [
   { label: "Upcoming", value: "upcoming" },
   { label: "All", value: "all" },
 ];
+const CATEGORIES = [
+  { label: "All projects", value: null },
+  { label: "Development", value: "municipal_development" },
+  { label: "Environmental", value: "environmental_review" },
+] as const;
 
 type Assertion = {
   field: string;
@@ -52,6 +57,14 @@ type ProjectEvent = {
   observed_at: string;
 };
 
+type ChangeEvent = ProjectEvent & {
+  project_id: string;
+  project_name: string;
+  project_type: string;
+  event_type: string;
+  summary: string | null;
+};
+
 type SearchResult = {
   id: string;
   name: string;
@@ -81,6 +94,10 @@ function eventDate(value: string | null) {
 
 export function MapExplorer() {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("week");
+  const [projectType, setProjectType] = useState<string | null>(null);
+  const [view, setView] = useState<"map" | "changes">("map");
+  const [changes, setChanges] = useState<ChangeEvent[]>([]);
+  const [changesState, setChangesState] = useState<"loading" | "done" | "error">("loading");
   const [selected, setSelected] = useState<MapProject | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
@@ -145,6 +162,27 @@ export function MapExplorer() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [searchOpen]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams({ window: timeWindow, limit: "100" });
+    if (projectType) params.set("project_type", projectType);
+    setChangesState("loading");
+    fetch(`${API_BASE}/changes?${params}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Changes API returned ${response.status}`);
+        return response.json() as Promise<ChangeEvent[]>;
+      })
+      .then((nextChanges) => {
+        setChanges(nextChanges);
+        setChangesState("done");
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setChangesState("error");
+      });
+    return () => controller.abort();
+  }, [projectType, timeWindow]);
+
   function selectProject(project: MapProject) {
     setSelected(project);
     setSelectedProjectId(project.id);
@@ -206,15 +244,18 @@ export function MapExplorer() {
           <p className="eyebrow">NAPA · SOLANO</p>
           <h1>NS Trackstar</h1>
         </div>
-        <button
-          aria-controls="project-search"
-          aria-expanded={searchOpen}
-          className="searchButton"
-          onClick={() => setSearchOpen(true)}
-          type="button"
-        >
-          Search
-        </button>
+        <div className="topbarActions">
+          <a className="healthLink" href="/admin/sources">Source health</a>
+          <button
+            aria-controls="project-search"
+            aria-expanded={searchOpen}
+            className="searchButton"
+            onClick={() => setSearchOpen(true)}
+            type="button"
+          >
+            Search
+          </button>
+        </div>
       </header>
 
       <nav className="filters" aria-label="Time filters">
@@ -234,10 +275,61 @@ export function MapExplorer() {
       <section className="mapStage" aria-label="Napa and Solano intelligence map">
         <MapCanvas
           onSelectProject={selectProject}
+          projectType={projectType}
           selectedProject={selected}
           timeWindow={timeWindow}
         />
         <div className="mapShade" />
+
+        <div className="mapToolbar" aria-label="Map display controls">
+          <div className="categoryFilters" role="group" aria-label="Project category">
+            {CATEGORIES.map((category) => (
+              <button
+                aria-pressed={category.value === projectType}
+                className={category.value === projectType ? "toolButton active" : "toolButton"}
+                key={category.label}
+                onClick={() => setProjectType(category.value)}
+                type="button"
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+          <div className="viewToggle" role="group" aria-label="Map or change feed">
+            <button className={view === "map" ? "toolButton active" : "toolButton"} onClick={() => setView("map")} type="button">Map</button>
+            <button className={view === "changes" ? "toolButton active" : "toolButton"} onClick={() => setView("changes")} type="button">Changes</button>
+          </div>
+        </div>
+
+        {view === "changes" ? (
+          <section className="changeFeed" aria-label="Recent project changes">
+            <header>
+              <p className="cardMeta">{activeFilter.toUpperCase()}</p>
+              <h2>What changed</h2>
+            </header>
+            {changesState === "loading" ? <p className="emptyMessage">Loading source-backed changes…</p> : null}
+            {changesState === "error" ? <p className="errorMessage">The change feed is temporarily unavailable.</p> : null}
+            {changesState === "done" && changes.length === 0 ? <p className="emptyMessage">No semantic changes match these filters yet.</p> : null}
+            <ol>
+              {changes.map((change) => (
+                <li key={change.id}>
+                  <button
+                    onClick={() => {
+                      setSelectedProjectId(change.project_id);
+                      setView("map");
+                    }}
+                    type="button"
+                  >
+                    <span><time dateTime={change.occurred_at ?? change.observed_at}>{eventDate(change.occurred_at ?? change.observed_at)}</time><em>{readableValue(change.event_type).replaceAll("_", " ")}</em></span>
+                    <strong>{change.project_name}</strong>
+                    <b>{change.title}</b>
+                    {change.summary ? <small>{change.summary}</small> : null}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
 
         {searchOpen ? (
           <aside className="searchPanel" id="project-search" aria-label="Project search">
@@ -306,7 +398,7 @@ export function MapExplorer() {
           </aside>
         ) : null}
 
-        <article className="projectCard" aria-live="polite">
+        {view === "map" ? <article className="projectCard" aria-live="polite">
           {selected ? (
             <>
               <div className="cardTopline">
@@ -387,7 +479,7 @@ export function MapExplorer() {
               </div>
             </>
           )}
-        </article>
+        </article> : null}
       </section>
     </>
   );

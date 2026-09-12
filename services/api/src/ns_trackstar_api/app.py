@@ -130,6 +130,7 @@ async def map_projects(
     east: Annotated[float | None, Query()] = None,
     north: Annotated[float | None, Query()] = None,
     time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
+    project_type: Annotated[str | None, Query(max_length=80)] = None,
 ) -> dict:
     params: dict[str, object] = {}
     bbox_filter = ""
@@ -148,6 +149,10 @@ async def map_projects(
 
     time_filter, time_params = _time_window_sql(time_window)
     params.update(time_params)
+    type_filter = ""
+    if project_type:
+        params["project_type"] = project_type
+        type_filter = "AND p.project_type = %(project_type)s"
 
     cursor = await app.state.db.execute(
         f"""
@@ -163,6 +168,7 @@ async def map_projects(
         WHERE p.primary_geometry IS NOT NULL
         {bbox_filter}
         {time_filter}
+        {type_filter}
         GROUP BY p.id
         ORDER BY p.last_activity_at DESC NULLS LAST
         LIMIT 1000
@@ -196,6 +202,7 @@ async def map_projects(
 async def changes(
     time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
     limit: Annotated[int, Query(ge=1, le=250)] = 50,
+    project_type: Annotated[str | None, Query(max_length=80)] = None,
 ) -> list[dict]:
     now = datetime.now(LOCAL_TIMEZONE)
     if time_window == "today":
@@ -213,6 +220,11 @@ async def changes(
     elif time_window == "upcoming":
         date_filter = "AND pe.occurred_at > now()"
 
+    type_filter = ""
+    if project_type:
+        params["project_type"] = project_type
+        type_filter = "AND p.project_type = %(project_type)s"
+
     cursor = await app.state.db.execute(
         f"""
         SELECT
@@ -223,6 +235,7 @@ async def changes(
         JOIN project p ON p.id = pe.project_id
         WHERE true
         {date_filter}
+        {type_filter}
         ORDER BY COALESCE(pe.occurred_at, pe.observed_at) DESC, pe.significance DESC
         LIMIT %(limit)s
         """,
