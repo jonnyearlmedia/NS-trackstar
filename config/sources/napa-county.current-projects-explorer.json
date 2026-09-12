@@ -4,7 +4,7 @@
   "jurisdiction": "Unincorporated Napa County",
   "adapter": "arcgis_rest",
   "base_url": "https://www.napacounty.gov/2876/Current-Projects-Explorer",
-  "poll_minutes": 1440,
+  "poll_minutes": 240,
   "options": {
     "layer_url": "https://services1.arcgis.com/Ko5rxt00spOfjMqj/ArcGIS/rest/services/Current_PBES_Projects_Public/FeatureServer/0",
     "id_field": "GlobalID",
