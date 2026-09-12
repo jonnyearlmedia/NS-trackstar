@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from ns_trackstar_api.freshness import freshness_state, stale_after_minutes
+from ns_trackstar_api.freshness import aggregate_freshness, freshness_state, stale_after_minutes
 
 
 def test_stale_threshold_uses_each_sources_own_poll_interval() -> None:
@@ -39,3 +39,11 @@ def test_missing_success_is_unknown() -> None:
     )
     assert state == "unknown"
     assert age is None
+
+
+def test_aggregate_freshness_never_overstates_partial_knowledge() -> None:
+    assert aggregate_freshness([]) == "unknown"
+    assert aggregate_freshness(["current", "current"]) == "current"
+    assert aggregate_freshness(["current", "unknown"]) == "unknown"
+    assert aggregate_freshness(["current", "stale"]) == "stale"
+    assert aggregate_freshness(["unknown", "stale"]) == "stale"
