@@ -25,7 +25,6 @@ INACTIVE_TERMS = (
 )
 COMPLETED_TERMS = (
     "completed",
-    "complete",
     "closed",
     "finished",
     "finaled",
@@ -86,7 +85,7 @@ def _matched_categories(value: str) -> set[LifecycleStage]:
     matches: set[LifecycleStage] = set()
     if any(_contains_phrase(value, term) for term in INACTIVE_TERMS):
         matches.add("inactive")
-    if any(_contains_phrase(value, term) for term in COMPLETED_TERMS):
+    if value == "complete" or any(_contains_phrase(value, term) for term in COMPLETED_TERMS):
         matches.add("completed")
     if "pre construction" not in value and any(
         _contains_phrase(value, term) for term in CONSTRUCTION_TERMS
