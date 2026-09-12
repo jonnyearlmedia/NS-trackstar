@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from ns_trackstar.adapters.accela_aca import AccelaAcaAdapter
+from ns_trackstar.adapters.accela_aca_live import AccelaAcaAdapter
 from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
