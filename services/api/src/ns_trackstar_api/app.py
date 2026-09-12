@@ -143,7 +143,8 @@ def _display_priority(row: dict) -> float:
     source_count = int(row.get("source_count") or 0)
     source_signal = min(source_count, 5) / 5 * 0.55
     type_signal = 0.12 if row.get("project_type") in {"transportation_project", "public_works"} else 0
-    return round(min(1.0, max(explicit, source_signal) + type_signal), 3)
+    stage_signal = 0.12 if row.get("delivery_stage") else 0
+    return round(min(1.0, max(explicit, source_signal) + type_signal + stage_signal), 3)
 
 
 @app.get("/health")
@@ -346,10 +347,12 @@ async def changes(
     elif time_window == "upcoming":
         date_filter = "AND pe.occurred_at > now()"
 
-    type_filter = ""
     if project_type:
         params["project_type"] = project_type
         type_filter = "AND p.project_type = %(project_type)s"
+    else:
+        type_filter = "AND p.project_type <> 'environmental_review'"
+    event_filter = "AND (pe.event_type <> 'project_discovered' OR COALESCE(pe.significance, 0) > 0.5)"
 
     cursor = await app.state.db.execute(
         f"""
@@ -362,6 +365,7 @@ async def changes(
         WHERE true
         {date_filter}
         {type_filter}
+        {event_filter}
         ORDER BY pe.significance DESC, COALESCE(pe.occurred_at, pe.observed_at) DESC
         LIMIT %(limit)s
         """,
