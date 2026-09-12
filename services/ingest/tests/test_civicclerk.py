@@ -20,6 +20,7 @@ def source_config() -> SourceConfig:
             "lookahead_days": 120,
             "fetch_agendas": True,
             "min_request_interval_seconds": 0,
+            "retry_backoff_seconds": 0,
         },
     )
 
@@ -96,6 +97,26 @@ async def test_collects_events_and_flattens_structured_agenda(source_config: Sou
     assert child.normalized_payload["body"] == "City Council"
     assert child.normalized_payload["title"] == "Approve development agreement"
     assert child.normalized_payload["attachments"][0]["fileName"] == "Staff Report"
+
+
+@pytest.mark.asyncio
+async def test_retries_transient_read_timeout(source_config: SourceConfig) -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        if request.url.path.endswith("/EventCategories"):
+            attempts += 1
+            if attempts == 1:
+                raise httpx.ReadTimeout("temporary CivicClerk timeout", request=request)
+            return httpx.Response(200, json={"value": []})
+        return httpx.Response(404)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = CivicClerkAdapter(source_config, client=client)
+        assert await adapter.canary() is True
+
+    assert attempts == 2
 
 
 @pytest.mark.asyncio
