@@ -86,6 +86,13 @@ type LifecycleTruth = {
   matched_value: string | null;
 };
 
+type CategoryTruth = {
+  id: string;
+  consumer_category: Exclude<ConsumerCategory, "all">;
+  category_basis: string;
+  category_evidence: string | null;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const NAPA_SOLANO_BOUNDS: [[number, number], [number, number]] = [
   [-122.72, 37.95],
@@ -119,7 +126,14 @@ function includesAny(value: string, words: string[]) {
   return words.some((word) => value.includes(word));
 }
 
+function isConsumerCategory(value: unknown): value is Exclude<ConsumerCategory, "all"> {
+  return value === "development" || value === "roads" || value === "utilities" || value === "places";
+}
+
 function classifyFeature(feature: Feature): Exclude<ConsumerCategory, "all"> {
+  const existing = feature.properties?.consumer_category;
+  if (isConsumerCategory(existing)) return existing;
+
   const type = String(feature.properties?.project_type ?? "");
   const name = ` ${String(feature.properties?.name ?? "").toLowerCase()} `;
 
@@ -407,28 +421,34 @@ export function MapCanvasV3({
         });
 
         try {
-          const [response, truthResponse, lifecycleResponse] = await Promise.all([
+          const [response, truthResponse, lifecycleResponse, categoryResponse] = await Promise.all([
             fetch(`${API_BASE}/map/projects?${params}`, { signal: refreshAbort.signal }),
             fetch(`${API_BASE}/map/location-truth?${truthParams}`, { signal: refreshAbort.signal }),
             fetch(`${API_BASE}/map/lifecycle-truth?${truthParams}`, { signal: refreshAbort.signal }),
+            fetch(`${API_BASE}/map/category-truth?${truthParams}`, { signal: refreshAbort.signal }),
           ]);
           if (!response.ok) throw new Error(`Project API returned ${response.status}`);
           const data = await response.json() as ProjectCollection;
           const truthRows = truthResponse.ok ? await truthResponse.json() as LocationTruth[] : [];
           const lifecycleRows = lifecycleResponse.ok ? await lifecycleResponse.json() as LifecycleTruth[] : [];
+          const categoryRows = categoryResponse.ok ? await categoryResponse.json() as CategoryTruth[] : [];
           const truthById = new Map(truthRows.map((row) => [row.id, row]));
           const lifecycleById = new Map(lifecycleRows.map((row) => [row.id, row]));
+          const categoryById = new Map(categoryRows.map((row) => [row.id, row]));
 
           const enriched = data.features.map((feature) => {
             const id = feature.properties?.id ? String(feature.properties.id) : "";
             const truth = truthById.get(id);
             const lifecycleTruth = lifecycleById.get(id);
-            const consumerCategory = classifyFeature(feature);
+            const categoryTruth = categoryById.get(id);
+            const consumerCategory = categoryTruth?.consumer_category ?? classifyFeature(feature);
             return {
               ...feature,
               properties: {
                 ...(feature.properties ?? {}),
                 consumer_category: consumerCategory,
+                category_basis: categoryTruth?.category_basis ?? "fallback",
+                category_evidence: categoryTruth?.category_evidence ?? null,
                 lifecycle_stage: lifecycleTruth?.lifecycle_stage ?? "unknown",
                 lifecycle_dimension: lifecycleTruth?.matched_dimension ?? null,
                 lifecycle_value: lifecycleTruth?.matched_value ?? null,
