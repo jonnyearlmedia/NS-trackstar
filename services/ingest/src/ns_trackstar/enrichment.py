@@ -3,65 +3,69 @@ from __future__ import annotations
 import psycopg
 
 
-async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> int:
-    """Attach authoritative Napa parcel geometry to projects with matching APN evidence.
+async def _enrich_projects_from_parcel_source(
+    conn: psycopg.AsyncConnection,
+    *,
+    source_key: str,
+    jurisdiction: str,
+    parcel_apn_fields: tuple[str, ...],
+) -> int:
+    """Attach official parcel geometry to projects with matching APN assertions.
 
-    This is deliberately conservative: only projects without primary geometry are
-    enriched, only APNs asserted by an existing project source record are used, and
-    geometry comes from the official Napa County parcel layer already stored in
-    source_record. Multi-parcel projects receive the union of every matched parcel.
+    APN assertions may be strings or arrays. The matcher extracts both Napa-style
+    3-3-3 parcel numbers and Solano-style 4-3-3 parcel numbers without treating the
+    punctuation as identity. Projects are only enriched when they do not already
+    have primary geometry, so source geometry always wins over derived parcel shape.
     """
 
+    parcel_apn_sql = "COALESCE(" + ", ".join(
+        f"NULLIF(sr.normalized_payload ->> '{field}', '')" for field in parcel_apn_fields
+    ) + ", '')"
+
     await conn.execute(
-        """
-        WITH apn_values AS (
+        f"""
+        WITH raw_apn_values AS (
           SELECT DISTINCT
             a.project_id,
-            CASE
-              WHEN jsonb_typeof(a.value) = 'string' THEN a.value #>> '{}'
-              ELSE NULL
-            END AS apn
+            a.value #>> '{{}}' AS apn_text
           FROM assertion a
           JOIN project p ON p.id = a.project_id
           WHERE a.field = 'apn'
             AND p.primary_geometry IS NULL
             AND jsonb_typeof(a.value) = 'string'
 
-          UNION
+          UNION ALL
 
           SELECT DISTINCT
             a.project_id,
-            value.apn
+            value.apn_text
           FROM assertion a
           JOIN project p ON p.id = a.project_id
-          CROSS JOIN LATERAL jsonb_array_elements_text(a.value) AS value(apn)
+          CROSS JOIN LATERAL jsonb_array_elements_text(a.value) AS value(apn_text)
           WHERE a.field = 'apn'
             AND p.primary_geometry IS NULL
             AND jsonb_typeof(a.value) = 'array'
         ),
         normalized_apns AS (
-          SELECT
+          SELECT DISTINCT
             project_id,
-            apn,
-            regexp_replace(lower(apn), '[^0-9a-z]', '', 'g') AS normalized_apn
-          FROM apn_values
-          WHERE apn IS NOT NULL AND btrim(apn) <> ''
+            match[1] AS apn,
+            regexp_replace(lower(match[1]), '[^0-9a-z]', '', 'g') AS normalized_apn
+          FROM raw_apn_values
+          CROSS JOIN LATERAL regexp_matches(
+            apn_text,
+            '([0-9]{{4}}[- ]?[0-9]{{3}}[- ]?[0-9]{{3}}|[0-9]{{3}}[- ]?[0-9]{{3}}[- ]?[0-9]{{3}})',
+            'g'
+          ) AS match
         ),
         parcel_records AS (
           SELECT
             sr.id AS source_record_id,
             sr.geometry,
-            regexp_replace(
-              lower(COALESCE(
-                NULLIF(sr.normalized_payload ->> 'asmtwithdash', ''),
-                NULLIF(sr.normalized_payload ->> 'asmt', ''),
-                ''
-              )),
-              '[^0-9a-z]', '', 'g'
-            ) AS normalized_apn
+            regexp_replace(lower({parcel_apn_sql}), '[^0-9a-z]', '', 'g') AS normalized_apn
           FROM source_record sr
           JOIN source s ON s.id = sr.source_id
-          WHERE s.source_key = 'napa-county.parcels'
+          WHERE s.source_key = %(source_key)s
             AND sr.geometry IS NOT NULL
         ),
         matches AS (
@@ -81,15 +85,17 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
         SELECT
           project_id,
           apn,
-          'Napa County',
+          %(jurisdiction)s,
           ST_Multi(ST_CollectionExtract(ST_Force2D(geometry), 3)),
           source_record_id
         FROM matches
         WHERE NOT ST_IsEmpty(ST_CollectionExtract(ST_Force2D(geometry), 3))
         ON CONFLICT (project_id, apn) DO UPDATE SET
+          jurisdiction = EXCLUDED.jurisdiction,
           parcel_geometry = EXCLUDED.parcel_geometry,
           source_record_id = EXCLUDED.source_record_id
-        """
+        """,
+        {"source_key": source_key, "jurisdiction": jurisdiction},
     )
 
     cursor = await conn.execute(
@@ -101,7 +107,7 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
             COUNT(*)::int AS parcel_count
           FROM project_parcel pp
           JOIN project p ON p.id = pp.project_id
-          WHERE pp.jurisdiction = 'Napa County'
+          WHERE pp.jurisdiction = %(jurisdiction)s
             AND p.primary_geometry IS NULL
           GROUP BY pp.project_id
         ),
@@ -123,21 +129,40 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
           id,
           primary_geometry,
           'apn_parcel_match',
-          'napa-county.parcels',
+          %(source_key)s,
           'exact_parcel',
           0.99,
           true,
           jsonb_build_object(
             'matched_parcels', parcel_count,
-            'method_note', 'Official project APN matched to Napa County public parcel geometry'
+            'method_note', 'Official project APN evidence matched to public county parcel geometry'
           )
         FROM updated
         ON CONFLICT DO NOTHING
         RETURNING project_id
-        """
+        """,
+        {"source_key": source_key, "jurisdiction": jurisdiction},
     )
     updated = await cursor.fetchall()
     return len(updated)
+
+
+async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> int:
+    return await _enrich_projects_from_parcel_source(
+        conn,
+        source_key="napa-county.parcels",
+        jurisdiction="Napa County",
+        parcel_apn_fields=("asmtwithdash", "asmt"),
+    )
+
+
+async def enrich_solano_projects_from_parcels(conn: psycopg.AsyncConnection) -> int:
+    return await _enrich_projects_from_parcel_source(
+        conn,
+        source_key="solano-county.parcels",
+        jurisdiction="Solano County",
+        parcel_apn_fields=("parcelid", "lowparceli"),
+    )
 
 
 async def enrich_sr37_sears_point_corridor(conn: psycopg.AsyncConnection) -> int:
