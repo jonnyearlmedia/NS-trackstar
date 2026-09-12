@@ -7,6 +7,9 @@ class EmptyCursor:
     async def fetchall(self):
         return []
 
+    async def fetchone(self):
+        return {"total_matching": 0, "mapped_matching": 0}
+
 
 class RecordingDatabase:
     def __init__(self) -> None:
@@ -42,7 +45,9 @@ async def test_map_and_change_queries_apply_project_type_filter() -> None:
         else:
             app.state.db = previous
 
-    assert len(database.calls) == 2
+    # Map rendering now runs both a feature query and a coverage metadata query,
+    # followed by the changes query. Every scoped query must apply the same type filter.
+    assert len(database.calls) == 3
     for query, params in database.calls:
         assert "p.project_type = %(project_type)s" in query
         assert params["project_type"] == "municipal_development"
