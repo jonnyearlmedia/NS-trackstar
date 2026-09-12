@@ -2,7 +2,7 @@
 
 import type { Geometry } from "geojson";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from "react";
+import type { FormEvent, PointerEvent as ReactPointerEvent } from "react";
 
 import {
   MapCanvas,
@@ -13,25 +13,10 @@ import {
 } from "@/components/map-canvas";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-const FILTERS: { label: string; value: TimeWindow }[] = [
-  { label: "Today", value: "today" },
-  { label: "This Week", value: "week" },
-  { label: "Upcoming", value: "upcoming" },
-  { label: "All", value: "all" },
-];
-const CATEGORIES = [
-  { label: "All", value: null },
-  { label: "Development", value: "municipal_development" },
-  { label: "Environmental", value: "environmental_review" },
-  { label: "Public works", value: "public_works" },
-  { label: "Water", value: "water_infrastructure" },
-  { label: "Transportation", value: "transportation_project" },
-] as const;
 const SNAP_ORDER = ["peek", "half", "full"] as const;
 
 type SheetSnap = (typeof SNAP_ORDER)[number];
-type DetailTab = "overview" | "activity" | "evidence";
-type AppView = "map" | "list" | "changes";
+type AppView = "explore" | "updates";
 
 type Assertion = {
   field: string;
@@ -47,6 +32,8 @@ type ProjectDetail = {
   name: string;
   project_type: string;
   geometry: Geometry | null;
+  summary?: string | null;
+  last_activity_at?: string | null;
   location: {
     method: string;
     source: string;
@@ -84,15 +71,6 @@ type ChangeEvent = ProjectEvent & {
   summary: string | null;
 };
 
-type CatalogProject = {
-  id: string;
-  name: string;
-  project_type: string;
-  last_activity_at: string | null;
-  has_geometry: boolean;
-  delivery_stage: string | null;
-};
-
 type SearchResult = {
   id: string;
   name: string;
@@ -119,14 +97,6 @@ type ProjectContext = {
     project_type: string;
     mapped: boolean;
   }>;
-  matches: Array<{
-    proposed_relationship: string;
-    state: string;
-    score: number;
-    signals: Record<string, unknown>;
-    project_id: string;
-    project_name: string;
-  }>;
 };
 
 type BriefingItem = {
@@ -134,8 +104,6 @@ type BriefingItem = {
   name: string;
   project_type: string;
   last_activity_at: string | null;
-  importance_score: number;
-  briefing_score: number;
   geometry: Geometry;
   statuses: Record<string, string>;
   summary: string | null;
@@ -151,6 +119,22 @@ type BriefingItem = {
   } | null;
 };
 
+const CATEGORY_OPTIONS = [
+  { label: "Everything", value: null, description: "Let Trackstar decide what is worth showing." },
+  { label: "Construction & development", value: "municipal_development", description: "Buildings, neighborhoods and development sites." },
+  { label: "Roads & transportation", value: "transportation_project", description: "Road work, corridors and transportation projects." },
+  { label: "Public projects", value: "public_works", description: "City and county infrastructure projects." },
+  { label: "Water", value: "water_infrastructure", description: "Water-system construction and upgrades." },
+  { label: "Reviews & approvals", value: "environmental_review", description: "Projects moving through public review and approvals." },
+] as const;
+
+const TIME_OPTIONS: Array<{ label: string; value: TimeWindow; description: string }> = [
+  { label: "Any time", value: "all", description: "Everything Trackstar knows about." },
+  { label: "Changed today", value: "today", description: "Projects with new activity today." },
+  { label: "Recently changed", value: "week", description: "Activity from the last seven days." },
+  { label: "Coming up", value: "upcoming", description: "Published future hearings, milestones and events." },
+];
+
 function readableField(field: string) {
   return field.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
@@ -164,21 +148,73 @@ function readableValue(value: unknown): string {
 }
 
 function eventDate(value: string | null | undefined) {
-  if (!value) return "Date not published";
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" })
-    .format(new Date(value));
+  if (!value) return "date not published";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
-function locationLabel(detail: ProjectDetail | null) {
-  if (!detail?.location) return detail?.geometry ? "Mapped from source geometry" : "Location pending";
-  const accuracy = detail.location.accuracy;
-  if (accuracy === "exact_source_geometry") return "Exact source geometry";
-  if (accuracy === "exact_parcel") return "Exact parcel footprint";
-  if (accuracy === "exact_address") return "Exact address";
-  if (accuracy === "street_segment") return "Published corridor";
-  if (accuracy === "intersection") return "Intersection-level location";
-  if (accuracy === "approximate_area") return "Approximate published area";
-  return readableValue(accuracy);
+function consumerType(projectType: string) {
+  if (projectType === "municipal_development") return "Construction & development";
+  if (projectType === "transportation_project") return "Roads & transportation";
+  if (projectType === "public_works") return "Public project";
+  if (projectType === "water_infrastructure") return "Water project";
+  if (projectType === "environmental_review") return "Project review";
+  return "Local project";
+}
+
+function humanStatus(statuses: Record<string, string>) {
+  const preferred = [
+    ["construction", "Construction"],
+    ["operations", "Operations"],
+    ["delivery_stage", "Current stage"],
+    ["official_tracker_stage", "Current stage"],
+    ["building_permit", "Building permit"],
+    ["planning", "Planning"],
+    ["entitlement", "Approval"],
+    ["environmental", "Review"],
+  ] as const;
+  for (const [key, label] of preferred) {
+    if (statuses[key]) return { label, value: readableValue(statuses[key]) };
+  }
+  const first = Object.entries(statuses)[0];
+  return first ? { label: readableField(first[0]), value: readableValue(first[1]) } : null;
+}
+
+function plainSummary(detail: ProjectDetail | null, context: ProjectContext | null) {
+  const description = context?.summary ?? detail?.summary ?? detail?.assertions.find((item) => item.field === "description")?.value;
+  if (typeof description === "string" && description.trim()) {
+    const cleaned = description.replace(/\s+/g, " ").trim();
+    return cleaned.length > 340 ? `${cleaned.slice(0, 337).trimEnd()}…` : cleaned;
+  }
+  if (!detail) return "Loading what this project is and what is happening here…";
+  const type = consumerType(detail.project_type).toLowerCase();
+  return `A ${type} Trackstar is following from official public information.`;
+}
+
+function humanFacts(assertions: Assertion[]) {
+  const priorities = [
+    "location_description",
+    "address",
+    "residential_units",
+    "units",
+    "project_units",
+    "planned_completion",
+    "completion_date",
+    "planned_construction_start",
+    "construction_start",
+    "location_acres",
+    "site_acres",
+    "building_area_sqft",
+    "developer",
+    "applicant",
+  ];
+  const byField = new Map<string, Assertion>();
+  for (const assertion of assertions) if (!byField.has(assertion.field)) byField.set(assertion.field, assertion);
+  return priorities.flatMap((field) => byField.has(field) ? [byField.get(field)!] : []).slice(0, 3);
+}
+
+function routeProjectId() {
+  if (typeof window === "undefined") return null;
+  return window.location.pathname.match(/^\/projects\/([^/]+)$/)?.[1] ?? null;
 }
 
 function SearchIcon() {
@@ -187,8 +223,11 @@ function SearchIcon() {
 function PulseIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12h4l2.2-6 4.1 12 2.1-6H21" /></svg>;
 }
-function LayersIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 10 9 5 9-5M3 18l9 5 9-5" /></svg>;
+function FilterIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4" /></svg>;
+}
+function LocationIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></svg>;
 }
 function ShareIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 13v7h14v-7" /></svg>;
@@ -199,37 +238,37 @@ function PlayIcon() {
 function PauseIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>;
 }
-function routeProjectId() {
-  if (typeof window === "undefined") return null;
-  const match = window.location.pathname.match(/^\/projects\/([^/]+)$/);
-  return match?.[1] ?? new URLSearchParams(window.location.search).get("project");
-}
 
 export function MapExplorer({ initialProjectId }: { initialProjectId?: string }) {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [projectType, setProjectType] = useState<string | null>(null);
-  const [view, setView] = useState<AppView>("map");
-  const [mapDisplay, setMapDisplay] = useState<MapDisplayMode>("projects");
-  const [resetNonce, setResetNonce] = useState(0);
+  const [displayMode, setDisplayMode] = useState<MapDisplayMode>("projects");
+  const [view, setView] = useState<AppView>("explore");
   const [coverage, setCoverage] = useState<MapCoverage | null>(null);
-  const [catalog, setCatalog] = useState<CatalogProject[]>([]);
-  const [catalogState, setCatalogState] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [changes, setChanges] = useState<ChangeEvent[]>([]);
-  const [changesState, setChangesState] = useState<"loading" | "done" | "error">("loading");
+  const [highlights, setHighlights] = useState<MapProject[]>([]);
+  const [resetNonce, setResetNonce] = useState(0);
+  const [locateNonce, setLocateNonce] = useState(0);
+
   const [selected, setSelected] = useState<MapProject | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [events, setEvents] = useState<ProjectEvent[]>([]);
   const [context, setContext] = useState<ProjectContext | null>(null);
   const [detailState, setDetailState] = useState<"idle" | "loading" | "error">("idle");
-  const [detailTab, setDetailTab] = useState<DetailTab>("overview");
+  const [technicalOpen, setTechnicalOpen] = useState(false);
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("half");
   const [sheetDrag, setSheetDrag] = useState(0);
   const dragStartY = useRef<number | null>(null);
+
+  const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchState, setSearchState] = useState<"idle" | "loading" | "done" | "error">("idle");
+
+  const [changes, setChanges] = useState<ChangeEvent[]>([]);
+  const [changesState, setChangesState] = useState<"loading" | "done" | "error">("loading");
+
   const [briefingItems, setBriefingItems] = useState<BriefingItem[]>([]);
   const [briefingIndex, setBriefingIndex] = useState(0);
   const [briefingActive, setBriefingActive] = useState(false);
@@ -239,39 +278,40 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
 
   useEffect(() => {
-    const projectId = initialProjectId ?? routeProjectId();
-    if (projectId) setSelectedProjectId(projectId);
+    const id = initialProjectId ?? routeProjectId();
+    if (id) setSelectedProjectId(id);
   }, [initialProjectId]);
 
   useEffect(() => {
-    function syncRouteSelection() {
-      const projectId = routeProjectId();
-      setSelectedProjectId(projectId);
-      if (!projectId) {
+    function syncRoute() {
+      const id = routeProjectId();
+      setSelectedProjectId(id);
+      if (!id) {
         setSelected(null);
         setDetail(null);
         setEvents([]);
         setContext(null);
       }
     }
-    window.addEventListener("popstate", syncRouteSelection);
-    return () => window.removeEventListener("popstate", syncRouteSelection);
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
   }, []);
 
   useEffect(() => {
-    function handleShortcut(event: KeyboardEvent) {
+    function shortcut(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen(true);
       }
       if (event.key === "Escape") {
         if (searchOpen) setSearchOpen(false);
+        else if (filterOpen) setFilterOpen(false);
         else if (briefingActive) setBriefingActive(false);
       }
     }
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [briefingActive, searchOpen]);
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, [briefingActive, filterOpen, searchOpen]);
 
   useEffect(() => {
     if (!selectedProjectId) return;
@@ -284,7 +324,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           fetch(`${API_BASE}/projects/${selectedProjectId}/events`, { signal: controller.signal }),
           fetch(`${API_BASE}/projects/${selectedProjectId}/context`, { signal: controller.signal }),
         ]);
-        if (!detailResponse.ok || !eventsResponse.ok) throw new Error("Project evidence could not be loaded");
+        if (!detailResponse.ok || !eventsResponse.ok) throw new Error("Project could not be loaded");
         const nextDetail = (await detailResponse.json()) as ProjectDetail;
         setDetail(nextDetail);
         setEvents(await eventsResponse.json());
@@ -295,6 +335,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           projectType: nextDetail.project_type,
           deliveryStage: nextDetail.statuses.delivery_stage ?? nextDetail.statuses.official_tracker_stage ?? null,
           geometry: nextDetail.geometry,
+          lastActivityAt: nextDetail.last_activity_at,
         });
         setDetailState("idle");
       } catch (error) {
@@ -308,7 +349,8 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ window: timeWindow, limit: "100" });
+    const updateWindow = timeWindow === "all" ? "week" : timeWindow;
+    const params = new URLSearchParams({ window: updateWindow, limit: "80" });
     if (projectType) params.set("project_type", projectType);
     setChangesState("loading");
     fetch(`${API_BASE}/changes?${params}`, { signal: controller.signal })
@@ -316,38 +358,13 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
         if (!response.ok) throw new Error(`Changes API returned ${response.status}`);
         return response.json() as Promise<ChangeEvent[]>;
       })
-      .then((nextChanges) => {
-        setChanges(nextChanges);
-        setChangesState("done");
-      })
+      .then((items) => { setChanges(items); setChangesState("done"); })
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setChangesState("error");
       });
     return () => controller.abort();
   }, [projectType, timeWindow]);
-
-  useEffect(() => {
-    if (view !== "list") return;
-    const controller = new AbortController();
-    const params = new URLSearchParams({ window: timeWindow });
-    if (projectType) params.set("project_type", projectType);
-    setCatalogState("loading");
-    fetch(`${API_BASE}/projects?${params}`, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Project catalog returned ${response.status}`);
-        return response.json() as Promise<CatalogProject[]>;
-      })
-      .then((projects) => {
-        setCatalog(projects);
-        setCatalogState("done");
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setCatalogState("error");
-      });
-    return () => controller.abort();
-  }, [projectType, timeWindow, view]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -360,31 +377,22 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setSearchState("loading");
-      fetch(`${API_BASE}/search/projects?${new URLSearchParams({ q: query, limit: "20" })}`, {
-        signal: controller.signal,
-      })
+      fetch(`${API_BASE}/search/projects?${new URLSearchParams({ q: query, limit: "20" })}`, { signal: controller.signal })
         .then((response) => {
-          if (!response.ok) throw new Error(`Search API returned ${response.status}`);
+          if (!response.ok) throw new Error(`Search returned ${response.status}`);
           return response.json() as Promise<SearchResult[]>;
         })
-        .then((results) => {
-          setSearchResults(results);
-          setSearchState("done");
-        })
+        .then((results) => { setSearchResults(results); setSearchState("done"); })
         .catch((error) => {
           if (error instanceof DOMException && error.name === "AbortError") return;
           setSearchState("error");
         });
-    }, 220);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
+    }, 180);
+    return () => { window.clearTimeout(timer); controller.abort(); };
   }, [searchOpen, searchQuery]);
 
   useEffect(() => {
-    if (!briefingActive || briefingPaused || briefingItems.length < 2) return;
-    if (briefingIndex >= briefingItems.length - 1) return;
+    if (!briefingActive || briefingPaused || briefingItems.length < 2 || briefingIndex >= briefingItems.length - 1) return;
     const timer = window.setTimeout(() => setBriefingIndex((index) => index + 1), 6500);
     return () => window.clearTimeout(timer);
   }, [briefingActive, briefingIndex, briefingItems.length, briefingPaused]);
@@ -400,36 +408,23 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       projectType: item.project_type,
       deliveryStage: item.statuses.delivery_stage ?? item.statuses.official_tracker_stage ?? null,
       geometry: item.geometry,
+      lastActivityAt: item.last_activity_at,
     });
-    setDetailTab("overview");
+    setTechnicalOpen(false);
     setSheetSnap("peek");
     window.history.replaceState({}, "", `/projects/${item.id}`);
   }, [briefingActive, briefingIndex, briefingItems]);
 
-  function selectProject(project: MapProject, history: "push" | "replace" = "push") {
-    if (briefingActive) setBriefingActive(false);
+  function selectProject(project: MapProject) {
+    setBriefingActive(false);
     setSelected(project);
     setSelectedProjectId(project.id);
     setDetail(null);
     setEvents([]);
     setContext(null);
-    setDetailTab("overview");
+    setTechnicalOpen(false);
     setSheetSnap("half");
-    if (history === "push") window.history.pushState({}, "", `/projects/${project.id}`);
-    else window.history.replaceState({}, "", `/projects/${project.id}`);
-  }
-
-  function selectProjectById(projectId: string) {
-    if (briefingActive) setBriefingActive(false);
-    setSelected(null);
-    setSelectedProjectId(projectId);
-    setDetail(null);
-    setEvents([]);
-    setContext(null);
-    setDetailTab("overview");
-    setSheetSnap("half");
-    window.history.pushState({}, "", `/projects/${projectId}`);
-    setView("map");
+    window.history.pushState({}, "", `/projects/${project.id}`);
   }
 
   function clearSelection() {
@@ -438,23 +433,21 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     setDetail(null);
     setEvents([]);
     setContext(null);
+    setTechnicalOpen(false);
     setBriefingActive(false);
     window.history.replaceState({}, "", "/");
   }
 
-  async function submitSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const query = searchQuery.trim();
-    if (query.length < 2) return;
-    setSearchState("loading");
-    try {
-      const response = await fetch(`${API_BASE}/search/projects?${new URLSearchParams({ q: query, limit: "20" })}`);
-      if (!response.ok) throw new Error(`Search API returned ${response.status}`);
-      setSearchResults(await response.json());
-      setSearchState("done");
-    } catch {
-      setSearchState("error");
-    }
+  function applyCategory(value: string | null) {
+    setProjectType(value);
+    setFilterOpen(false);
+    clearSelection();
+  }
+
+  function applyTime(value: TimeWindow) {
+    setTimeWindow(value);
+    setFilterOpen(false);
+    clearSelection();
   }
 
   function chooseSearchResult(result: SearchResult) {
@@ -465,22 +458,23 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       deliveryStage: result.statuses.delivery_stage ?? result.statuses.official_tracker_stage ?? null,
       geometry: result.geometry,
     });
-    setView("map");
     setSearchOpen(false);
+    setView("explore");
   }
 
-  function changeWindow(next: TimeWindow) {
-    setTimeWindow(next);
-    setCoverage(null);
-    setBriefingActive(false);
-    clearSelection();
-  }
-
-  function changeProjectType(next: string | null) {
-    setProjectType(next);
-    setCoverage(null);
-    setBriefingActive(false);
-    clearSelection();
+  async function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    if (query.length < 2) return;
+    setSearchState("loading");
+    try {
+      const response = await fetch(`${API_BASE}/search/projects?${new URLSearchParams({ q: query, limit: "20" })}`);
+      if (!response.ok) throw new Error("Search failed");
+      setSearchResults(await response.json());
+      setSearchState("done");
+    } catch {
+      setSearchState("error");
+    }
   }
 
   async function shareProject() {
@@ -488,26 +482,22 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     const url = `${window.location.origin}/projects/${selectedProjectId}`;
     const title = detail?.name ?? selected?.name ?? "NS Trackstar project";
     if (navigator.share) {
-      try {
-        await navigator.share({ title, text: `Track this project on NS Trackstar: ${title}`, url });
-        return;
-      } catch {
-        return;
-      }
+      try { await navigator.share({ title, text: `${title} on NS Trackstar`, url }); return; } catch { return; }
     }
     await navigator.clipboard.writeText(url);
     setShareState("copied");
-    window.setTimeout(() => setShareState("idle"), 1600);
+    window.setTimeout(() => setShareState("idle"), 1400);
   }
 
   async function startBriefing() {
     setBriefingLoading(true);
+    setView("explore");
     setSearchOpen(false);
-    setView("map");
+    setFilterOpen(false);
     try {
       let windowName: "today" | "week" = "today";
       let response = await fetch(`${API_BASE}/briefing?window=today&limit=8`);
-      let items = response.ok ? (await response.json()) as BriefingItem[] : [];
+      let items = response.ok ? await response.json() as BriefingItem[] : [];
       if (items.length < 2) {
         windowName = "week";
         response = await fetch(`${API_BASE}/briefing?window=week&limit=8`);
@@ -520,14 +510,9 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       setBriefingWindow(windowName);
       setBriefingPaused(false);
       setBriefingActive(true);
-      setTimeWindow(windowName === "today" ? "today" : "week");
     } finally {
       setBriefingLoading(false);
     }
-  }
-
-  function moveBriefing(delta: number) {
-    setBriefingIndex((index) => Math.max(0, Math.min(briefingItems.length - 1, index + delta)));
   }
 
   function stopBriefing() {
@@ -540,45 +525,38 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     dragStartY.current = event.clientY;
     event.currentTarget.setPointerCapture(event.pointerId);
   }
-
   function onSheetPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
     if (dragStartY.current === null) return;
-    setSheetDrag(Math.max(-120, Math.min(180, event.clientY - dragStartY.current)));
+    setSheetDrag(Math.max(-110, Math.min(170, event.clientY - dragStartY.current)));
   }
-
   function onSheetPointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
     if (dragStartY.current === null) return;
     const delta = event.clientY - dragStartY.current;
     const current = SNAP_ORDER.indexOf(sheetSnap);
-    if (delta < -55) setSheetSnap(SNAP_ORDER[Math.min(SNAP_ORDER.length - 1, current + 1)]);
-    if (delta > 55) setSheetSnap(SNAP_ORDER[Math.max(0, current - 1)]);
+    if (delta < -50) setSheetSnap(SNAP_ORDER[Math.min(SNAP_ORDER.length - 1, current + 1)]);
+    if (delta > 50) setSheetSnap(SNAP_ORDER[Math.max(0, current - 1)]);
     dragStartY.current = null;
     setSheetDrag(0);
   }
 
-  const facts = useMemo(() => {
-    const seen = new Set<string>();
-    return (detail?.assertions ?? [])
-      .filter((assertion) => !assertion.field.startsWith("status.") && assertion.field !== "description")
-      .filter((assertion) => {
-        if (seen.has(assertion.field)) return false;
-        seen.add(assertion.field);
-        return true;
-      })
-      .slice(0, 8);
-  }, [detail]);
-  const summary = context?.summary ?? detail?.assertions.find((assertion) => assertion.field === "description")?.value ?? null;
-  const activeFilter = FILTERS.find((filter) => filter.value === timeWindow)?.label ?? "All";
+  const currentCategory = CATEGORY_OPTIONS.find((option) => option.value === projectType)?.label ?? "Everything";
+  const currentTime = TIME_OPTIONS.find((option) => option.value === timeWindow)?.label ?? "Any time";
+  const activeFilters = Number(projectType !== null) + Number(timeWindow !== "all") + Number(displayMode !== "projects");
+  const status = humanStatus(detail?.statuses ?? {});
+  const summary = plainSummary(detail, context);
+  const facts = useMemo(() => humanFacts(detail?.assertions ?? []), [detail]);
   const currentBriefing = briefingItems[briefingIndex];
-  const sheetStyle = { "--sheet-drag": `${sheetDrag}px` } as CSSProperties;
+  const latestEvent = events[0];
 
   return (
-    <section className="trackstarApp" aria-label="NS Trackstar Napa and Solano intelligence map">
+    <section className="trackstarApp" aria-label="NS Trackstar local project map">
       <MapCanvas
         briefingActive={briefingActive}
-        displayMode={mapDisplay}
+        displayMode={displayMode}
+        locateNonce={locateNonce}
         onCoverageChange={setCoverage}
-        onSelectProject={(project) => selectProject(project)}
+        onHighlightsChange={setHighlights}
+        onSelectProject={selectProject}
         projectType={projectType}
         resetNonce={resetNonce}
         selectedProject={selected}
@@ -586,150 +564,121 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       />
       <div className={selected ? "mapAtmosphere selected" : "mapAtmosphere"} />
 
-      <header className="floatingHeader">
+      <header className="simpleHeader">
         <button className="brandLockup" onClick={() => { clearSelection(); setResetNonce((value) => value + 1); }} type="button">
           <span className="brandMark"><PulseIcon /></span>
           <span className="brandText"><strong>Trackstar</strong><small>Napa · Solano</small></span>
         </button>
-        <a className="liveStatus" href="/admin/sources"><i /> Live intelligence</a>
+        <button className="simpleSearch" onClick={() => setSearchOpen(true)} type="button"><SearchIcon /><span>What’s being built?</span></button>
       </header>
 
       {!briefingActive ? (
-        <>
-          <button className="heroSearch" onClick={() => setSearchOpen(true)} type="button">
-            <SearchIcon /><span>Search projects, roads, permits, APNs…</span><kbd>⌘ K</kbd>
-          </button>
-
-          <nav className="timeRail" aria-label="Time filters">
-            {FILTERS.map((filter) => (
-              <button aria-pressed={filter.value === timeWindow} className={filter.value === timeWindow ? "timeChip active" : "timeChip"} key={filter.value} onClick={() => changeWindow(filter.value)} type="button">
-                {filter.label}
-              </button>
-            ))}
-            <button className="briefingChip" disabled={briefingLoading} onClick={() => void startBriefing()} type="button">
-              <PlayIcon /> {briefingLoading ? "Loading…" : "Play briefing"}
-            </button>
-          </nav>
-
-          <div className="categoryRail" aria-label="Project categories">
-            <span className="categoryLead"><LayersIcon /></span>
-            {CATEGORIES.map((category) => (
-              <button aria-pressed={category.value === projectType} className={category.value === projectType ? "categoryChip active" : "categoryChip"} key={category.label} onClick={() => changeProjectType(category.value)} type="button">
-                {category.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="mapUtilityDock" role="group" aria-label="Map visualization">
-            <button className={mapDisplay === "projects" ? "active" : ""} onClick={() => setMapDisplay("projects")} type="button">Map</button>
-            <button className={mapDisplay === "density" ? "active" : ""} onClick={() => setMapDisplay("density")} type="button">Heat</button>
-            <button className={mapDisplay === "perspective" ? "active" : ""} onClick={() => setMapDisplay("perspective")} type="button">Tilt</button>
-            <button aria-label="Reset regional view" onClick={() => setResetNonce((value) => value + 1)} type="button">↗</button>
-          </div>
-        </>
+        <div className="simpleActions">
+          <button onClick={() => setLocateNonce((value) => value + 1)} type="button"><LocationIcon /><span>Near me</span></button>
+          <button className={activeFilters ? "hasFilters" : ""} onClick={() => setFilterOpen(true)} type="button"><FilterIcon /><span>Filter</span>{activeFilters ? <b>{activeFilters}</b> : null}</button>
+        </div>
       ) : null}
 
-      <div className="modeDock" role="group" aria-label="Application view">
-        <button className={view === "map" ? "active" : ""} onClick={() => setView("map")} type="button"><span>Map</span></button>
-        <button className={view === "list" ? "active" : ""} onClick={() => { stopBriefing(); setView("list"); }} type="button"><span>List</span></button>
-        <button className={view === "changes" ? "active" : ""} onClick={() => { stopBriefing(); setView("changes"); }} type="button"><span>Updates</span>{changes.length ? <b>{Math.min(changes.length, 99)}</b> : null}</button>
-      </div>
-
-      {briefingActive && currentBriefing ? (
-        <section className="briefingHud" aria-live="polite">
-          <div className="briefingProgress"><i style={{ width: `${((briefingIndex + 1) / briefingItems.length) * 100}%` }} /></div>
-          <div className="briefingMeta"><span>{briefingWindow === "today" ? "TODAY" : "THIS WEEK"} · {briefingIndex + 1}/{briefingItems.length}</span><strong>{currentBriefing.event?.title ?? currentBriefing.name}</strong></div>
-          <div className="briefingControls">
-            <button disabled={briefingIndex === 0} onClick={() => moveBriefing(-1)} type="button">‹</button>
-            <button aria-label={briefingPaused ? "Resume briefing" : "Pause briefing"} onClick={() => setBriefingPaused((value) => !value)} type="button">{briefingPaused ? <PlayIcon /> : <PauseIcon />}</button>
-            <button disabled={briefingIndex === briefingItems.length - 1} onClick={() => moveBriefing(1)} type="button">›</button>
-            <button className="briefingDone" onClick={stopBriefing} type="button">Done</button>
+      {view === "explore" && !selected && !briefingActive ? (
+        <section className="aroundCard">
+          <div className="aroundHeading">
+            <div><p>AROUND HERE</p><h2>{coverage ? `${coverage.visibleMapped.toLocaleString()} things on this map` : "What’s changing nearby"}</h2></div>
+            <button onClick={() => void startBriefing()} type="button"><PlayIcon />{briefingLoading ? "Loading" : "Play today"}</button>
           </div>
+          <div className="aroundList">
+            {highlights.length ? highlights.map((project, index) => (
+              <button key={project.id} onClick={() => selectProject(project)} type="button">
+                <span className="aroundRank">{index + 1}</span>
+                <span className="aroundCopy"><small>{consumerType(project.projectType)}</small><strong>{project.name}</strong><em>{project.deliveryStage ? readableValue(project.deliveryStage) : "Tap to see what’s happening"}</em></span>
+                <span className="aroundArrow">›</span>
+              </button>
+            )) : <p className="emptyMessage">Move the map or zoom in to see what matters in this area.</p>}
+          </div>
+          <button className="filterSummary" onClick={() => setFilterOpen(true)} type="button">Showing {currentCategory.toLowerCase()} · {currentTime.toLowerCase()}</button>
         </section>
       ) : null}
 
-      {view === "list" ? (
-        <section className="browseSheet" aria-label="Project catalog">
-          <div className="sheetHandle static" />
-          <header className="browseHeader"><div><p className="cardMeta">{activeFilter.toUpperCase()} · {catalog.length.toLocaleString()} PROJECTS</p><h2>Project catalog</h2></div><button className="roundClose" aria-label="Return to map" onClick={() => setView("map")} type="button">×</button></header>
-          {catalogState === "loading" ? <p className="emptyMessage">Loading the canonical project catalog…</p> : null}
-          {catalogState === "error" ? <p className="errorMessage">The project catalog is temporarily unavailable.</p> : null}
-          <ol className="browseList">
-            {catalog.map((project) => (
-              <li key={project.id}><button onClick={() => selectProjectById(project.id)} type="button"><span className="browseMeta"><time>{eventDate(project.last_activity_at)}</time><em className={project.has_geometry ? "mapped" : "pending"}>{project.has_geometry ? "Mapped" : "Location pending"}</em></span><strong>{project.name}</strong><span>{readableValue(project.project_type)}</span>{project.delivery_stage ? <small>{readableValue(project.delivery_stage)}</small> : null}</button></li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
+      <nav className="consumerNav" aria-label="Trackstar sections">
+        <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")} type="button">Explore</button>
+        <button className={view === "updates" ? "active" : ""} onClick={() => { stopBriefing(); clearSelection(); setView("updates"); }} type="button">Updates{changes.length ? <b>{Math.min(changes.length, 99)}</b> : null}</button>
+      </nav>
 
-      {view === "changes" ? (
-        <section className="browseSheet" aria-label="Recent project changes">
-          <div className="sheetHandle static" />
-          <header className="browseHeader"><div><p className="cardMeta">{activeFilter.toUpperCase()}</p><h2>What changed</h2></div><button className="roundClose" aria-label="Return to map" onClick={() => setView("map")} type="button">×</button></header>
-          {changesState === "loading" ? <p className="emptyMessage">Loading source-backed updates…</p> : null}
+      {view === "updates" ? (
+        <section className="updatesSheet">
+          <div className="sheetHandle" />
+          <header><div><p>WHAT CHANGED</p><h2>The stuff worth knowing</h2><span>Recent official activity, ranked so you don’t have to dig through government records.</span></div><button onClick={() => void startBriefing()} type="button"><PlayIcon />Play</button></header>
+          {changesState === "loading" ? <p className="emptyMessage">Checking what changed…</p> : null}
           {changesState === "error" ? <p className="errorMessage">Updates are temporarily unavailable.</p> : null}
-          {changesState === "done" && changes.length === 0 ? <p className="emptyMessage">No changes match these filters yet.</p> : null}
-          <ol className="browseList">
+          {changesState === "done" && changes.length === 0 ? <p className="emptyMessage">Nothing new matches these filters right now.</p> : null}
+          <ol className="updatesList">
             {changes.map((change) => (
-              <li key={change.id}><button onClick={() => selectProjectById(change.project_id)} type="button"><span className="browseMeta"><time>{eventDate(change.occurred_at ?? change.observed_at)}</time><em>{readableValue(change.event_type)}</em></span><strong>{change.project_name}</strong><span>{change.title}</span>{change.summary ? <small>{change.summary}</small> : null}</button></li>
+              <li key={change.id}><button onClick={() => { setView("explore"); selectProject({ id: change.project_id, name: change.project_name, projectType: change.project_type, deliveryStage: null, geometry: null }); }} type="button"><span><small>{consumerType(change.project_type)} · {eventDate(change.occurred_at ?? change.observed_at)}</small><strong>{change.project_name}</strong><em>{change.summary ?? change.title}</em></span><b>›</b></button></li>
             ))}
           </ol>
         </section>
+      ) : null}
+
+      {filterOpen ? (
+        <aside className="modalScrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setFilterOpen(false); }}>
+          <section className="filterSheet" aria-label="Filter projects">
+            <div className="sheetHandle" />
+            <header><div><p>SHOW ME</p><h2>What do you care about?</h2></div><button className="roundClose" onClick={() => setFilterOpen(false)} type="button">×</button></header>
+            <div className="filterSection"><h3>Type of project</h3><div className="choiceList">{CATEGORY_OPTIONS.map((option) => <button className={projectType === option.value ? "selected" : ""} key={option.label} onClick={() => applyCategory(option.value)} type="button"><span><strong>{option.label}</strong><small>{option.description}</small></span><i>{projectType === option.value ? "✓" : ""}</i></button>)}</div></div>
+            <div className="filterSection"><h3>When</h3><div className="choiceList compact">{TIME_OPTIONS.map((option) => <button className={timeWindow === option.value ? "selected" : ""} key={option.value} onClick={() => applyTime(option.value)} type="button"><span><strong>{option.label}</strong><small>{option.description}</small></span><i>{timeWindow === option.value ? "✓" : ""}</i></button>)}</div></div>
+            <details className="moreFilters"><summary>Map options</summary><div className="mapModeChoices"><button className={displayMode === "projects" ? "selected" : ""} onClick={() => setDisplayMode("projects")} type="button">Standard</button><button className={displayMode === "density" ? "selected" : ""} onClick={() => setDisplayMode("density")} type="button">Heat</button><button className={displayMode === "perspective" ? "selected" : ""} onClick={() => setDisplayMode("perspective")} type="button">Tilt</button></div></details>
+            <button className="clearFilters" onClick={() => { setProjectType(null); setTimeWindow("all"); setDisplayMode("projects"); setFilterOpen(false); clearSelection(); }} type="button">Reset to the simple view</button>
+          </section>
+        </aside>
       ) : null}
 
       {searchOpen ? (
-        <aside className="searchOverlay" aria-label="Project search">
+        <aside className="searchOverlay" aria-label="Search Trackstar">
           <div className="searchOverlayInner">
-            <header className="searchOverlayHeader"><div><p className="cardMeta">SEARCH THE REGION</p><h2>Find anything changing</h2></div><button aria-label="Close search" className="roundClose" onClick={() => setSearchOpen(false)} type="button">×</button></header>
-            <form className="spotlightSearch" onSubmit={submitSearch} role="search"><SearchIcon /><input autoFocus minLength={2} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Project, business, address, permit, APN, road…" type="search" value={searchQuery} /><button disabled={searchQuery.trim().length < 2 || searchState === "loading"} type="submit">{searchState === "loading" ? "…" : "Go"}</button></form>
-            <p className="searchHint">Live source-backed search across project names, aliases, addresses, APNs, permits and evidence.</p>
-            <div className="searchResults" aria-live="polite">
-              {searchState === "done" && searchResults.length === 0 ? <p className="emptyMessage">No source-backed projects matched that search.</p> : null}
+            <header className="searchOverlayHeader"><div><p className="cardMeta">FIND A PLACE OR PROJECT</p><h2>What are you curious about?</h2></div><button aria-label="Close search" className="roundClose" onClick={() => setSearchOpen(false)} type="button">×</button></header>
+            <form className="spotlightSearch" onSubmit={submitSearch}><SearchIcon /><input autoFocus minLength={2} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Try a road, business, project or address" type="search" value={searchQuery} /><button disabled={searchQuery.trim().length < 2 || searchState === "loading"} type="submit">Go</button></form>
+            <div className="searchResults">
+              {searchState === "done" && searchResults.length === 0 ? <p className="emptyMessage">Nothing matched that yet.</p> : null}
               {searchState === "error" ? <p className="errorMessage">Search is temporarily unavailable.</p> : null}
               {searchResults.map((result) => {
-                const stage = result.statuses.delivery_stage ?? result.statuses.official_tracker_stage;
-                return <button className="searchResult" key={result.id} onClick={() => chooseSearchResult(result)} type="button"><span className="searchResultTopline"><strong>{result.name}</strong>{stage ? <em>{readableValue(stage)}</em> : null}</span>{result.summary ? <span>{result.summary}</span> : null}<small>{readableValue(result.matched_on)} · {result.geometry ? "mapped" : "location pending"}</small></button>;
+                const statusResult = humanStatus(result.statuses);
+                return <button className="searchResult" key={result.id} onClick={() => chooseSearchResult(result)} type="button"><span className="searchResultTopline"><strong>{result.name}</strong><em>{consumerType(result.project_type)}</em></span>{result.summary ? <span>{result.summary}</span> : null}<small>{statusResult ? `${statusResult.label}: ${statusResult.value}` : result.geometry ? "Mapped" : "Location still being verified"}</small></button>;
               })}
             </div>
           </div>
         </aside>
       ) : null}
 
-      {view === "map" && selected ? (
-        <article className={`projectSheet snap-${sheetSnap} ${briefingActive ? "briefingProject" : ""}`} style={sheetStyle} aria-live="polite">
-          <button className="sheetGrabber" aria-label="Drag project details" onPointerDown={onSheetPointerDown} onPointerMove={onSheetPointerMove} onPointerUp={onSheetPointerUp} type="button"><span /></button>
-          <div className="projectSheetTopline"><p className="cardMeta">{readableValue(selected.projectType).toUpperCase()}</p><div className="sheetActions"><button className="iconButton" aria-label="Share project" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button className="roundClose small" aria-label="Close project" onClick={clearSelection} type="button">×</button></div></div>
-          <div className="projectTitleRow"><div><h2>{detail?.name ?? selected.name}</h2>{context?.aliases.length ? <p className="aliasLine">also known as {context.aliases.map((item) => item.alias).join(" · ")}</p> : null}</div>{selected.deliveryStage ? <span className="stagePill">{readableValue(selected.deliveryStage)}</span> : null}</div>
-          <div className="trustRow"><span className={detail?.geometry ? "trustBadge mapped" : "trustBadge pending"}>{detail?.geometry ? "●" : "○"} {locationLabel(detail)}</span>{detail?.location?.confidence !== null && detail?.location?.confidence !== undefined ? <span>{Math.round(detail.location.confidence * 100)}% location confidence</span> : null}{shareState === "copied" ? <span className="copiedNotice">Link copied</span> : null}</div>
-
-          <nav className="detailTabs" aria-label="Project detail sections">{(["overview", "activity", "evidence"] as DetailTab[]).map((tab) => <button className={detailTab === tab ? "active" : ""} key={tab} onClick={() => { setDetailTab(tab); if (sheetSnap === "peek") setSheetSnap("half"); }} type="button">{readableField(tab)}</button>)}</nav>
-
-          <div className="projectSheetBody">
-            {detailState === "loading" ? <p className="detailLoading">Loading official project intelligence…</p> : null}
-            {detailState === "error" ? <p className="errorMessage">Project evidence could not be loaded.</p> : null}
-
-            {detailTab === "overview" ? (
-              <>
-                {summary ? <p className="projectSummary">{readableValue(summary)}</p> : null}
-                {!selected.geometry ? <p className="locationNotice">Trackstar knows this project exists, but no defensible map geometry is available yet. It stays in the catalog without a fake pin.</p> : null}
-                {detail && Object.keys(detail.statuses).length ? <section className="statusSection"><h3>Status</h3><div className="statusGrid">{Object.entries(detail.statuses).map(([dimension, value]) => <div key={dimension}><span>{readableField(dimension)}</span><strong>{readableValue(value)}</strong></div>)}</div></section> : null}
-                {facts.length ? <dl className="facts">{facts.map((assertion) => <div key={`${assertion.field}-${JSON.stringify(assertion.value)}`}><dt>{readableField(assertion.field)}</dt><dd>{readableValue(assertion.value)}</dd></div>)}</dl> : null}
-                {context?.relationships.length ? <section className="relationshipSection"><div className="sectionHeading"><h3>Connected projects</h3><span>{context.relationships.length}</span></div><div className="relationshipList">{context.relationships.map((relationship) => <button key={`${relationship.direction}-${relationship.project_id}-${relationship.relationship_type}`} onClick={() => selectProjectById(relationship.project_id)} type="button"><span><small>{readableValue(relationship.relationship_type)}</small><strong>{relationship.project_name}</strong></span><em>{relationship.mapped ? "Mapped" : "Location pending"} →</em></button>)}</div></section> : null}
-              </>
-            ) : null}
-
-            {detailTab === "activity" ? <section className="activitySection"><div className="sectionHeading"><h3>Project timeline</h3><span>{events.length}</span></div>{events.length ? <ol className="timeline expanded">{events.map((projectEvent) => <li key={projectEvent.id}><time dateTime={projectEvent.occurred_at ?? projectEvent.observed_at}>{eventDate(projectEvent.occurred_at ?? projectEvent.observed_at)}</time><div><strong>{projectEvent.title}</strong>{projectEvent.summary ? <p>{projectEvent.summary}</p> : null}</div></li>)}</ol> : <p className="emptyMessage">No dated project events have been published yet.</p>}</section> : null}
-
-            {detailTab === "evidence" ? <section className="evidenceSection"><div className="sectionHeading"><h3>Official evidence</h3><span>{detail?.sources.length ?? 0}</span></div><div className="sourceCards">{detail?.sources.map((source) => <article key={`${source.source_key}-${source.relationship_type}-${source.url}`}><div><strong>{source.source_name}</strong><small>{readableValue(source.relationship_type)} · {Math.round(source.confidence * 100)}% link confidence</small></div>{source.url ? <a href={source.url} rel="noreferrer" target="_blank">Open source ↗</a> : null}</article>)}</div>{detail?.assertions.length ? <details className="assertionDrawer"><summary>All extracted facts <span>{detail.assertions.length}</span></summary><dl className="facts compact">{detail.assertions.map((assertion, index) => <div key={`${assertion.field}-${index}`}><dt>{readableField(assertion.field)}</dt><dd>{readableValue(assertion.value)}</dd></div>)}</dl></details> : null}</section> : null}
-          </div>
-        </article>
+      {briefingActive && currentBriefing ? (
+        <section className="briefingHud">
+          <div className="briefingProgress"><i style={{ width: `${((briefingIndex + 1) / briefingItems.length) * 100}%` }} /></div>
+          <p>{briefingWindow === "today" ? "TODAY" : "THIS WEEK"} · {briefingIndex + 1}/{briefingItems.length}</p>
+          <strong>{currentBriefing.event?.title ?? currentBriefing.name}</strong>
+          <div className="briefingControls"><button disabled={briefingIndex === 0} onClick={() => setBriefingIndex((index) => Math.max(0, index - 1))} type="button">‹</button><button onClick={() => setBriefingPaused((value) => !value)} type="button">{briefingPaused ? <PlayIcon /> : <PauseIcon />}</button><button disabled={briefingIndex === briefingItems.length - 1} onClick={() => setBriefingIndex((index) => Math.min(briefingItems.length - 1, index + 1))} type="button">›</button><button className="briefingDone" onClick={stopBriefing} type="button">Done</button></div>
+        </section>
       ) : null}
 
-      {view === "map" && !selected && !briefingActive ? (
-        <>
-          <details className="mapLegend"><summary>Legend</summary><div><span><i data-kind="development" />Development</span><span><i data-kind="environmental" />Environmental</span><span><i data-kind="transportation" />Transportation</span><span><i data-kind="public" />Public works</span><span><i data-kind="water" />Water</span></div></details>
-          <div className="discoveryHint"><i /><span>{coverage ? <><strong>{coverage.visibleMapped.toLocaleString()} visible</strong> · {coverage.mappedMatching.toLocaleString()} mapped · {coverage.locationPending.toLocaleString()} location pending</> : <><strong>{activeFilter}</strong> · loading project coverage…</>}</span></div>
-        </>
+      {view === "explore" && selected ? (
+        <article className={`humanProjectCard snap-${sheetSnap}`} style={{ transform: `translateY(${sheetDrag}px)` }}>
+          <button className="sheetGrabber" onPointerDown={onSheetPointerDown} onPointerMove={onSheetPointerMove} onPointerUp={onSheetPointerUp} type="button"><span /></button>
+          <div className="humanCardTop"><div><p>{consumerType(selected.projectType).toUpperCase()}</p><h2>{detail?.name ?? selected.name}</h2>{context?.aliases.length ? <small>also known as {context.aliases.map((item) => item.alias).join(" · ")}</small> : null}</div><div className="sheetActions"><button className="iconButton" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button className="roundClose small" onClick={clearSelection} type="button">×</button></div></div>
+          <div className="humanCardBody">
+            {detailState === "loading" ? <p className="projectLead">Figuring out what this is and what’s happening…</p> : <p className="projectLead">{summary}</p>}
+            {status ? <section className="whatsHappening"><small>WHAT’S HAPPENING</small><strong>{status.value}</strong><span>{status.label}</span></section> : null}
+            {facts.length ? <div className="humanFacts">{facts.map((fact) => <div key={fact.field}><small>{readableField(fact.field)}</small><strong>{readableValue(fact.value)}</strong></div>)}</div> : null}
+            <div className="humanTrust"><span>{detail?.sources.length ? `Verified from ${detail.sources.length} official source${detail.sources.length === 1 ? "" : "s"}` : "Official-source details loading"}</span><span>{latestEvent ? `Updated ${eventDate(latestEvent.occurred_at ?? latestEvent.observed_at)}` : detail?.last_activity_at ? `Updated ${eventDate(detail.last_activity_at)}` : ""}</span>{shareState === "copied" ? <b>Link copied</b> : null}</div>
+            {!detail?.geometry && detailState === "idle" ? <p className="locationNotice">Trackstar knows this project exists, but the exact map location is still being verified. No fake pin.</p> : null}
+            <button className="technicalToggle" onClick={() => { setTechnicalOpen((value) => !value); setSheetSnap("full"); }} type="button">{technicalOpen ? "Hide details" : "Details & sources"}<span>{technicalOpen ? "−" : "+"}</span></button>
+
+            {technicalOpen ? (
+              <div className="technicalLayer">
+                {context?.relationships.length ? <section><h3>Connected projects</h3><div className="relationshipList">{context.relationships.map((relationship) => <button key={`${relationship.direction}-${relationship.project_id}`} onClick={() => { setSelectedProjectId(relationship.project_id); setTechnicalOpen(false); window.history.pushState({}, "", `/projects/${relationship.project_id}`); }} type="button"><span><small>{readableValue(relationship.relationship_type)}</small><strong>{relationship.project_name}</strong></span><em>›</em></button>)}</div></section> : null}
+                {events.length ? <section><h3>Timeline</h3><ol className="timeline expanded">{events.map((item) => <li key={item.id}><time>{eventDate(item.occurred_at ?? item.observed_at)}</time><div><strong>{item.title}</strong>{item.summary ? <p>{item.summary}</p> : null}</div></li>)}</ol></section> : null}
+                {detail?.assertions.length ? <section><h3>Technical facts</h3><dl className="facts compact">{detail.assertions.slice(0, 18).map((item, index) => <div key={`${item.field}-${index}`}><dt>{readableField(item.field)}</dt><dd>{readableValue(item.value)}</dd></div>)}</dl></section> : null}
+                {detail?.sources.length ? <section><h3>Official sources</h3><div className="sourceCards">{detail.sources.map((source, index) => <article key={`${source.source_key}-${index}`}><div><strong>{source.source_name}</strong><small>{readableValue(source.relationship_type)}</small></div>{source.url ? <a href={source.url} rel="noreferrer" target="_blank">Open ↗</a> : null}</article>)}</div></section> : null}
+              </div>
+            ) : null}
+          </div>
+        </article>
       ) : null}
     </section>
   );
