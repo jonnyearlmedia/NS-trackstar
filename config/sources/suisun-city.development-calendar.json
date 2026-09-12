@@ -1,0 +1,47 @@
+{
+  "key": "suisun-city.development-calendar",
+  "name": "Suisun City Development Calendar",
+  "jurisdiction": "City of Suisun City",
+  "adapter": "pdf_project_tracker",
+  "base_url": "https://www.suisun.com/News-articles/Development-Calendar",
+  "poll_minutes": 1440,
+  "options": {
+    "document_url": "https://www.suisun.com/files/sharedassets/suisuncity/v/1/training/resources/images/michaels-images/development-calendar-update-final.pdf",
+    "min_page_count": 22,
+    "expected_project_count": 16,
+    "canary_markers": [
+      "Active Development Calendar",
+      "Future Development Calendar"
+    ],
+    "page_groups": [
+      {
+        "tracker_stage": "entitled_or_under_construction",
+        "pages": [5, 6, 7, 8]
+      },
+      {
+        "tracker_stage": "under_review_or_in_process",
+        "pages": [10, 11, 12, 13, 14, 15]
+      },
+      {
+        "tracker_stage": "future_requires_entitlements",
+        "pages": [17, 18, 19, 20, 21, 22]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "name",
+      "project_type": "municipal_development",
+      "description_field": "project_description",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "official_tracker_stage",
+      "status_field": "tracker_stage",
+      "assertions": {
+        "location_description": "location_description",
+        "owner_applicant": "owner_applicant",
+        "land_use_designation": "land_use_designation",
+        "zoning": "zoning",
+        "official_status_text": "status_text",
+        "description": "project_description"
+      }
+    }
+  }
+}

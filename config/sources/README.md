@@ -15,6 +15,7 @@ Planned source families include:
 - `granicus`
 - `escribe`
 - `ceqanet`
+- `pdf_project_tracker`
 - `caltrans`
 - `bayarea_511`
 - `abc_ca`
@@ -25,3 +26,8 @@ Planned source families include:
 - `nigc`
 
 The adapter rule is strict: reuse transport and parsing infrastructure without throwing away fields that exist only in one jurisdiction.
+
+`pdf_project_tracker` is for official, slide- or page-based curated inventories where each
+configured page describes one project. It preserves the source page text and document SHA-256;
+stage groupings remain source-specific assertions rather than being flattened into planning or
+construction status.
