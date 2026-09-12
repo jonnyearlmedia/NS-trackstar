@@ -234,7 +234,7 @@ async def briefing(
               SELECT 1
               FROM project_status_dimension meaningful_status
               WHERE meaningful_status.project_id = p.id
-                AND lower(meanful_status.value) <> ALL(%(terminal_statuses)s)
+                AND lower(meaningful_status.value) <> ALL(%(terminal_statuses)s)
             )
             OR COALESCE(le.significance, 0) >= 0.6
           )
