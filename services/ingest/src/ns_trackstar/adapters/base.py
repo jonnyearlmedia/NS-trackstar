@@ -7,6 +7,10 @@ from typing import Any
 from ns_trackstar.models import CollectorResult
 
 
+class SourceBlockedError(RuntimeError):
+    """The public source cannot run until an external prerequisite is supplied."""
+
+
 @dataclass(frozen=True, slots=True)
 class SourceConfig:
     key: str

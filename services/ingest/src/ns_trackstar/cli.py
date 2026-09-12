@@ -7,7 +7,7 @@ import os
 
 import psycopg
 
-from ns_trackstar.adapters.base import SourceConfig
+from ns_trackstar.adapters.base import SourceBlockedError, SourceConfig
 from ns_trackstar.config import load_source_config
 from ns_trackstar.db import (
     connect,
@@ -21,7 +21,21 @@ from ns_trackstar.registry import build_adapter
 
 async def _dry_run(adapter_name: str, config: SourceConfig) -> int:
     adapter = build_adapter(adapter_name, config)
-    canary_ok = await adapter.canary()
+    try:
+        canary_ok = await adapter.canary()
+    except SourceBlockedError as exc:
+        print(
+            json.dumps(
+                {
+                    "source": config.key,
+                    "canary_ok": None,
+                    "records": 0,
+                    "health_state": "blocked",
+                    "reason": str(exc),
+                }
+            )
+        )
+        return 3
     if not canary_ok:
         print(json.dumps({"source": config.key, "canary_ok": False, "records": 0}))
         return 2
@@ -114,6 +128,9 @@ async def collect(config_path: str, *, write: bool) -> int:
                     error_type=type(exc).__name__,
                     error_message=str(exc),
                     canary_ok=canary_ok,
+                    health_state=(
+                        "blocked" if isinstance(exc, SourceBlockedError) else "broken"
+                    ),
                 )
             raise
 

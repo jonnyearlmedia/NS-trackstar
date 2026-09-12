@@ -92,7 +92,7 @@ function eventDate(value: string | null) {
     .format(new Date(value));
 }
 
-export function MapExplorer() {
+export function MapExplorer({ initialProjectId }: { initialProjectId?: string }) {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("week");
   const [projectType, setProjectType] = useState<string | null>(null);
   const [view, setView] = useState<"map" | "changes">("map");
@@ -111,9 +111,10 @@ export function MapExplorer() {
   );
 
   useEffect(() => {
-    const initialProjectId = new URLSearchParams(window.location.search).get("project");
-    if (initialProjectId) setSelectedProjectId(initialProjectId);
-  }, []);
+    const projectId =
+      initialProjectId ?? new URLSearchParams(window.location.search).get("project");
+    if (projectId) setSelectedProjectId(projectId);
+  }, [initialProjectId]);
 
   useEffect(() => {
     if (!selectedProjectId) return;
@@ -188,9 +189,7 @@ export function MapExplorer() {
     setSelectedProjectId(project.id);
     setDetail(null);
     setEvents([]);
-    const url = new URL(window.location.href);
-    url.searchParams.set("project", project.id);
-    window.history.replaceState({}, "", url);
+    window.history.replaceState({}, "", `/projects/${project.id}`);
   }
 
   async function submitSearch(event: FormEvent<HTMLFormElement>) {
@@ -228,9 +227,7 @@ export function MapExplorer() {
     setSelectedProjectId(null);
     setDetail(null);
     setEvents([]);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("project");
-    window.history.replaceState({}, "", url);
+    window.history.replaceState({}, "", "/");
   }
 
   const assertions =

@@ -12,6 +12,7 @@ from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
+from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
 
 AdapterFactory = Callable[[SourceConfig], CollectorAdapter]
 
@@ -25,6 +26,8 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "opencities_map": OpenCitiesMapAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
+    "bayarea_511_traffic": BayArea511TrafficAdapter,
+    "wzdx": WzdxAdapter,
 }
 
 
