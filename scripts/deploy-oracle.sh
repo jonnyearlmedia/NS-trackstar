@@ -5,6 +5,9 @@ cd "$(dirname "$0")/.."
 
 env_file=.env.production
 mode=${1:-deploy}
+api_domain_override=${NS_TRACKSTAR_API_DOMAIN:-}
+web_origin_override=${NS_TRACKSTAR_WEB_ORIGIN:-}
+cert_email_override=${NS_TRACKSTAR_CERT_EMAIL:-}
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install Docker Engine with the Compose plugin, then rerun this script." >&2
@@ -43,6 +46,17 @@ prompt_keep_existing() {
   printf "%s" "$value"
 }
 
+pick_setting() {
+  override=$1
+  label=$2
+  current=$3
+  if [ -n "$override" ]; then
+    printf "%s" "$override"
+  else
+    prompt_keep_existing "$label" "$current"
+  fi
+}
+
 validate_runtime_settings() {
   case "$api_domain" in
     ""|*[!A-Za-z0-9.-]*|.*|*.) echo "Enter a valid hostname only, without https://, a path, or a port." >&2; exit 1 ;;
@@ -72,9 +86,9 @@ configure_runtime() {
   db_user=$(read_setting POSTGRES_USER || true)
   db_password=$(read_setting POSTGRES_PASSWORD || true)
 
-  api_domain=$(prompt_keep_existing "Public API hostname (example: api.trackstar.example)" "$current_api_domain")
-  cors_origins=$(prompt_keep_existing "Deployed web origin (example: https://trackstar.vercel.app)" "$current_cors_origins")
-  caddy_email=$(prompt_keep_existing "Email for automatic HTTPS certificate notices" "$current_caddy_email")
+  api_domain=$(pick_setting "$api_domain_override" "Public API hostname (example: api.trackstar.example)" "$current_api_domain")
+  cors_origins=$(pick_setting "$web_origin_override" "Deployed web origin (example: https://trackstar.vercel.app)" "$current_cors_origins")
+  caddy_email=$(pick_setting "$cert_email_override" "Email for automatic HTTPS certificate notices" "$current_caddy_email")
 
   validate_runtime_settings
 
@@ -137,6 +151,9 @@ esac
 
 if [ ! -f "$env_file" ]; then
   echo "First-time NS Trackstar backend setup. No env-file editing is required."
+  configure_runtime
+elif [ -n "$api_domain_override$web_origin_override$cert_email_override" ]; then
+  echo "Applying supplied deployment settings without env-file editing."
   configure_runtime
 else
   echo "Using saved deployment settings. Run './scripts/deploy-oracle.sh configure' to change them without editing files."
