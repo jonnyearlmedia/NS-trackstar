@@ -24,11 +24,33 @@ Clone this repository on the VM, check out `build/phase-0-foundation`, then run:
 ./scripts/deploy-oracle.sh
 ```
 
-The script asks for only the public API hostname, deployed web origin, and an
-email for certificate notices. It generates the database password locally in
-an ignored `0600` file, builds the architecture-compatible PostGIS/backend
-images, applies unapplied SQL migrations, starts the API and sequential
-config-driven collector scheduler, and checks the public HTTPS health endpoint.
+On first run, the script asks only for the public API hostname, deployed web
+origin, and an email for certificate notices. It generates the database password
+locally and stores runtime settings in an ignored `0600` file. **The user never
+needs to open or manually edit that file.** The script builds the
+architecture-compatible PostGIS/backend images, applies unapplied SQL migrations,
+starts the API and sequential config-driven collector scheduler, and checks the
+public HTTPS health endpoint.
+
+To change the API hostname, web origin/CORS setting, or certificate email later,
+run:
+
+```sh
+./scripts/deploy-oracle.sh configure
+```
+
+Press Enter to keep an existing value. The database password is preserved and
+never printed. Check the non-secret deployment settings with:
+
+```sh
+./scripts/deploy-oracle.sh status
+```
+
+Then redeploy with:
+
+```sh
+./scripts/deploy-oracle.sh
+```
 
 Useful operations:
 
@@ -38,6 +60,10 @@ docker compose --env-file .env.production -f docker-compose.production.yml logs 
 git pull --ff-only
 ./scripts/deploy-oracle.sh
 ```
+
+Those Docker commands are maintainer/debug operations; normal setup and
+reconfiguration should go through the script so the user does not need to touch
+environment files.
 
 Before infrastructure maintenance, create a recoverable database backup:
 
@@ -56,9 +82,11 @@ Oracle Free Tier does not make application-level backups automatically.
 2. Set the project root directory to `apps/web` and production branch to the
    approved branch (normally `main` after PR review; do not merge PR #1 merely
    to deploy a preview).
-3. Add `NEXT_PUBLIC_API_BASE_URL=https://<API_DOMAIN>` to Preview and Production.
-4. Deploy, then add the final Vercel/custom-domain origin to `CORS_ORIGINS` in
-   the VM's `.env.production` and rerun `./scripts/deploy-oracle.sh`.
+3. Add `NEXT_PUBLIC_API_BASE_URL=https://<API_DOMAIN>` to Preview and Production
+   using Vercel's project settings; no local env file is required.
+4. Deploy. If the final Vercel/custom-domain origin differs from the backend's
+   saved CORS value, run `./scripts/deploy-oracle.sh configure` on the VM, enter
+   the final web origin, then rerun `./scripts/deploy-oracle.sh`.
 
 Verify the real public path after both sides are deployed:
 
@@ -75,8 +103,8 @@ and the browser console has no CORS or mixed-content error.
 
 The collector scheduler reads only promoted configurations in `config/sources`
 and runs them one at a time at each configuration's `poll_minutes`. Smoke-only
-eTRAKiT configurations are deliberately excluded until their safe recurring
-discovery strategies are production-ready. Martin can be added when the web app
-actually consumes its vector tiles; the current vertical slice reads project
-GeoJSON from the API, so running an unused tile service would add complexity
-without changing the deployed product.
+eTRAKiT and Accela configurations are deliberately excluded until their safe
+recurring discovery/session strategies are production-ready. Martin can be added
+when the web app actually consumes its vector tiles; the current vertical slice
+reads project GeoJSON from the API, so running an unused tile service would add
+complexity without changing the deployed product.
