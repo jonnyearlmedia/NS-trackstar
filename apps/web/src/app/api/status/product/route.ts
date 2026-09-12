@@ -7,7 +7,9 @@ const MAJOR_REVIEW_PRIORITY = 0.4;
 export const dynamic = "force-dynamic";
 
 type MapFeatureProbe = {
+  id?: string;
   properties?: {
+    id?: string;
     name?: string;
     display_priority?: number;
     source_count?: number;
@@ -18,7 +20,13 @@ type MapFeatureProbe = {
   };
 };
 type MapProbe = { features?: MapFeatureProbe[] };
-
+type LocationTruthProbe = Array<{
+  id?: string;
+  accuracy?: string | null;
+  accuracy_meters?: number | null;
+  confidence?: number | null;
+  method?: string | null;
+}>;
 type BriefingProbe = Array<{
   project_type?: string;
   briefing_kind?: string;
@@ -29,18 +37,27 @@ type ChangesProbe = Array<{ project_type?: string; event_type?: string; signific
 
 export async function GET() {
   try {
-    const mapParams = new URLSearchParams({
+    const viewport = {
       west: "-122.25",
       south: "38.05",
       east: "-121.85",
       north: "38.45",
-      window: "all",
-    });
-    const [briefingResponse, fallbackBriefingResponse, contextResponse, mapResponse, changesResponse] = await Promise.all([
+    };
+    const mapParams = new URLSearchParams({ ...viewport, window: "all" });
+    const locationParams = new URLSearchParams(viewport);
+    const [
+      briefingResponse,
+      fallbackBriefingResponse,
+      contextResponse,
+      mapResponse,
+      locationTruthResponse,
+      changesResponse,
+    ] = await Promise.all([
       fetch(`${API_BASE}/briefing?window=week&limit=3`, { cache: "no-store" }),
       fetch(`${API_BASE}/briefing?window=all&limit=3`, { cache: "no-store" }),
       fetch(`${API_BASE}/projects/${ONE_LAKE_ID}/context`, { cache: "no-store" }),
       fetch(`${API_BASE}/map/projects?${mapParams}`, { cache: "no-store" }),
+      fetch(`${API_BASE}/map/location-truth?${locationParams}`, { cache: "no-store" }),
       fetch(`${API_BASE}/changes?window=week&limit=5`, { cache: "no-store" }),
     ]);
 
@@ -48,6 +65,7 @@ export async function GET() {
     const fallbackBriefingText = await fallbackBriefingResponse.text();
     const contextText = await contextResponse.text();
     const mapText = await mapResponse.text();
+    const locationTruthText = await locationTruthResponse.text();
     const changesText = await changesResponse.text();
     const parse = (text: string): unknown => {
       try {
@@ -61,10 +79,32 @@ export async function GET() {
     const fallbackBriefing = parse(fallbackBriefingText) as BriefingProbe;
     const changes = parse(changesText) as ChangesProbe;
     const map = parse(mapText) as MapProbe;
+    const locationTruth = parse(locationTruthText) as LocationTruthProbe;
     const firstFeature = Array.isArray(map?.features) ? map.features[0] : undefined;
     const scottsValley = Array.isArray(map?.features)
       ? map.features.find((feature) => feature.properties?.name === "Scotts Valley Casino and Tribal Housing Project")
       : undefined;
+    const locationById = new Map(
+      Array.isArray(locationTruth)
+        ? locationTruth.filter((row) => row.id).map((row) => [String(row.id), row] as const)
+        : [],
+    );
+    const mapIds = Array.isArray(map?.features)
+      ? map.features.map((feature) => String(feature.properties?.id ?? feature.id ?? "")).filter(Boolean)
+      : [];
+    const locationTruthCoverage =
+      locationTruthResponse.ok &&
+      Array.isArray(locationTruth) &&
+      locationTruth.length > 0 &&
+      mapIds.some((id) => {
+        const truth = locationById.get(id);
+        return Boolean(truth?.accuracy && truth.method);
+      });
+    const truthIncludesApproximate =
+      Array.isArray(locationTruth) &&
+      locationTruth.some((row) =>
+        ["intersection", "street_segment", "approximate_area", "city_only"].includes(String(row.accuracy)),
+      );
     const relevanceSignals =
       typeof firstFeature?.properties?.display_priority === "number" &&
       typeof firstFeature?.properties?.source_count === "number" &&
@@ -104,6 +144,7 @@ export async function GET() {
       fallbackBriefingResponse.ok &&
       contextResponse.ok &&
       mapResponse.ok &&
+      locationTruthCoverage &&
       changesResponse.ok &&
       relevanceSignals &&
       majorReviewVisible &&
@@ -118,8 +159,12 @@ export async function GET() {
         fallback_briefing_status: fallbackBriefingResponse.status,
         context_status: contextResponse.status,
         map_status: mapResponse.status,
+        location_truth_status: locationTruthResponse.status,
         changes_status: changesResponse.status,
         relevance_signals: relevanceSignals,
+        location_truth_coverage: locationTruthCoverage,
+        location_truth_includes_approximate: truthIncludesApproximate,
+        location_truth_sample: Array.isArray(locationTruth) ? locationTruth.slice(0, 3) : locationTruth,
         major_review_visible: majorReviewVisible,
         major_review_sample: scottsValley ?? null,
         consumer_briefing: consumerBriefing,
