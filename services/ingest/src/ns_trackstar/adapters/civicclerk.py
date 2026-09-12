@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -15,9 +16,7 @@ def _wall_clock_datetime(value: Any) -> datetime | None:
     """Parse CivicClerk's local wall-clock datetime without trusting its Z suffix."""
     if not value:
         return None
-    text = str(value).strip()
-    if text.endswith("Z"):
-        text = text[:-1]
+    text = str(value).strip().removesuffix("Z")
     try:
         parsed = datetime.fromisoformat(text)
     except ValueError:
@@ -48,6 +47,7 @@ class CivicClerkAdapter(CollectorAdapter):
         self.lookahead_days = int(config.options.get("lookahead_days", 120))
         self.fetch_agendas = bool(config.options.get("fetch_agendas", True))
         self.min_interval = float(config.options.get("min_request_interval_seconds", 1.0))
+        self.timezone = ZoneInfo(str(config.options.get("timezone", "America/Los_Angeles")))
         self._client = client
         self._last_request_at: float | None = None
 
@@ -73,7 +73,7 @@ class CivicClerkAdapter(CollectorAdapter):
             response.raise_for_status()
             payload = response.json()
             if not isinstance(payload, dict):
-                raise RuntimeError("CivicClerk returned a non-object JSON payload")
+                raise TypeError("CivicClerk returned a non-object JSON payload")
             return payload
         finally:
             self._last_request_at = asyncio.get_running_loop().time()
@@ -84,7 +84,7 @@ class CivicClerkAdapter(CollectorAdapter):
         if not value:
             return None
         if not isinstance(value, str):
-            raise RuntimeError("CivicClerk @odata.nextLink is not a string")
+            raise TypeError("CivicClerk @odata.nextLink is not a string")
         base = urlparse(self.api_base)
         target = urlparse(value)
         if target.scheme != "https" or target.hostname != base.hostname:
@@ -96,7 +96,7 @@ class CivicClerkAdapter(CollectorAdapter):
         return isinstance(payload.get("value"), list)
 
     async def _events(self) -> list[dict[str, Any]]:
-        today = date.today()
+        today = datetime.now(self.timezone).date()
         from_date = today - timedelta(days=self.lookback_days)
         to_date = today + timedelta(days=self.lookahead_days)
         filters = (
@@ -111,7 +111,7 @@ class CivicClerkAdapter(CollectorAdapter):
             payload = await self._get_json(url, params=params)
             values = payload.get("value") or []
             if not isinstance(values, list):
-                raise RuntimeError("CivicClerk Events.value is not a list")
+                raise TypeError("CivicClerk Events.value is not a list")
             events.extend(value for value in values if isinstance(value, dict))
             url = self._safe_next_link(payload.get("@odata.nextLink")) or ""
             params = None
@@ -161,7 +161,7 @@ class CivicClerkAdapter(CollectorAdapter):
             return []
         items = payload.get("items") or []
         if not isinstance(items, list):
-            raise RuntimeError("CivicClerk agenda items is not a list")
+            raise TypeError("CivicClerk agenda items is not a list")
 
         records: list[NormalizedRecord] = []
         for item in _walk_items([value for value in items if isinstance(value, dict)]):
