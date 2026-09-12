@@ -8,5 +8,6 @@ def test_product_routes_are_registered() -> None:
 
     assert "/briefing" in product_paths
     assert "/projects/{project_id}/context" in product_paths
+    assert "/map/location-truth" in product_paths
     assert "/map/projects" in core_paths
     assert "/search/projects" in core_paths
