@@ -28,6 +28,17 @@ def freshness_state(
     return ("stale" if age_minutes > threshold else "current"), age_minutes
 
 
+def aggregate_freshness(states: list[str]) -> str:
+    """Aggregate source freshness without overstating partially-known projects."""
+    if not states:
+        return "unknown"
+    if "stale" in states:
+        return "stale"
+    if "unknown" in states:
+        return "unknown"
+    return "current"
+
+
 @router.get("/projects/{project_id}/freshness")
 async def project_freshness(request: Request, project_id: UUID) -> dict:
     project_cursor = await request.app.state.db.execute(
@@ -96,13 +107,7 @@ async def project_freshness(request: Request, project_id: UUID) -> dict:
     ]
     stale_sources = [source for source in sources if source["freshness_state"] == "stale"]
     unknown_sources = [source for source in sources if source["freshness_state"] == "unknown"]
-
-    if stale_sources:
-        overall = "stale"
-    elif unknown_sources and len(unknown_sources) == len(sources):
-        overall = "unknown"
-    else:
-        overall = "current"
+    overall = aggregate_freshness([source["freshness_state"] for source in sources])
 
     return {
         "project_id": str(project_id),
