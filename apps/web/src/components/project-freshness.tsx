@@ -96,7 +96,7 @@ export function ProjectFreshnessStatus({
           {age ? ` Oldest successful check was ${age}.` : " A recent successful check is not available."}
         </p>
       ) : freshness.freshness_state === "current" && age ? (
-        <p className={styles.freshnessLine}>Official records checked {age}</p>
+        <p className={styles.freshnessLine}>Official source checks current · oldest {age}</p>
       ) : null}
 
       {expanded ? (
