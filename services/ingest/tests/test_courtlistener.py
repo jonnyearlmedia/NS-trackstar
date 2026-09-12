@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import httpx
 import pytest
 
 from ns_trackstar.adapters.base import SourceBlockedError, SourceConfig
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
+from ns_trackstar.config import load_source_config
+from ns_trackstar.registry import build_adapter
 
 
 def _config(**options) -> SourceConfig:
@@ -36,6 +40,14 @@ def _docket(docket_id: int = 73414675) -> dict:
         "jurisdictionType": "U.S. Government Defendant",
         "meta": {"timestamp": "2026-09-01T12:30:00Z"},
     }
+
+
+def test_smoke_config_builds_registered_adapter() -> None:
+    config_path = Path(__file__).parents[3] / "config" / "smoke" / "napa-solano.courtlistener.json"
+    adapter_name, config = load_source_config(config_path)
+
+    assert adapter_name == "courtlistener"
+    assert isinstance(build_adapter(adapter_name, config), CourtListenerAdapter)
 
 
 @pytest.mark.asyncio
