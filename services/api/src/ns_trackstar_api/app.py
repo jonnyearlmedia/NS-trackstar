@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from asyncio import Lock
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, time, timedelta
@@ -29,16 +30,47 @@ SEARCH_ASSERTION_FIELDS = (
 )
 
 
+class ResilientDatabaseConnection:
+    """Single-node connection wrapper that recovers after a database restart."""
+
+    def __init__(self, database_url: str) -> None:
+        self.database_url = database_url
+        self.connection: psycopg.AsyncConnection | None = None
+        self._reconnect_lock = Lock()
+
+    async def connect(self) -> None:
+        self.connection = await psycopg.AsyncConnection.connect(
+            self.database_url,
+            row_factory=dict_row,
+            autocommit=True,
+        )
+
+    async def close(self) -> None:
+        if self.connection is not None:
+            await self.connection.close()
+            self.connection = None
+
+    async def execute(self, query, params=None):
+        if self.connection is None:
+            await self.connect()
+        try:
+            return await self.connection.execute(query, params)
+        except (psycopg.InterfaceError, psycopg.OperationalError):
+            failed_connection = self.connection
+            async with self._reconnect_lock:
+                if self.connection is failed_connection:
+                    await self.close()
+                    await self.connect()
+            return await self.connection.execute(query, params)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise RuntimeError("DATABASE_URL is required")
-    app.state.db = await psycopg.AsyncConnection.connect(
-        database_url,
-        row_factory=dict_row,
-        autocommit=True,
-    )
+    app.state.db = ResilientDatabaseConnection(database_url)
+    await app.state.db.connect()
     try:
         yield
     finally:
