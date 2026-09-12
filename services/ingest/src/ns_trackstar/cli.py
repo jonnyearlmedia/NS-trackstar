@@ -19,6 +19,7 @@ from ns_trackstar.db import (
 from ns_trackstar.enrichment import (
     enrich_napa_projects_from_parcels,
     enrich_one_lake_relationships,
+    enrich_solano_projects_from_parcels,
     enrich_sr37_sears_point_corridor,
 )
 from ns_trackstar.registry import build_adapter
@@ -94,7 +95,8 @@ async def collect(config_path: str, *, write: bool) -> int:
         raise RuntimeError("DATABASE_URL is required when --write is used")
 
     adapter = build_adapter(adapter_name, config)
-    enriched_projects = 0
+    enriched_napa_projects = 0
+    enriched_solano_projects = 0
     enriched_corridors = 0
     enriched_relationships = 0
     async with connect(database_url) as conn:
@@ -127,12 +129,29 @@ async def collect(config_path: str, *, write: bool) -> int:
                     canary_ok=True,
                     project_mapping=config.options.get("project_mapping"),
                 )
-                if config.key == "napa-county.parcels":
-                    enriched_projects = await enrich_napa_projects_from_parcels(conn)
+
+                # Parcel-derived geometry is intentionally rerun when either side of the
+                # join changes. That makes a new project APN useful immediately without
+                # waiting for the relatively slow county parcel refresh interval.
+                if config.key in {
+                    "napa-county.parcels",
+                    "california.ceqanet.napa-solano",
+                    "napa-county.current-projects-explorer",
+                }:
+                    enriched_napa_projects = await enrich_napa_projects_from_parcels(conn)
+
+                if config.key in {
+                    "solano-county.parcels",
+                    "fairfield.one-lake-assessor-map",
+                }:
+                    enriched_solano_projects = await enrich_solano_projects_from_parcels(conn)
+
                 if config.key == "california.ceqanet.napa-solano":
                     enriched_corridors = await enrich_sr37_sears_point_corridor(conn)
+
                 if config.key in {
                     "fairfield.one-lake-council-goals",
+                    "fairfield.one-lake-assessor-map",
                     "fairfield.vanden-canon-overcrossing",
                 }:
                     enriched_relationships = await enrich_one_lake_relationships(conn)
@@ -164,7 +183,8 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "records_changed": summary.records_changed,
                     "projects_created": summary.projects_created,
                     "projects_touched": summary.projects_touched,
-                    "projects_enriched_from_parcels": enriched_projects,
+                    "napa_projects_enriched_from_parcels": enriched_napa_projects,
+                    "solano_projects_enriched_from_parcels": enriched_solano_projects,
                     "corridors_enriched": enriched_corridors,
                     "project_relationships_enriched": enriched_relationships,
                 },
