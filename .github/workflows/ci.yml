@@ -51,5 +51,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - run: psql -h localhost -U nstrackstar -d nstrackstar -v ON_ERROR_STOP=1 -f db/migrations/0001_core.sql
+      - name: Apply database migrations in order
+        run: |
+          for migration in db/migrations/*.sql; do
+            psql -h localhost -U nstrackstar -d nstrackstar -v ON_ERROR_STOP=1 -f "$migration"
+          done
       - run: psql -h localhost -U nstrackstar -d nstrackstar -c "SELECT PostGIS_Version();"
