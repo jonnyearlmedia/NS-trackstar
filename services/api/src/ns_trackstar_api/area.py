@@ -10,7 +10,15 @@ from fastapi import APIRouter, Query, Request
 router = APIRouter()
 LOCAL_TIMEZONE = ZoneInfo("America/Los_Angeles")
 AreaWindow = Literal["today", "week", "upcoming", "all"]
-LifecycleStage = Literal["review", "approved", "construction", "completed", "inactive", "unknown"]
+LifecycleStage = Literal[
+    "proposed",
+    "review",
+    "approved",
+    "construction",
+    "completed",
+    "inactive",
+    "unknown",
+]
 
 INACTIVE_TERMS = (
     "canceled",
@@ -63,6 +71,7 @@ REVIEW_TERMS = (
     "ready for ceqa",
     "application deemed complete",
 )
+PROPOSED_TERMS = ("proposed",)
 NEGATION_PREFIXES = ("not ", "not yet ", "no longer ")
 
 
@@ -95,6 +104,8 @@ def _matched_categories(value: str) -> set[LifecycleStage]:
         matches.add("approved")
     if any(_contains_phrase(value, term) for term in REVIEW_TERMS):
         matches.add("review")
+    if any(_contains_phrase(value, term) for term in PROPOSED_TERMS):
+        matches.add("proposed")
     return matches
 
 
@@ -129,6 +140,7 @@ def normalize_lifecycle(statuses: dict[str, str]) -> tuple[LifecycleStage, str |
         "construction",
         "approved",
         "review",
+        "proposed",
     )
     for stage in precedence:
         for candidate_stage, dimension, raw_value in candidates:
