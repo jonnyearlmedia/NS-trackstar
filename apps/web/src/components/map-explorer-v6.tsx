@@ -13,6 +13,7 @@ import {
   type MapProject,
   type MapViewportState,
   type TimeWindow,
+  type UserLocation,
   type ViewportBounds,
 } from "@/components/map-canvas-v3";
 import styles from "./map-explorer-v2.module.css";
@@ -36,6 +37,13 @@ type ProjectDetail = {
   statuses: Record<string, string>;
   assertions: Array<{ field: string; value: unknown }>;
   sources: Array<{ source_key: string; source_name: string; relationship_type: string; url: string | null }>;
+};
+
+type ProjectClassification = {
+  project_id: string;
+  consumer_category: Exclude<ConsumerCategory, "all">;
+  lifecycle_stage: LifecycleStage;
+  lifecycle_evidence: { dimension: string | null; value: string | null };
 };
 
 type ProjectEvent = {
@@ -119,18 +127,11 @@ function categoryForRecord(projectType: string, projectName: string): Exclude<Co
   return "development";
 }
 
-function normalized(value: string | null | undefined) {
-  return String(value ?? "").trim().toLowerCase().replaceAll("_", " ").replaceAll("-", " ").replace(/\s+/g, " ");
-}
-
-function lifecycleForStatuses(statuses: Record<string, string>): LifecycleStage {
-  const values = Object.values(statuses).map(normalized);
-  if (values.some((value) => ["canceled", "cancelled", "withdrawn", "denied", "rejected", "abandoned", "stalled", "inactive"].some((term) => value === term || value.includes(term)))) return "inactive";
-  if (values.some((value) => ["completed", "complete", "closed", "finished"].some((term) => value === term || value.includes(term)))) return "completed";
-  if (values.some((value) => !value.includes("pre construction") && (value === "construction" || ["under construction", "active construction", "in construction", "construction underway", "construction phase"].some((term) => value.includes(term))))) return "construction";
-  if (values.some((value) => ["approved", "entitled", "permit issued", "permits issued"].some((term) => value === term || value.includes(term)))) return "approved";
-  if (values.some((value) => ["under review", "in review", "pending review", "application submitted", "submitted", "processing", "environmental review", "planning review"].some((term) => value === term || value.includes(term)))) return "review";
-  return "unknown";
+function categoryLabel(category: Exclude<ConsumerCategory, "all">) {
+  if (category === "development") return "Development";
+  if (category === "roads") return "Roads & transit";
+  if (category === "utilities") return "Utilities";
+  return "Public places";
 }
 
 function lifecycleLabel(stage: LifecycleStage) {
@@ -148,11 +149,7 @@ function routeProjectId() {
 }
 
 function consumerType(type: string, name = "") {
-  const category = categoryForRecord(type, name);
-  if (category === "development") return "Development";
-  if (category === "roads") return "Roads & transit";
-  if (category === "utilities") return "Utilities";
-  return "Public places";
+  return categoryLabel(categoryForRecord(type, name));
 }
 
 function readableValue(value: unknown) {
@@ -183,7 +180,7 @@ function projectSummary(detail: ProjectDetail | null, selected: MapProject | nul
   const direct = detail?.summary?.trim();
   if (direct) return direct.length > 280 ? `${direct.slice(0, 277).trimEnd()}…` : direct;
   if (!selected) return "";
-  return `A ${consumerType(selected.projectType, selected.name).toLowerCase()} project in Napa–Solano. Open details for the official records and history Trackstar has collected.`;
+  return `A ${categoryLabel(selected.consumerCategory).toLowerCase()} project in Napa–Solano. Open details for the official records and history Trackstar has collected.`;
 }
 
 function locationUncertain(detail: ProjectDetail | null, selected: MapProject | null) {
@@ -248,7 +245,7 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
   const [lifecycle, setLifecycle] = useState<LifecycleFilter>("all");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [resetNonce, setResetNonce] = useState(0);
-  const [locateNonce, setLocateNonce] = useState(0);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [browseOpen, setBrowseOpen] = useState(false);
 
   const [selected, setSelected] = useState<MapProject | null>(null);
@@ -349,22 +346,25 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
     async function loadProject() {
       setDetailState("loading");
       try {
-        const [detailResponse, eventsResponse] = await Promise.all([
+        const [detailResponse, eventsResponse, classificationResponse] = await Promise.all([
           fetch(`${API_BASE}/projects/${selectedProjectId}`, { signal: controller.signal }),
           fetch(`${API_BASE}/projects/${selectedProjectId}/events`, { signal: controller.signal }),
+          fetch(`${API_BASE}/projects/${selectedProjectId}/classification`, { signal: controller.signal }),
         ]);
-        if (!detailResponse.ok || !eventsResponse.ok) throw new Error("Project unavailable");
+        if (!detailResponse.ok || !eventsResponse.ok || !classificationResponse.ok) throw new Error("Project unavailable");
         const nextDetail = (await detailResponse.json()) as ProjectDetail;
         const nextEvents = (await eventsResponse.json()) as ProjectEvent[];
+        const classification = (await classificationResponse.json()) as ProjectClassification;
         setDetail(nextDetail);
         setEvents(nextEvents);
         setSelected({
           id: nextDetail.id,
           name: nextDetail.name,
           projectType: nextDetail.project_type,
-          consumerCategory: categoryForRecord(nextDetail.project_type, nextDetail.name),
+          consumerCategory: classification.consumer_category,
           deliveryStage: nextDetail.statuses.delivery_stage ?? nextDetail.statuses.official_tracker_stage ?? null,
-          lifecycleStage: lifecycleForStatuses(nextDetail.statuses),
+          lifecycleStage: classification.lifecycle_stage,
+          lifecycleEvidence: classification.lifecycle_evidence,
           geometry: nextDetail.geometry,
           lastActivityAt: nextDetail.last_activity_at,
           locationAccuracy: nextDetail.location?.accuracy ?? null,
@@ -513,7 +513,7 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
       projectType: result.project_type,
       consumerCategory: categoryForRecord(result.project_type, result.name),
       deliveryStage: result.statuses.delivery_stage ?? result.statuses.official_tracker_stage ?? null,
-      lifecycleStage: lifecycleForStatuses(result.statuses),
+      lifecycleStage: "unknown",
       geometry: result.geometry,
     });
   }
@@ -564,15 +564,16 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
     setLocationState("checking");
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         if (!isInsideCoverage(latitude, longitude)) {
+          setUserLocation(null);
           setLocationState("outside");
           return;
         }
         setLocationState("idle");
         setLocationPromptOpen(false);
         rememberFreeExplore();
-        setLocateNonce((value) => value + 1);
+        setUserLocation({ latitude, longitude, accuracy });
       },
       (error) => {
         setLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "error");
@@ -587,7 +588,6 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
         briefingActive={briefingActive}
         category={category}
         lifecycle={lifecycle}
-        locateNonce={locateNonce}
         onCoverageChange={setCoverage}
         onSelectProject={selectProject}
         onUserInteraction={() => {
@@ -604,6 +604,7 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
         restoreNonce={restoreNonce}
         selectedProject={selected}
         timeWindow={timeWindow}
+        userLocation={userLocation}
       />
       <div className={`mapAtmosphere ${selected ? "selected" : ""}`} />
 
@@ -648,7 +649,7 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
 
       {view === "explore" && !selected && browseOpen && !briefingActive ? <section className={styles.updatesPanel} aria-label="Projects in this area">
         <div className={styles.updatesHeader}><div><p>BROWSE THIS AREA</p><h2>{currentCategory.longLabel}</h2><span>{visibleCount.toLocaleString()} mapped projects in the current view{lifecycle !== "all" ? ` · ${LIFECYCLE_OPTIONS.find((item) => item.value === lifecycle)?.label}` : ""}</span></div><div className={styles.projectActions}><button aria-label="Close project list" onClick={() => setBrowseOpen(false)} type="button">×</button></div></div>
-        {category === "all" && lifecycle === "all" && visibleCount > 150 ? <><p className={styles.stateMessage}>There are too many projects here for a useful flat list. Choose a category, stage, or zoom in.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button key={item.key} onClick={() => applyCategory(item.key)} type="button"><i>{item.icon}</i><span>{item.label}</span></button>)}</div></> : <ol className={styles.updateList}>{sortedViewportProjects.map((project) => <li key={project.id}><button onClick={() => selectProject(project)} type="button"><small>{consumerType(project.projectType, project.name)} · {lifecycleLabel(project.lifecycleStage)}{project.deliveryStage ? ` · ${readableValue(project.deliveryStage)}` : ""}</small><strong>{project.name}</strong><span>{project.locationUncertain ? "Approximate location" : "View project"}</span></button></li>)}</ol>}
+        {category === "all" && lifecycle === "all" && visibleCount > 150 ? <><p className={styles.stateMessage}>There are too many projects here for a useful flat list. Choose a category, stage, or zoom in.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button key={item.key} onClick={() => applyCategory(item.key)} type="button"><i>{item.icon}</i><span>{item.label}</span></button>)}</div></> : <ol className={styles.updateList}>{sortedViewportProjects.map((project) => <li key={project.id}><button onClick={() => selectProject(project)} type="button"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}{project.deliveryStage ? ` · ${readableValue(project.deliveryStage)}` : ""}</small><strong>{project.name}</strong><span>{project.locationUncertain ? "Approximate location" : "View project"}</span></button></li>)}</ol>}
         {viewport && visibleCount === 0 ? <div className={styles.emptyUpdates}><strong>No mapped projects match this view.</strong><span>Try clearing filters or zooming out.</span><button onClick={clearAllFilters} type="button">Clear filters</button></div> : null}
       </section> : null}
 
@@ -667,8 +668,8 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
         <div className={styles.projectCardHandle}><span /></div>
         <div className={styles.projectTopLine}><span className={styles.breadcrumb}>AREA BRIEFING · {briefingIndex + 1} OF {briefingItems.length}</span><div className={styles.projectActions}><button aria-label="Exit briefing" onClick={() => stopBriefing(true)} type="button">×</button></div></div>
         <div className={styles.projectScroll}>
-          <div className={styles.projectTitleBlock}><small>{consumerType(currentBriefing.projectType, currentBriefing.name)} · {lifecycleLabel(currentBriefing.lifecycleStage)}{currentBriefing.deliveryStage ? ` · ${readableValue(currentBriefing.deliveryStage)}` : ""}</small><h2>{currentBriefing.name}</h2>{currentBriefing.locationUncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
-          {currentBriefingChange ? <div className={styles.latestBlock}><small>RECENT CHANGE</small><strong>{eventHeadline(currentBriefingChange)}</strong><span>{eventDate(currentBriefingChange.occurred_at ?? currentBriefingChange.observed_at)}</span></div> : <p className={styles.projectLead}>One of the current projects worth orienting to in the area you chose.</p>}
+          <div className={styles.projectTitleBlock}><small>{categoryLabel(currentBriefing.consumerCategory)} · {lifecycleLabel(currentBriefing.lifecycleStage)}{currentBriefing.deliveryStage ? ` · ${readableValue(currentBriefing.deliveryStage)}` : ""}</small><h2>{currentBriefing.name}</h2>{currentBriefing.locationUncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
+          {currentBriefingChange ? <div className={styles.latestBlock}><small>RECENT CHANGE</small><strong>{eventHeadline(currentBriefingChange)}</strong><span>{eventDate(currentBriefingChange.occurred_at ?? currentBriefingChange.observed_at)}</span></div> : <p className={styles.projectLead}>A current project in the map area you chose.</p>}
           <div className={styles.panelFooter}><button onClick={() => setBriefingPaused((value) => !value)} type="button">{briefingPaused ? "Resume" : "Pause"}</button><button disabled={briefingIndex >= briefingItems.length - 1} onClick={() => setBriefingIndex((index) => Math.min(briefingItems.length - 1, index + 1))} type="button">Next</button></div>
           <button className={styles.detailsButton} onClick={openBriefingProject} type="button">Open this project <span>›</span></button>
         </div>
@@ -676,9 +677,9 @@ export function MapExplorerV6({ initialProjectId }: { initialProjectId?: string 
 
       {view === "explore" && selected && !briefingActive ? <article className={`${styles.projectCard} ${detailExpanded ? styles.projectCardExpanded : ""}`}>
         <div className={styles.projectCardHandle}><span /></div>
-        <div className={styles.projectTopLine}><button className={styles.breadcrumb} onClick={clearSelection} type="button">‹ {consumerType(selected.projectType, selected.name)}</button><div className={styles.projectActions}><button aria-label="Share project" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button aria-label="Close project" onClick={clearSelection} type="button">×</button></div></div>
+        <div className={styles.projectTopLine}><button className={styles.breadcrumb} onClick={clearSelection} type="button">‹ {categoryLabel(selected.consumerCategory)}</button><div className={styles.projectActions}><button aria-label="Share project" onClick={() => void shareProject()} type="button"><ShareIcon /></button><button aria-label="Close project" onClick={clearSelection} type="button">×</button></div></div>
         <div className={styles.projectScroll}>
-          <div className={styles.projectTitleBlock}><small>{consumerType(selected.projectType, selected.name)} · {lifecycleLabel(selected.lifecycleStage)}{stage ? ` · ${stage}` : ""}</small><h2>{detail?.name ?? selected.name}</h2>{uncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
+          <div className={styles.projectTitleBlock}><small>{categoryLabel(selected.consumerCategory)} · {lifecycleLabel(selected.lifecycleStage)}{stage ? ` · ${stage}` : ""}</small><h2>{detail?.name ?? selected.name}</h2>{uncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
           {detailState === "loading" ? <p className={styles.projectLead}>Loading the official project details…</p> : null}
           {detailState === "error" ? <p className={styles.projectLead}>Trackstar could not load this project’s details right now.</p> : null}
           {detailState === "idle" ? <p className={styles.projectLead}>{summary}</p> : null}
