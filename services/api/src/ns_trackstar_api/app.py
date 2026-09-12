@@ -3,12 +3,18 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime, time, timedelta
+from typing import Literal
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import psycopg
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
+
+LOCAL_TIMEZONE = ZoneInfo("America/Los_Angeles")
+TimeWindow = Literal["today", "week", "upcoming", "all"]
 
 
 @asynccontextmanager
@@ -37,6 +43,34 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+
+def _time_window_sql(time_window: TimeWindow) -> tuple[str, dict[str, object]]:
+    now = datetime.now(LOCAL_TIMEZONE)
+    if time_window == "today":
+        return (
+            "AND p.last_activity_at >= %(activity_after)s",
+            {"activity_after": datetime.combine(now.date(), time.min, tzinfo=LOCAL_TIMEZONE)},
+        )
+    if time_window == "week":
+        return "AND p.last_activity_at >= %(activity_after)s", {"activity_after": now - timedelta(days=7)}
+    if time_window == "upcoming":
+        return (
+            """
+            AND NOT EXISTS (
+              SELECT 1
+              FROM project_status_dimension upcoming_status
+              WHERE upcoming_status.project_id = p.id
+                AND upcoming_status.dimension = 'delivery_stage'
+                AND lower(upcoming_status.value) IN (
+                  'completed', 'complete', 'closed', 'construction',
+                  'under construction', 'cancelled', 'canceled'
+                )
+            )
+            """,
+            {},
+        )
+    return "", {}
 
 
 @app.get("/health")
@@ -77,19 +111,25 @@ async def map_projects(
     south: float | None = Query(default=None),
     east: float | None = Query(default=None),
     north: float | None = Query(default=None),
+    time_window: TimeWindow = Query(default="week", alias="window"),
 ) -> dict:
-    params: dict[str, float] = {}
+    params: dict[str, object] = {}
     bbox_filter = ""
     if all(value is not None for value in (west, south, east, north)):
-        params = {
-            "west": float(west),
-            "south": float(south),
-            "east": float(east),
-            "north": float(north),
-        }
+        params.update(
+            {
+                "west": float(west),
+                "south": float(south),
+                "east": float(east),
+                "north": float(north),
+            }
+        )
         bbox_filter = """
           AND p.primary_geometry && ST_MakeEnvelope(%(west)s, %(south)s, %(east)s, %(north)s, 4326)
         """
+
+    time_filter, time_params = _time_window_sql(time_window)
+    params.update(time_params)
 
     cursor = await app.state.db.execute(
         f"""
@@ -104,6 +144,7 @@ async def map_projects(
         LEFT JOIN project_status_dimension psd ON psd.project_id = p.id
         WHERE p.primary_geometry IS NOT NULL
         {bbox_filter}
+        {time_filter}
         GROUP BY p.id
         ORDER BY p.last_activity_at DESC NULLS LAST
         LIMIT 1000
@@ -131,6 +172,60 @@ async def map_projects(
             for row in rows
         ],
     }
+
+
+@app.get("/changes")
+async def changes(
+    time_window: TimeWindow = Query(default="week", alias="window"),
+    limit: int = Query(default=50, ge=1, le=250),
+) -> list[dict]:
+    now = datetime.now(LOCAL_TIMEZONE)
+    if time_window == "today":
+        event_after = datetime.combine(now.date(), time.min, tzinfo=LOCAL_TIMEZONE)
+    elif time_window == "week":
+        event_after = now - timedelta(days=7)
+    else:
+        event_after = None
+
+    params: dict[str, object] = {"limit": limit}
+    date_filter = ""
+    if event_after is not None:
+        params["event_after"] = event_after
+        date_filter = "AND COALESCE(pe.occurred_at, pe.observed_at) >= %(event_after)s"
+    elif time_window == "upcoming":
+        date_filter = "AND pe.occurred_at > now()"
+
+    cursor = await app.state.db.execute(
+        f"""
+        SELECT
+          pe.id, pe.project_id, pe.event_type, pe.occurred_at, pe.observed_at,
+          pe.title, pe.summary, pe.significance,
+          p.canonical_name AS project_name, p.project_type
+        FROM project_event pe
+        JOIN project p ON p.id = pe.project_id
+        WHERE true
+        {date_filter}
+        ORDER BY COALESCE(pe.occurred_at, pe.observed_at) DESC, pe.significance DESC
+        LIMIT %(limit)s
+        """,
+        params,
+    )
+    rows = await cursor.fetchall()
+    return [
+        {
+            "id": str(row["id"]),
+            "project_id": str(row["project_id"]),
+            "project_name": row["project_name"],
+            "project_type": row["project_type"],
+            "event_type": row["event_type"],
+            "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
+            "observed_at": row["observed_at"].isoformat(),
+            "title": row["title"],
+            "summary": row["summary"],
+            "significance": row["significance"],
+        }
+        for row in rows
+    ]
 
 
 @app.get("/projects/{project_id}")

@@ -3,6 +3,8 @@
 import type { Geometry } from "geojson";
 import { useEffect, useRef } from "react";
 
+export type TimeWindow = "today" | "week" | "upcoming" | "all";
+
 export type MapProject = {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export type MapProject = {
 
 type MapCanvasProps = {
   onSelectProject: (project: MapProject) => void;
+  timeWindow: TimeWindow;
 };
 
 type MapLibreModule = typeof import("maplibre-gl");
@@ -39,7 +42,11 @@ function visitCoordinates(value: unknown, visit: (coordinate: [number, number]) 
   for (const child of value) visitCoordinates(child, visit);
 }
 
-function frameFeature(map: import("maplibre-gl").Map, geometry: Geometry, maplibregl: MapLibreModule) {
+function frameFeature(
+  map: import("maplibre-gl").Map,
+  geometry: Geometry,
+  maplibregl: MapLibreModule,
+) {
   if (geometry.type === "Point") {
     map.flyTo({
       center: geometry.coordinates as [number, number],
@@ -66,13 +73,20 @@ function frameFeature(map: import("maplibre-gl").Map, geometry: Geometry, maplib
   }
 }
 
-export function MapCanvas({ onSelectProject }: MapCanvasProps) {
+export function MapCanvas({ onSelectProject, timeWindow }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onSelectRef = useRef(onSelectProject);
+  const timeWindowRef = useRef(timeWindow);
+  const refreshProjectsRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     onSelectRef.current = onSelectProject;
   }, [onSelectProject]);
+
+  useEffect(() => {
+    timeWindowRef.current = timeWindow;
+    refreshProjectsRef.current?.();
+  }, [timeWindow]);
 
   useEffect(() => {
     let disposed = false;
@@ -105,6 +119,7 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
           south: String(bounds.getSouth()),
           east: String(bounds.getEast()),
           north: String(bounds.getNorth()),
+          window: timeWindowRef.current,
         });
 
         try {
@@ -121,6 +136,8 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
         }
       }
 
+      refreshProjectsRef.current = () => void refreshProjects();
+
       map.on("load", () => {
         if (!map) return;
         map.addSource(PROJECT_SOURCE, { type: "geojson", data: emptyCollection() });
@@ -135,11 +152,15 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
             "fill-color": [
               "match",
               ["get", "delivery_stage"],
-              "Construction", "#d7ff58",
-              "Design", "#ffb38a",
-              "Planning", "#b6a7ff",
-              "Completed", "#8fd18a",
-              "#d7ff58"
+              "Construction",
+              "#d7ff58",
+              "Design",
+              "#ffb38a",
+              "Planning",
+              "#b6a7ff",
+              "Completed",
+              "#8fd18a",
+              "#d7ff58",
             ],
             "fill-opacity": 0.28,
           },
@@ -173,7 +194,12 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
           id: "selected-line-glow",
           type: "line",
           source: SELECTED_SOURCE,
-          paint: { "line-color": "#d7ff58", "line-width": 9, "line-opacity": 0.18, "line-blur": 4 },
+          paint: {
+            "line-color": "#d7ff58",
+            "line-width": 9,
+            "line-opacity": 0.18,
+            "line-blur": 4,
+          },
         });
         map.addLayer({
           id: "selected-line",
@@ -216,7 +242,9 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
             };
             onSelectRef.current(project);
 
-            const selectedSource = map.getSource(SELECTED_SOURCE) as import("maplibre-gl").GeoJSONSource;
+            const selectedSource = map.getSource(
+              SELECTED_SOURCE,
+            ) as import("maplibre-gl").GeoJSONSource;
             selectedSource.setData({
               type: "Feature",
               geometry: feature.geometry,
@@ -235,6 +263,7 @@ export function MapCanvas({ onSelectProject }: MapCanvasProps) {
     void mount();
     return () => {
       disposed = true;
+      refreshProjectsRef.current = null;
       refreshAbort?.abort();
       map?.remove();
     };
