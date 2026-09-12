@@ -175,6 +175,9 @@ if [ "$backend_deploy" -eq 1 ]; then
   echo "Backend-impacting changes detected; rebuilding the Trackstar stack."
   docker compose --env-file "$env_file" -f docker-compose.production.yml up --detach --build
   docker compose --env-file "$env_file" -f docker-compose.production.yml ps
+  echo "Applying local project enrichment without re-crawling upstream sources."
+  docker compose --env-file "$env_file" -f docker-compose.production.yml run --rm --no-deps \
+    collector ns-trackstar-ingest enrich
 else
   echo "Frontend/docs-only update detected; leaving API, database, and collector containers running."
 fi
