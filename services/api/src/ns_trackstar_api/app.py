@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+from asyncio import Lock
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, time, timedelta
 from typing import Annotated, Literal
@@ -16,27 +18,54 @@ LOCAL_TIMEZONE = ZoneInfo("America/Los_Angeles")
 TimeWindow = Literal["today", "week", "upcoming", "all"]
 
 
-def _database_url() -> str:
-    value = os.environ.get("DATABASE_URL")
-    if not value:
-        raise RuntimeError("DATABASE_URL is required")
-    return value
+class ResilientDatabaseConnection:
+    """Single-node connection wrapper that recovers after a database restart."""
+
+    def __init__(self, database_url: str) -> None:
+        self.database_url = database_url
+        self.connection: psycopg.AsyncConnection | None = None
+        self._reconnect_lock = Lock()
+
+    async def connect(self) -> None:
+        self.connection = await psycopg.AsyncConnection.connect(
+            self.database_url,
+            row_factory=dict_row,
+            autocommit=True,
+        )
+
+    async def close(self) -> None:
+        if self.connection is not None:
+            await self.connection.close()
+            self.connection = None
+
+    async def execute(self, query, params=None):
+        if self.connection is None:
+            await self.connect()
+        try:
+            return await self.connection.execute(query, params)
+        except (psycopg.InterfaceError, psycopg.OperationalError):
+            failed_connection = self.connection
+            async with self._reconnect_lock:
+                if self.connection is failed_connection:
+                    await self.close()
+                    await self.connect()
+            return await self.connection.execute(query, params)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.db = await psycopg.AsyncConnection.connect(
-        _database_url(),
-        row_factory=dict_row,
-        autocommit=True,
-    )
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is required")
+    app.state.db = ResilientDatabaseConnection(database_url)
+    await app.state.db.connect()
     try:
         yield
     finally:
         await app.state.db.close()
 
 
-app = FastAPI(title="NS Trackstar API", lifespan=lifespan)
+app = FastAPI(title="NS Trackstar API", version="0.1.0", lifespan=lifespan)
 
 cors_origins = [
     origin.strip()
@@ -88,13 +117,7 @@ def _project_scope(
 
 
 def _display_priority(row: dict) -> float:
-    """Return a presentation hint, never a factual project status.
-
-    The score only controls visual prominence. Existing explicit importance wins;
-    otherwise multiple independent source records gradually raise prominence. Major
-    infrastructure types receive a small presentation bump so a regional corridor
-    does not disappear under thousands of one-source records.
-    """
+    """Presentation prominence only; never interpreted as a factual project status."""
 
     explicit = float(row.get("importance_score") or 0)
     source_count = int(row.get("source_count") or 0)
