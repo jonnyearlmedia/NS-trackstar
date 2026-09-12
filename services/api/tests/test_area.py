@@ -20,6 +20,19 @@ def test_lifecycle_marks_explicit_review_without_guessing() -> None:
     assert value == "Under Review"
 
 
+def test_lifecycle_marks_real_tracker_review_phrases() -> None:
+    for value in (
+        "Review Process",
+        "Preliminary Review",
+        "Review Underway",
+        "CEQA Process",
+        "CEQA Prep",
+        "Ready for CEQA",
+        "Application Deemed Complete",
+    ):
+        assert normalize_lifecycle({"official_tracker_stage": value})[0] == "review"
+
+
 def test_lifecycle_marks_explicit_approval() -> None:
     stage, dimension, value = normalize_lifecycle({"official_tracker_stage": "Approved"})
     assert stage == "approved"
@@ -61,6 +74,8 @@ def test_lifecycle_does_not_promote_negated_status() -> None:
 def test_lifecycle_marks_terminal_statuses() -> None:
     assert normalize_lifecycle({"delivery_stage": "Completed"})[0] == "completed"
     assert normalize_lifecycle({"planning": "Withdrawn"})[0] == "inactive"
+    assert normalize_lifecycle({"official_tracker_stage": "Finaled - Opened for Business"})[0] == "completed"
+    assert normalize_lifecycle({"official_tracker_stage": "Building Permit Finaled"})[0] == "completed"
 
 
 def test_invalid_bbox_fails_closed() -> None:
