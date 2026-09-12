@@ -122,6 +122,7 @@ class CivicClerkAdapter(CollectorAdapter):
         event_date = _wall_clock_datetime(event.get("eventDate"))
         if event_id is None or event_date is None:
             return None
+        source_timestamp = event_date.replace(tzinfo=self.timezone)
         normalized = {
             "record_kind": "meeting",
             "event_id": event_id,
@@ -142,7 +143,7 @@ class CivicClerkAdapter(CollectorAdapter):
             source_key=self.config.key,
             external_id=f"event:{event_id}",
             canonical_url=str(self.portal_url) if self.portal_url else None,
-            source_created_at=event_date,
+            source_created_at=source_timestamp,
             raw_payload=event,
             normalized_payload=normalized,
         )
@@ -163,6 +164,7 @@ class CivicClerkAdapter(CollectorAdapter):
         if not isinstance(items, list):
             raise TypeError("CivicClerk agenda items is not a list")
 
+        source_timestamp = event_date.replace(tzinfo=self.timezone)
         records: list[NormalizedRecord] = []
         for item in _walk_items([value for value in items if isinstance(value, dict)]):
             item_id = item.get("id")
@@ -186,7 +188,7 @@ class CivicClerkAdapter(CollectorAdapter):
                     source_key=self.config.key,
                     external_id=f"event:{event.get('id')}:agenda:{agenda_id}:item:{item_id}",
                     canonical_url=str(self.portal_url) if self.portal_url else None,
-                    source_created_at=event_date,
+                    source_created_at=source_timestamp,
                     raw_payload=item,
                     normalized_payload=normalized,
                 )
