@@ -9,13 +9,17 @@ async def _enrich_projects_from_parcel_source(
     source_key: str,
     jurisdiction: str,
     parcel_apn_fields: tuple[str, ...],
+    allow_trailing_zero_suffix: bool = False,
 ) -> int:
     """Attach official parcel geometry to projects with matching APN assertions.
 
     APN assertions may be strings or arrays. The matcher extracts both Napa-style
     3-3-3 parcel numbers and Solano-style 4-3-3 parcel numbers without treating the
-    punctuation as identity. Projects are only enriched when they do not already
-    have primary geometry, so source geometry always wins over derived parcel shape.
+    punctuation as identity. Napa County's public layer commonly stores the same
+    assessor parcel with a trailing ``-000`` suffix while planning records publish
+    the 3-3-3 base APN, so that narrowly defined suffix is accepted for Napa only.
+    Projects are only enriched when they do not already have primary geometry, so
+    source geometry always wins over derived parcel shape.
     """
 
     parcel_apn_sql = "COALESCE(" + ", ".join(
@@ -76,7 +80,14 @@ async def _enrich_projects_from_parcel_source(
             pr.geometry
           FROM normalized_apns na
           JOIN parcel_records pr
-            ON pr.normalized_apn = na.normalized_apn
+            ON (
+              pr.normalized_apn = na.normalized_apn
+              OR (
+                %(allow_trailing_zero_suffix)s
+                AND length(na.normalized_apn) = 9
+                AND pr.normalized_apn = na.normalized_apn || '000'
+              )
+            )
            AND pr.normalized_apn <> ''
         )
         INSERT INTO project_parcel (
@@ -95,7 +106,11 @@ async def _enrich_projects_from_parcel_source(
           parcel_geometry = EXCLUDED.parcel_geometry,
           source_record_id = EXCLUDED.source_record_id
         """,
-        {"source_key": source_key, "jurisdiction": jurisdiction},
+        {
+            "source_key": source_key,
+            "jurisdiction": jurisdiction,
+            "allow_trailing_zero_suffix": allow_trailing_zero_suffix,
+        },
     )
 
     cursor = await conn.execute(
@@ -153,6 +168,7 @@ async def enrich_napa_projects_from_parcels(conn: psycopg.AsyncConnection) -> in
         source_key="napa-county.parcels",
         jurisdiction="Napa County",
         parcel_apn_fields=("asmtwithdash", "asmt"),
+        allow_trailing_zero_suffix=True,
     )
 
 
