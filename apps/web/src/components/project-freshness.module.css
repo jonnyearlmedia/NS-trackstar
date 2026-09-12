@@ -1,0 +1,72 @@
+.freshnessLine {
+  margin: 9px 1px 0;
+  color: #829088;
+  font-size: 7.5px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
+.freshnessWarning {
+  margin: 9px 0 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 205, 120, 0.13);
+  border-radius: 11px;
+  color: #c8bda9;
+  background: rgba(255, 205, 120, 0.055);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.freshnessWarning strong {
+  color: #f2d8ad;
+}
+
+.freshnessDetail {
+  margin-top: 14px;
+}
+
+.freshnessDetail h3 {
+  margin: 0 0 7px;
+  color: #eef4f0;
+  font-size: 10px;
+  letter-spacing: -0.01em;
+}
+
+.freshnessDetail > div {
+  display: grid;
+  gap: 5px;
+}
+
+.freshnessDetail article {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.freshnessDetail strong {
+  min-width: 0;
+  color: #cfd8d3;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.freshnessDetail span {
+  flex: 0 0 auto;
+  color: #85928a;
+  font-size: 7px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.freshnessDetail span[data-state="stale"] {
+  color: #d9bd91;
+}
+
+.freshnessDetail span[data-state="current"] {
+  color: #a9c678;
+}
