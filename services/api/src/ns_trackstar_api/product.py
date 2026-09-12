@@ -58,6 +58,50 @@ def _briefing_row(row: dict, *, kind: str) -> dict:
     }
 
 
+@router.get("/map/location-truth")
+async def map_location_truth(
+    request: Request,
+    west: Annotated[float, Query()],
+    south: Annotated[float, Query()],
+    east: Annotated[float, Query()],
+    north: Annotated[float, Query()],
+) -> list[dict]:
+    """Return how precise mapped project geometry actually is for the current viewport."""
+
+    cursor = await request.app.state.db.execute(
+        """
+        SELECT
+          p.id,
+          pl.location_accuracy::text AS accuracy,
+          pl.geometry_accuracy_meters AS accuracy_meters,
+          pl.geometry_confidence AS confidence,
+          pl.geometry_method AS method,
+          pl.geometry_source AS source
+        FROM project p
+        JOIN project_location pl
+          ON pl.project_id = p.id
+         AND pl.is_primary = true
+        WHERE p.primary_geometry IS NOT NULL
+          AND p.primary_geometry && ST_MakeEnvelope(%(west)s, %(south)s, %(east)s, %(north)s, 4326)
+        """,
+        {"west": west, "south": south, "east": east, "north": north},
+    )
+    rows = await cursor.fetchall()
+    return [
+        {
+            "id": str(row["id"]),
+            "accuracy": row["accuracy"],
+            "accuracy_meters": (
+                float(row["accuracy_meters"]) if row["accuracy_meters"] is not None else None
+            ),
+            "confidence": float(row["confidence"]) if row["confidence"] is not None else None,
+            "method": row["method"],
+            "source": row["source"],
+        }
+        for row in rows
+    ]
+
+
 @router.get("/projects/{project_id}/context")
 async def project_context(project_id: UUID, request: Request) -> dict:
     project_cursor = await request.app.state.db.execute(
@@ -74,6 +118,23 @@ async def project_context(project_id: UUID, request: Request) -> dict:
              ORDER BY a.observed_at DESC LIMIT 1),
             NULL
           ) AS evidence_summary,
+          COALESCE(
+            (SELECT a.value #>> '{}'
+             FROM assertion a
+             WHERE a.project_id = p.id
+               AND a.field IN ('address', 'location_description')
+             ORDER BY CASE WHEN a.field = 'address' THEN 0 ELSE 1 END,
+                      a.observed_at DESC
+             LIMIT 1),
+            NULL
+          ) AS location_label,
+          COALESCE(
+            (SELECT a.value #>> '{}'
+             FROM assertion a
+             WHERE a.project_id = p.id AND a.field = 'lead_agency'
+             ORDER BY a.observed_at DESC LIMIT 1),
+            NULL
+          ) AS lead_agency,
           COALESCE(
             (SELECT jsonb_agg(jsonb_build_object(
               'alias', pa.alias,
@@ -155,6 +216,8 @@ async def project_context(project_id: UUID, request: Request) -> dict:
         "name": project["canonical_name"],
         "importance_score": float(project["importance_score"] or 0),
         "summary": project["summary_cache"] or project["evidence_summary"],
+        "location_label": project["location_label"],
+        "lead_agency": project["lead_agency"],
         "aliases": project["aliases"],
         "relationships": [
             {
