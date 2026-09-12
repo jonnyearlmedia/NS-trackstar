@@ -30,7 +30,10 @@ const FIXTURES: Fixture[] = [
     key: "sr37-sears-point-mare-island",
     label: "SR 37 Sears Point–Mare Island",
     queries: ["SR 37", "Sears Point", "Mare Island"],
-    expectedNames: ["state route 37 sears point to mare island improvement project"],
+    expectedNames: [
+      "state route 37 sears point to mare island improvement project",
+      "state route (sr) 37 sears point to mare island improvement project",
+    ],
   },
   {
     key: "napa-pipe",
@@ -82,6 +85,7 @@ export async function GET() {
           key: fixture.key,
           label: fixture.label,
           found: canonicalMatches.length > 0,
+          map_ready: canonicalMatches.some((match) => match.geometry !== null),
           evidence_found: matches.length > 0,
           canonical_matches: canonicalMatches.map((match) => ({
             id: match.id,
@@ -106,15 +110,17 @@ export async function GET() {
       ? ((await todayCatalogResponse.json()) as unknown[])
       : [];
     const missing = fixtureResults.filter((fixture) => !fixture.found).map((fixture) => fixture.key);
+    const unmapped = fixtureResults.filter((fixture) => fixture.found && !fixture.map_ready).map((fixture) => fixture.key);
 
     return NextResponse.json({
-      ok: missing.length === 0 && todayCatalogResponse.ok,
+      ok: missing.length === 0 && unmapped.length === 0 && todayCatalogResponse.ok,
       catalog: {
         endpoint_ok: todayCatalogResponse.ok,
         today_count: todayCatalog.length,
       },
       fixtures: fixtureResults,
       missing,
+      unmapped,
       checked_at: new Date().toISOString(),
     });
   } catch (error) {
