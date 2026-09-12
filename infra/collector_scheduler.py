@@ -105,6 +105,70 @@ def persisted_last_attempts(database_url: str | None) -> dict[str, datetime]:
     return {str(source_key): attempted_at for source_key, attempted_at in rows}
 
 
+def persisted_failure_state(
+    database_url: str | None,
+    *,
+    source_key: str,
+) -> tuple[str | None, int]:
+    """Read the collector-owned health state after a failed subprocess.
+
+    Retry decisions fail closed: if health cannot be read, the scheduler uses the
+    source's normal poll interval rather than guessing that an upstream is safe to retry.
+    """
+    if not database_url:
+        return None, 0
+    try:
+        with psycopg.connect(database_url) as conn:
+            row = conn.execute(
+                """
+                SELECT sh.health_state::text, sh.consecutive_failures
+                FROM source s
+                LEFT JOIN source_health sh ON sh.source_id = s.id
+                WHERE s.source_key = %s
+                """,
+                (source_key,),
+            ).fetchone()
+    except psycopg.Error as exc:
+        print(
+            json.dumps(
+                {
+                    "event": "scheduler_failure_state_unavailable",
+                    "source": source_key,
+                    "reason": str(exc),
+                    "fallback": "normal_poll_interval",
+                }
+            ),
+            flush=True,
+        )
+        return None, 0
+    if row is None:
+        return None, 0
+    return (str(row[0]) if row[0] is not None else None, int(row[1] or 0))
+
+
+def retry_delay_seconds(
+    source: ScheduledSource,
+    *,
+    health_state: str | None,
+    consecutive_failures: int,
+) -> int:
+    """Return a conservative retry delay for a persisted collector failure.
+
+    Only transient-looking broken/degraded states get a shortened retry. Blocked,
+    schema-changed, unknown and other states keep the normal configured cadence so the
+    scheduler never turns access restrictions or schema drift into a retry storm.
+    """
+    if health_state not in {"broken", "degraded"}:
+        return source.poll_seconds
+
+    base_retry = min(
+        source.poll_seconds,
+        max(300, min(900, source.poll_seconds // 4)),
+    )
+    exponent = max(0, min(consecutive_failures - 1, 4))
+    return min(source.poll_seconds, base_retry * (2**exponent))
+
+
 def seconds_until_due(
     source: ScheduledSource,
     *,
@@ -174,6 +238,8 @@ def main() -> int:
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
 
+    database_url = os.environ.get("DATABASE_URL")
+
     # Persisted source_health makes deployment restarts cheap: successful/recent
     # sources keep the remaining portion of their configured interval, while a
     # previously failed source is retried immediately after a deploy that may fix it.
@@ -181,7 +247,7 @@ def main() -> int:
     # configs for operator smoke testing.
     next_run = initial_schedule(
         sources,
-        database_url=os.environ.get("DATABASE_URL"),
+        database_url=database_url,
         force_now=args.once or args.dry_run,
     )
     tick_seconds = max(5, int(os.environ.get("SCHEDULER_TICK_SECONDS", "60")))
@@ -193,8 +259,33 @@ def main() -> int:
                 break
             if now < next_run[source.key]:
                 continue
-            collect(source, dry_run=args.dry_run)
-            next_run[source.key] = time.monotonic() + source.poll_seconds
+
+            exit_code = collect(source, dry_run=args.dry_run)
+            delay = source.poll_seconds
+            if exit_code != 0 and not args.dry_run:
+                health_state, consecutive_failures = persisted_failure_state(
+                    database_url,
+                    source_key=source.key,
+                )
+                delay = retry_delay_seconds(
+                    source,
+                    health_state=health_state,
+                    consecutive_failures=consecutive_failures,
+                )
+                print(
+                    json.dumps(
+                        {
+                            "event": "collector_retry_scheduled",
+                            "source": source.key,
+                            "health_state": health_state,
+                            "consecutive_failures": consecutive_failures,
+                            "retry_in_seconds": delay,
+                            "normal_poll_seconds": source.poll_seconds,
+                        }
+                    ),
+                    flush=True,
+                )
+            next_run[source.key] = time.monotonic() + delay
 
         if args.once:
             return 0
