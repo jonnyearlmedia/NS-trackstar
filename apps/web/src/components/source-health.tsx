@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -18,6 +18,22 @@ type SourceHealth = {
   consecutive_failures: number | null;
 };
 
+type SourceCadence = {
+  source_key: string;
+  stability_state: "stable" | "watch" | "unstable" | "insufficient_history";
+  success_rate: number | null;
+  change_run_rate: number | null;
+  missed_expected_check: boolean;
+  overdue_minutes: number | null;
+  latest_run: {
+    outcome: "changed" | "checked_no_change" | "failed" | null;
+  };
+};
+
+type CadenceResponse = {
+  items: SourceCadence[];
+};
+
 function timestamp(value: string | null) {
   if (!value) return "Never";
   return new Intl.DateTimeFormat("en-US", {
@@ -26,19 +42,43 @@ function timestamp(value: string | null) {
   }).format(new Date(value));
 }
 
+function percent(value: number | null | undefined) {
+  return value === null || value === undefined ? "—" : `${Math.round(value * 100)}%`;
+}
+
+function readable(value: string | null | undefined) {
+  return value?.replaceAll("_", " ") ?? "—";
+}
+
 export function SourceHealthDashboard() {
   const [sources, setSources] = useState<SourceHealth[]>([]);
+  const [cadence, setCadence] = useState<SourceCadence[]>([]);
   const [state, setState] = useState<"loading" | "done" | "error">("loading");
+
+  const cadenceByKey = useMemo(
+    () => new Map(cadence.map((item) => [item.source_key, item])),
+    [cadence],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/admin/sources/health`, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Source health API returned ${response.status}`);
-        return response.json() as Promise<SourceHealth[]>;
+    Promise.all([
+      fetch(`${API_BASE}/admin/sources/health`, { signal: controller.signal }),
+      fetch(`${API_BASE}/admin/sources/cadence?days=7`, { signal: controller.signal }),
+    ])
+      .then(async ([healthResponse, cadenceResponse]) => {
+        if (!healthResponse.ok) throw new Error(`Source health API returned ${healthResponse.status}`);
+        const healthData = await healthResponse.json() as SourceHealth[];
+        let cadenceData: SourceCadence[] = [];
+        if (cadenceResponse.ok) {
+          const payload = await cadenceResponse.json() as CadenceResponse;
+          cadenceData = payload.items;
+        }
+        return { healthData, cadenceData };
       })
-      .then((data) => {
-        setSources(data);
+      .then(({ healthData, cadenceData }) => {
+        setSources(healthData);
+        setCadence(cadenceData);
         setState("done");
       })
       .catch((error) => {
@@ -60,26 +100,34 @@ export function SourceHealthDashboard() {
       {state === "loading" ? <p className="emptyMessage">Loading collector health…</p> : null}
       {state === "error" ? <p className="errorMessage">Collector health is unavailable.</p> : null}
       <section className="healthGrid" aria-live="polite">
-        {sources.map((source) => (
-          <article className="healthCard" key={source.source_key}>
-            <header>
-              <div>
-                <p className="cardMeta">{source.jurisdiction ?? source.source_family}</p>
-                <h2>{source.name}</h2>
-              </div>
-              <span className="healthState" data-state={source.health_state ?? "unknown"}>
-                {source.health_state?.replaceAll("_", " ") ?? "not run"}
-              </span>
-            </header>
-            <dl className="healthFacts">
-              <div><dt>Last success</dt><dd>{timestamp(source.last_success_at)}</dd></div>
-              <div><dt>Last attempt</dt><dd>{timestamp(source.last_attempt_at)}</dd></div>
-              <div><dt>Records</dt><dd>{source.records_returned ?? "—"}</dd></div>
-              <div><dt>Parser yield</dt><dd>{source.parser_yield === null ? "—" : `${Math.round(source.parser_yield * 100)}%`}</dd></div>
-            </dl>
-            {source.health_reason ? <p className="healthReason">{source.health_reason}</p> : null}
-          </article>
-        ))}
+        {sources.map((source) => {
+          const sourceCadence = cadenceByKey.get(source.source_key);
+          return (
+            <article className="healthCard" key={source.source_key}>
+              <header>
+                <div>
+                  <p className="cardMeta">{source.jurisdiction ?? source.source_family}</p>
+                  <h2>{source.name}</h2>
+                </div>
+                <span className="healthState" data-state={source.health_state ?? "unknown"}>
+                  {source.health_state?.replaceAll("_", " ") ?? "not run"}
+                </span>
+              </header>
+              <dl className="healthFacts">
+                <div><dt>Last success</dt><dd>{timestamp(source.last_success_at)}</dd></div>
+                <div><dt>Last attempt</dt><dd>{timestamp(source.last_attempt_at)}</dd></div>
+                <div><dt>Records</dt><dd>{source.records_returned ?? "—"}</dd></div>
+                <div><dt>Parser yield</dt><dd>{source.parser_yield === null ? "—" : `${Math.round(source.parser_yield * 100)}%`}</dd></div>
+                <div><dt>7-day stability</dt><dd>{sourceCadence ? `${readable(sourceCadence.stability_state)} · ${percent(sourceCadence.success_rate)}` : "—"}</dd></div>
+                <div><dt>Latest outcome</dt><dd>{readable(sourceCadence?.latest_run.outcome)}</dd></div>
+                <div><dt>Change-run rate</dt><dd>{percent(sourceCadence?.change_run_rate)}</dd></div>
+                <div><dt>Missed check</dt><dd>{sourceCadence?.missed_expected_check ? `Yes${sourceCadence.overdue_minutes ? ` · ${sourceCadence.overdue_minutes}m` : ""}` : "No"}</dd></div>
+              </dl>
+              {source.health_reason ? <p className="healthReason">{source.health_reason}</p> : null}
+              {sourceCadence?.stability_state === "unstable" ? <p className="healthReason">Repeated failures in the 7-day audit window; latest health alone is not sufficient.</p> : null}
+            </article>
+          );
+        })}
       </section>
     </main>
   );
