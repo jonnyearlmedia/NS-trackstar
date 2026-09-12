@@ -18,6 +18,7 @@ INACTIVE_TERMS = (
     "withdrawn",
     "denied",
     "rejected",
+    "disapproved",
     "abandoned",
     "stalled",
     "inactive",
@@ -29,6 +30,7 @@ COMPLETED_TERMS = (
     "finished",
 )
 CONSTRUCTION_TERMS = (
+    "construction",
     "under construction",
     "active construction",
     "in construction",
@@ -51,10 +53,39 @@ REVIEW_TERMS = (
     "environmental review",
     "planning review",
 )
+NEGATION_PREFIXES = ("not ", "not yet ", "no longer ")
 
 
 def _normalized(value: object) -> str:
     return " ".join(str(value or "").strip().lower().replace("_", " ").replace("-", " ").split())
+
+
+def _contains_phrase(value: str, phrase: str) -> bool:
+    return f" {phrase} " in f" {value} "
+
+
+def _is_negated(value: str) -> bool:
+    return value.startswith(NEGATION_PREFIXES)
+
+
+def _matched_categories(value: str) -> set[LifecycleStage]:
+    if _is_negated(value):
+        return set()
+
+    matches: set[LifecycleStage] = set()
+    if any(_contains_phrase(value, term) for term in INACTIVE_TERMS):
+        matches.add("inactive")
+    if any(_contains_phrase(value, term) for term in COMPLETED_TERMS):
+        matches.add("completed")
+    if "pre construction" not in value and any(
+        _contains_phrase(value, term) for term in CONSTRUCTION_TERMS
+    ):
+        matches.add("construction")
+    if any(_contains_phrase(value, term) for term in APPROVED_TERMS):
+        matches.add("approved")
+    if any(_contains_phrase(value, term) for term in REVIEW_TERMS):
+        matches.add("review")
+    return matches
 
 
 def normalize_lifecycle(statuses: dict[str, str]) -> tuple[LifecycleStage, str | None, str | None]:
@@ -71,33 +102,28 @@ def normalize_lifecycle(statuses: dict[str, str]) -> tuple[LifecycleStage, str |
         if value is not None and str(value).strip()
     ]
 
-    def exact_or_phrase(terms: tuple[str, ...]) -> tuple[str | None, str | None]:
-        for dimension, raw_value, value in normalized:
-            if any(value == term or term in value for term in terms):
-                return dimension, raw_value
-        return None, None
-
-    dimension, value = exact_or_phrase(INACTIVE_TERMS)
-    if dimension:
-        return "inactive", dimension, value
-
-    dimension, value = exact_or_phrase(COMPLETED_TERMS)
-    if dimension:
-        return "completed", dimension, value
-
+    candidates: list[tuple[LifecycleStage, str, str]] = []
     for dimension, raw_value, value in normalized:
-        if "pre construction" in value:
+        matches = _matched_categories(value)
+        if " or " in value and len(matches) > 1:
+            # Example: Suisun's official "entitled_or_under_construction" stage.
+            # It is useful source truth, but it does not prove which lifecycle state
+            # the project is actually in, so do not collapse it into one bucket.
             continue
-        if value == "construction" or any(term in value for term in CONSTRUCTION_TERMS):
-            return "construction", dimension, raw_value
+        for stage in matches:
+            candidates.append((stage, dimension, raw_value))
 
-    dimension, value = exact_or_phrase(APPROVED_TERMS)
-    if dimension:
-        return "approved", dimension, value
-
-    dimension, value = exact_or_phrase(REVIEW_TERMS)
-    if dimension:
-        return "review", dimension, value
+    precedence: tuple[LifecycleStage, ...] = (
+        "inactive",
+        "completed",
+        "construction",
+        "approved",
+        "review",
+    )
+    for stage in precedence:
+        for candidate_stage, dimension, raw_value in candidates:
+            if candidate_stage == stage:
+                return stage, dimension, raw_value
 
     # Dimension names can be informative, but only when the value itself indicates an
     # active/pending workflow. This avoids calling every project with a planning field
