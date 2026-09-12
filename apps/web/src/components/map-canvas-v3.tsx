@@ -7,6 +7,7 @@ export type TimeWindow = "today" | "week" | "upcoming" | "all";
 export type ConsumerCategory = "all" | "development" | "roads" | "utilities" | "places";
 export type LifecycleStage = "review" | "approved" | "construction" | "completed" | "inactive" | "unknown";
 export type LifecycleFilter = LifecycleStage | "all";
+export type UserLocation = { longitude: number; latitude: number; accuracy?: number };
 
 export type MapProject = {
   id: string;
@@ -58,7 +59,7 @@ type MapCanvasProps = {
   category: ConsumerCategory;
   lifecycle: LifecycleFilter;
   resetNonce: number;
-  locateNonce: number;
+  userLocation?: UserLocation | null;
   briefingActive?: boolean;
   restoreBounds?: ViewportBounds | null;
   restoreNonce?: number;
@@ -101,6 +102,7 @@ const NAPA_SOLANO_BOUNDS: [[number, number], [number, number]] = [
 const PROJECT_SOURCE = "trackstar-v3-shapes";
 const POINT_SOURCE = "trackstar-v3-points";
 const SELECTED_SOURCE = "trackstar-v3-selected";
+const USER_LOCATION_SOURCE = "trackstar-v3-user-location";
 const MAJOR_REVIEW_PRIORITY = 0.4;
 
 const ROAD_WORDS = [
@@ -219,6 +221,18 @@ function geometryBounds(geometry: Geometry) {
   return Number.isFinite(west) ? [[west, south], [east, north]] as [[number, number], [number, number]] : null;
 }
 
+function userLocationFeature(userLocation: UserLocation | null | undefined): FeatureCollection {
+  if (!userLocation) return emptyCollection();
+  return {
+    type: "FeatureCollection",
+    features: [{
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [userLocation.longitude, userLocation.latitude] },
+      properties: { accuracy: userLocation.accuracy ?? null },
+    }],
+  };
+}
+
 function categoryCounts(projects: MapProject[]): Record<ConsumerCategory, number> {
   const counts: Record<ConsumerCategory, number> = {
     all: projects.length,
@@ -266,16 +280,16 @@ export function MapCanvasV3({
   category,
   lifecycle,
   resetNonce,
-  locateNonce,
+  userLocation = null,
   briefingActive = false,
   restoreBounds = null,
   restoreNonce = 0,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
-  const geolocateRef = useRef<import("maplibre-gl").GeolocateControl | null>(null);
   const refreshRef = useRef<(() => void) | null>(null);
   const selectedRef = useRef(selectedProject);
+  const userLocationRef = useRef<UserLocation | null>(userLocation);
   const timeRef = useRef(timeWindow);
   const categoryRef = useRef(category);
   const lifecycleRef = useRef(lifecycle);
@@ -295,6 +309,23 @@ export function MapCanvasV3({
   useEffect(() => { onViewportRef.current = onViewportChange; }, [onViewportChange]);
   useEffect(() => { onInteractionRef.current = onUserInteraction; }, [onUserInteraction]);
   useEffect(() => { briefingRef.current = briefingActive; }, [briefingActive]);
+
+  useEffect(() => {
+    userLocationRef.current = userLocation;
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const source = map.getSource(USER_LOCATION_SOURCE) as import("maplibre-gl").GeoJSONSource | undefined;
+    if (!source) return;
+    source.setData(userLocationFeature(userLocation));
+    if (userLocation) {
+      map.easeTo({
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: Math.max(map.getZoom(), 13.5),
+        duration: 700,
+        essential: true,
+      });
+    }
+  }, [userLocation]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -346,11 +377,6 @@ export function MapCanvasV3({
   }, [resetNonce]);
 
   useEffect(() => {
-    if (locateNonce === 0) return;
-    geolocateRef.current?.trigger();
-  }, [locateNonce]);
-
-  useEffect(() => {
     if (restoreNonce === 0 || !restoreBounds) return;
     const map = mapRef.current;
     if (!map) return;
@@ -385,14 +411,6 @@ export function MapCanvasV3({
       });
 
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-      const geolocate = new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: false,
-        showUserLocation: true,
-        fitBoundsOptions: { maxZoom: 14 },
-      });
-      geolocateRef.current = geolocate;
-      map.addControl(geolocate, "bottom-right");
       map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
       async function refresh() {
@@ -515,6 +533,7 @@ export function MapCanvasV3({
         map.addSource(PROJECT_SOURCE, { type: "geojson", data: emptyCollection() });
         map.addSource(POINT_SOURCE, { type: "geojson", data: emptyCollection(), cluster: true, clusterMaxZoom: 13, clusterRadius: 44 });
         map.addSource(SELECTED_SOURCE, { type: "geojson", data: emptyCollection() });
+        map.addSource(USER_LOCATION_SOURCE, { type: "geojson", data: userLocationFeature(userLocationRef.current) });
 
         const categoryColor = categoryColorExpression();
         const exactFilter = ["!=", ["get", "location_uncertain"], true] as import("maplibre-gl").ExpressionSpecification;
@@ -617,6 +636,17 @@ export function MapCanvasV3({
         map.addLayer({ id: "v3-selected-fill", type: "fill", source: SELECTED_SOURCE, filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], paint: { "fill-color": "#d9ff61", "fill-opacity": 0.34 } });
         map.addLayer({ id: "v3-selected-line", type: "line", source: SELECTED_SOURCE, paint: { "line-color": "#f5ffc9", "line-width": 3.5, "line-opacity": 1 } });
         map.addLayer({ id: "v3-selected-point", type: "circle", source: SELECTED_SOURCE, filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 9, "circle-color": "#d9ff61", "circle-stroke-color": "#f7ffd7", "circle-stroke-width": 3 } });
+        map.addLayer({ id: "v3-user-location-halo", type: "circle", source: USER_LOCATION_SOURCE, paint: { "circle-radius": 14, "circle-color": "#67d7ff", "circle-opacity": 0.18 } });
+        map.addLayer({ id: "v3-user-location", type: "circle", source: USER_LOCATION_SOURCE, paint: { "circle-radius": 6, "circle-color": "#67d7ff", "circle-stroke-color": "#ffffff", "circle-stroke-width": 2.2 } });
+
+        if (userLocationRef.current) {
+          map.easeTo({
+            center: [userLocationRef.current.longitude, userLocationRef.current.latitude],
+            zoom: Math.max(map.getZoom(), 13.5),
+            duration: 700,
+            essential: true,
+          });
+        }
 
         for (const layer of ["v3-fill", "v3-fill-uncertain", "v3-line", "v3-line-uncertain", "v3-points", "v3-points-uncertain"]) {
           map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
@@ -658,7 +688,6 @@ export function MapCanvasV3({
       if (moveTimer !== undefined) window.clearTimeout(moveTimer);
       refreshAbort?.abort();
       refreshRef.current = null;
-      geolocateRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -667,9 +696,6 @@ export function MapCanvasV3({
   return (
     <>
       <div className="mapCanvas" ref={containerRef} />
-      <style jsx global>{`
-        .maplibregl-ctrl-geolocate { display: none !important; }
-      `}</style>
       {mapState !== "ready" ? (
         <div className={mapState === "error" ? "mapStatus error" : "mapStatus"} role="status">
           {mapState === "error" ? <><strong>Map could not load</strong><button onClick={() => window.location.reload()} type="button">Retry</button></> : "Loading what’s happening around you…"}
