@@ -4,7 +4,7 @@ import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, time, timedelta
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -107,11 +107,11 @@ async def source_health() -> list[dict]:
 
 @app.get("/map/projects")
 async def map_projects(
-    west: float | None = Query(default=None),
-    south: float | None = Query(default=None),
-    east: float | None = Query(default=None),
-    north: float | None = Query(default=None),
-    time_window: TimeWindow = Query(default="week", alias="window"),
+    west: Annotated[float | None, Query()] = None,
+    south: Annotated[float | None, Query()] = None,
+    east: Annotated[float | None, Query()] = None,
+    north: Annotated[float | None, Query()] = None,
+    time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
 ) -> dict:
     params: dict[str, object] = {}
     bbox_filter = ""
@@ -176,8 +176,8 @@ async def map_projects(
 
 @app.get("/changes")
 async def changes(
-    time_window: TimeWindow = Query(default="week", alias="window"),
-    limit: int = Query(default=50, ge=1, le=250),
+    time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
+    limit: Annotated[int, Query(ge=1, le=250)] = 50,
 ) -> list[dict]:
     now = datetime.now(LOCAL_TIMEZONE)
     if time_window == "today":
