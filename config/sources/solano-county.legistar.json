@@ -4,7 +4,7 @@
   "jurisdiction": "Solano County",
   "adapter": "legistar",
   "base_url": "https://solano.legistar.com",
-  "poll_minutes": 120,
+  "poll_minutes": 60,
   "options": {
     "api_base": "https://webapi.legistar.com/v1",
     "client_name": "solano",
