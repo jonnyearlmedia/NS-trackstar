@@ -134,6 +134,28 @@ summary:focus-visible {
   outline-offset: 2px;
 }
 
+@media (pointer: coarse) {
+  .simpleActions button,
+  .consumerNav button,
+  .aroundHeading > button,
+  .roundClose,
+  .iconButton,
+  .briefingControls button,
+  .timelineHeader button,
+  .showHistory {
+    min-height: 44px;
+  }
+  .roundClose,
+  .roundClose.small,
+  .iconButton {
+    width: 44px;
+    height: 44px;
+  }
+  .consumerNav button { height: 44px; }
+  .simpleSearch { height: 46px; }
+  .choiceList button { min-height: 48px; }
+}
+
 @media (min-width: 720px) {
   .mapLegend {
     top: auto;
