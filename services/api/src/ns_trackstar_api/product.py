@@ -225,6 +225,8 @@ async def briefing(
         WHERE p.primary_geometry IS NOT NULL
         {consumer_filter}
         {window_filter}
+          AND le.event_type IS NOT NULL
+          AND le.event_type <> 'project_discovered'
           AND (
             COALESCE(sc.source_count, 0) >= 2
             OR COALESCE(p.importance_score, 0) >= 0.2
@@ -234,22 +236,7 @@ async def briefing(
               WHERE meaningful_status.project_id = p.id
                 AND lower(meanful_status.value) <> ALL(%(terminal_statuses)s)
             )
-            OR (
-              le.event_type IS NOT NULL
-              AND le.event_type <> 'project_discovered'
-              AND COALESCE(le.significance, 0) >= 0.6
-            )
-          )
-          AND NOT (
-            le.event_type = 'project_discovered'
-            AND COALESCE(sc.source_count, 0) < 2
-            AND COALESCE(p.importance_score, 0) < 0.2
-            AND NOT EXISTS (
-              SELECT 1
-              FROM project_status_dimension nonterminal_status
-              WHERE nonterminal_status.project_id = p.id
-                AND lower(nonterminal_status.value) <> ALL(%(terminal_statuses)s)
-            )
+            OR COALESCE(le.significance, 0) >= 0.6
           )
         ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
         LIMIT %(limit)s
@@ -269,19 +256,15 @@ async def briefing(
             "statuses": row["statuses"],
             "summary": row["project_summary"],
             "source_count": row["source_count"],
-            "event": (
-                {
-                    "id": str(row["event_id"]),
-                    "title": row["event_title"],
-                    "summary": row["event_summary"],
-                    "event_type": row["event_type"],
-                    "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
-                    "observed_at": row["observed_at"].isoformat() if row["observed_at"] else None,
-                    "significance": float(row["event_significance"] or 0),
-                }
-                if row["event_id"]
-                else None
-            ),
+            "event": {
+                "id": str(row["event_id"]),
+                "title": row["event_title"],
+                "summary": row["event_summary"],
+                "event_type": row["event_type"],
+                "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
+                "observed_at": row["observed_at"].isoformat() if row["observed_at"] else None,
+                "significance": float(row["event_significance"] or 0),
+            },
         }
         for row in rows
     ]
