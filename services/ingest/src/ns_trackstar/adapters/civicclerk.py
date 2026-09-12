@@ -47,6 +47,9 @@ class CivicClerkAdapter(CollectorAdapter):
         self.lookahead_days = int(config.options.get("lookahead_days", 120))
         self.fetch_agendas = bool(config.options.get("fetch_agendas", True))
         self.min_interval = float(config.options.get("min_request_interval_seconds", 1.0))
+        self.timeout_seconds = float(config.options.get("request_timeout_seconds", 45))
+        self.request_attempts = max(1, int(config.options.get("request_attempts", 3)))
+        self.retry_backoff_seconds = max(0.0, float(config.options.get("retry_backoff_seconds", 1.5)))
         self.timezone = ZoneInfo(str(config.options.get("timezone", "America/Los_Angeles")))
         self._client = client
         self._last_request_at: float | None = None
@@ -59,26 +62,48 @@ class CivicClerkAdapter(CollectorAdapter):
         if delay > 0:
             await asyncio.sleep(delay)
 
+    @staticmethod
+    def _retryable_http_error(error: httpx.HTTPStatusError) -> bool:
+        return error.response.status_code == 429 or error.response.status_code >= 500
+
     async def _get_json(
         self,
         url: str,
         *,
         params: dict[str, str] | None = None,
     ) -> dict[str, Any]:
-        await self._pace()
         owns_client = self._client is None
-        client = self._client or httpx.AsyncClient(timeout=30, follow_redirects=True)
+        client = self._client or httpx.AsyncClient(timeout=self.timeout_seconds, follow_redirects=True)
         try:
-            response = await client.get(url, params=params, headers={"User-Agent": "NS-Trackstar/0.1"})
-            response.raise_for_status()
-            payload = response.json()
-            if not isinstance(payload, dict):
-                raise TypeError("CivicClerk returned a non-object JSON payload")
-            return payload
+            for attempt in range(1, self.request_attempts + 1):
+                await self._pace()
+                try:
+                    response = await client.get(
+                        url,
+                        params=params,
+                        headers={"User-Agent": "NS-Trackstar/0.1"},
+                    )
+                    response.raise_for_status()
+                    payload = response.json()
+                    if not isinstance(payload, dict):
+                        raise TypeError("CivicClerk returned a non-object JSON payload")
+                    return payload
+                except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
+                    if attempt >= self.request_attempts:
+                        raise
+                except httpx.HTTPStatusError as error:
+                    if attempt >= self.request_attempts or not self._retryable_http_error(error):
+                        raise
+                finally:
+                    self._last_request_at = asyncio.get_running_loop().time()
+
+                if self.retry_backoff_seconds:
+                    await asyncio.sleep(self.retry_backoff_seconds * attempt)
         finally:
-            self._last_request_at = asyncio.get_running_loop().time()
             if owns_client:
                 await client.aclose()
+
+        raise RuntimeError("CivicClerk request retry loop ended unexpectedly")
 
     def _safe_next_link(self, value: Any) -> str | None:
         if not value:
