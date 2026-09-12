@@ -1,0 +1,122 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+FreshnessClass = Literal[
+    "meeting_feed",
+    "active_project_tracker",
+    "state_project_watch",
+    "regulatory_watch",
+    "project_specific_record",
+    "parcel_reference",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class SourceFreshnessPolicy:
+    freshness_class: FreshnessClass
+    meaningful_change_window: str
+    recommended_min_minutes: int
+    recommended_max_minutes: int
+    rationale: str
+
+
+SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
+    "american-canyon.construction-development-updates": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Active municipal construction/development tracker; same-day stage/project edits are useful.",
+    ),
+    "benicia.current-planning-applications": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Current planning application inventory; useful changes are typically municipal business-day edits.",
+    ),
+    "bia.scotts-valley-gaming-decisions": SourceFreshnessPolicy(
+        "regulatory_watch", "daily", 720, 1440,
+        "Federal decision/document set; important when it changes, but sub-hour polling adds little value.",
+    ),
+    "california.ceqanet.napa-solano": SourceFreshnessPolicy(
+        "state_project_watch", "within_day", 360, 720,
+        "State environmental filings can materially change project context during the day.",
+    ),
+    "caltrans.building-ca.napa-solano": SourceFreshnessPolicy(
+        "state_project_watch", "within_day", 360, 720,
+        "State transportation project updates are valuable same-day but are not minute-by-minute events.",
+    ),
+    "fairfield.one-lake-assessor-map": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Authoritative project-specific reference document; changes are infrequent.",
+    ),
+    "fairfield.one-lake-council-goals": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Project-specific council/reference record with low expected edit frequency.",
+    ),
+    "fairfield.vanden-canon-overcrossing": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Project-specific official record; useful as evidence but not a fast-changing feed.",
+    ),
+    "federal-register.napa-solano": SourceFreshnessPolicy(
+        "regulatory_watch", "daily", 1440, 1440,
+        "Federal Register publication cadence makes daily checks sufficient for local intelligence.",
+    ),
+    "napa-city.legistar": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Structured public meeting/agendum feed; same-day agenda and item changes matter.",
+    ),
+    "napa-city.napa-pipe-amendments": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Allowlisted authoritative project documents; changes are infrequent and discrete.",
+    ),
+    "napa-city.public-works-cip": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Municipal capital-project tracker where construction/status changes are useful within the day.",
+    ),
+    "napa-city.water-cip": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Municipal water capital-project tracker; useful changes are operationally same-day, not real-time.",
+    ),
+    "napa-county.current-projects-explorer": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "County current-project explorer directly supports Trackstar's site/project identification job.",
+    ),
+    "napa-county.napa-pipe-development-plan": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Authoritative project-specific plan; useful evidence with low expected change frequency.",
+    ),
+    "napa-county.parcels": SourceFreshnessPolicy(
+        "parcel_reference", "rare", 1440, 10080,
+        "Parcel geometry/reference data changes slowly and should not be polled like an activity feed.",
+    ),
+    "nigc.scotts-valley-gaming-ordinance": SourceFreshnessPolicy(
+        "regulatory_watch", "daily", 720, 1440,
+        "Federal gaming regulatory record; significant but low-frequency changes.",
+    ),
+    "solano-county.legistar": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Structured public meeting/agendum feed; same-day agenda and item changes matter.",
+    ),
+    "solano-county.parcels": SourceFreshnessPolicy(
+        "parcel_reference", "rare", 1440, 10080,
+        "Parcel geometry/reference data changes slowly and should not be polled like an activity feed.",
+    ),
+    "suisun-city.development-calendar": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Current municipal development inventory; same-day status/project changes are useful.",
+    ),
+    "suisun-city.dutch-bros-public-notice": SourceFreshnessPolicy(
+        "project_specific_record", "rare", 1440, 10080,
+        "Single-project official notice/document evidence, not a continuously changing tracker.",
+    ),
+    "vallejo.civicclerk": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Meeting/agendum feed where same-day changes matter; current 120-minute polling is temporary while churn is audited.",
+    ),
+    "vallejo.value-current-development": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Current development tracker directly supports site identification and project-stage discovery.",
+    ),
+}
+
+
+def source_freshness_policy(source_key: str) -> SourceFreshnessPolicy | None:
+    return SOURCE_FRESHNESS_POLICIES.get(source_key)
