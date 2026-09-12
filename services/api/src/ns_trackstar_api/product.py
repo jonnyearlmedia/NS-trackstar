@@ -159,9 +159,11 @@ async def briefing(
     request: Request,
     window: Annotated[BriefingWindow, Query()] = "today",
     limit: Annotated[int, Query(ge=1, le=20)] = 8,
+    include_reviews: Annotated[bool, Query()] = False,
 ) -> list[dict]:
     window_filter, params = _briefing_window_sql(window)
     params["limit"] = limit
+    consumer_filter = "" if include_reviews else "AND p.project_type <> 'environmental_review'"
     cursor = await request.app.state.db.execute(
         f"""
         WITH latest_event AS (
@@ -219,6 +221,7 @@ async def briefing(
         LEFT JOIN latest_event le ON le.project_id = p.id
         LEFT JOIN source_counts sc ON sc.project_id = p.id
         WHERE p.primary_geometry IS NOT NULL
+        {consumer_filter}
         {window_filter}
         ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
         LIMIT %(limit)s
