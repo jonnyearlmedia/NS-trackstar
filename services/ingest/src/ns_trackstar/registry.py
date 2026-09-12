@@ -12,6 +12,7 @@ from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.html_table import HtmlTableAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
+from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
 from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
@@ -28,6 +29,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "html_table": HtmlTableAdapter,
     "legistar": LegistarAdapter,
     "opencities_map": OpenCitiesMapAdapter,
+    "official_document_set": OfficialDocumentSetAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
     "bayarea_511_traffic": BayArea511TrafficAdapter,

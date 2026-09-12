@@ -7,6 +7,7 @@ from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
+from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
 
@@ -19,6 +20,7 @@ __all__ = [
     "CourtListenerAdapter",
     "ETrakitAdapter",
     "LegistarAdapter",
+    "OfficialDocumentSetAdapter",
     "PdfProjectTrackerAdapter",
     "SourceBlockedError",
     "SourceConfig",

@@ -22,6 +22,7 @@ Planned source families include:
 - `environmental_health`
 - `courtlistener_recap`
 - `federal_register`
+- `official_document_set`
 - `bia_gaming`
 - `nigc`
 
@@ -35,3 +36,8 @@ construction status.
 `ceqanet` reads the official CSV export and groups document history by SCH number. Any link to
 an existing canonical project must be an explicit source-record anchor with typed relationship
 and evidence signals; title similarity alone never merges identities.
+
+`official_document_set` downloads an explicit allowlisted set of authoritative public PDFs when
+an agency provides durable documents but no stable anonymous discovery API. Per-document status
+assertions stay in distinct dimensions and retain their dates and supersession lineage; the
+adapter does not infer current status or discover newly posted documents.

@@ -1,0 +1,33 @@
+{
+  "key": "nigc.scotts-valley-gaming-ordinance",
+  "name": "NIGC Scotts Valley Gaming Ordinance",
+  "jurisdiction": "United States",
+  "adapter": "official_document_set",
+  "base_url": "https://www.nigc.gov/office-of-general-counsel/gaming-ordinances/",
+  "poll_minutes": 1440,
+  "options": {
+    "allowed_hosts": ["www.nigc.gov"],
+    "canary_external_id": "scotts-valley-2025-03-25-gaming-ordinance-amendment",
+    "documents": [
+      {
+        "external_id": "scotts-valley-2025-03-25-gaming-ordinance-amendment",
+        "document_url": "https://www.nigc.gov/?ind=13533&wpdmdl=13532",
+        "action_date": "2025-03-25",
+        "agency": "National Indian Gaming Commission",
+        "title": "Scotts Valley Band of Pomo Indians Amended Gaming Ordinance",
+        "action_type": "gaming_ordinance_amendment_approved",
+        "tribe": "Scotts Valley Band of Pomo Indians of California",
+        "tribal_resolution": "S.V. #13-25",
+        "canary_markers": ["Scotts Valley Band", "Gaming Ordinance", "approved"],
+        "status_assertions": [
+          {
+            "dimension": "gaming_ordinance",
+            "value": "amendment_approved",
+            "authority_type": "federal_regulator",
+            "direct": true
+          }
+        ]
+      }
+    ]
+  }
+}
