@@ -436,9 +436,9 @@ export function MapCanvas({
           "water_infrastructure", "#59edc5",
           "#d9ff61",
         ] as import("maplibre-gl").ExpressionSpecification;
-        const exactFilter = ["!=", ["get", "location_uncertain"], true] as import("maplibre-gl").FilterSpecification;
-        const uncertainFilter = ["==", ["get", "location_uncertain"], true] as import("maplibre-gl").FilterSpecification;
-        const unclusteredFilter = ["!", ["has", "point_count"]] as import("maplibre-gl").FilterSpecification;
+        const exactFilter = ["!=", ["get", "location_uncertain"], true] as import("maplibre-gl").ExpressionSpecification;
+        const uncertainFilter = ["==", ["get", "location_uncertain"], true] as import("maplibre-gl").ExpressionSpecification;
+        const unclusteredFilter = ["!", ["has", "point_count"]] as import("maplibre-gl").ExpressionSpecification;
 
         map.addLayer({
           id: "density-heat", type: "heatmap", source: DENSITY_SOURCE, maxzoom: 15, layout: { visibility: "none" },
