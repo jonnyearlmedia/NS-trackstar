@@ -6,5 +6,8 @@
     "dev": "pnpm --filter @ns-trackstar/web dev",
     "build": "pnpm --filter @ns-trackstar/web build",
     "typecheck": "pnpm --filter @ns-trackstar/web typecheck"
+  },
+  "dependencies": {
+    "next": "latest"
   }
 }
