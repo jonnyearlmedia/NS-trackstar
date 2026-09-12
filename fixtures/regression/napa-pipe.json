@@ -5,15 +5,15 @@
       "key": "master-development",
       "name": "Napa Pipe",
       "entity_kind": "master_development",
-      "apns": ["035-010-054"],
-      "identifiers": {},
+      "apns": ["046-412-005", "046-400-030"],
+      "identifiers": {"sch_number": "2008122111"},
       "status_dimensions": {"planning": "approved_history", "environmental": "eir_certified"}
     },
     {
       "key": "phase-1",
       "name": "Napa Pipe Phase 1",
       "entity_kind": "development_phase",
-      "apns": ["035-010-054"],
+      "apns": ["046-412-005", "046-400-030"],
       "identifiers": {},
       "status_dimensions": {"construction": "independent_phase_status_required"}
     },
@@ -21,7 +21,7 @@
       "key": "phase-2",
       "name": "Napa Pipe Phase 2",
       "entity_kind": "development_phase",
-      "apns": ["035-010-054"],
+      "apns": ["046-412-005", "046-400-030"],
       "identifiers": {},
       "status_dimensions": {"building_permit": "independent_phase_status_required"}
     }
@@ -35,7 +35,7 @@
       "left": "phase-1",
       "right": "phase-2",
       "evidence": {
-        "shared_apns": ["035-010-054"],
+        "shared_apns": ["046-412-005", "046-400-030"],
         "authoritative_identifiers": {},
         "explicit_same_project_references": [],
         "geometry_overlap": true,
@@ -47,6 +47,7 @@
   ],
   "required_evidence_types": ["environmental_history", "phase_specific_permit"],
   "sources": [
+    "https://ceqanet.lci.ca.gov/2008122111/6",
     "https://www.countyofnapa.org/DocumentCenter/View/580/Napa-Pipe-Draft-Development-Plan-August-2013-PDF"
   ]
 }
