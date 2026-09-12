@@ -1,0 +1,43 @@
+{
+  "key": "napa-county.current-projects-explorer",
+  "name": "Napa County PBES Current Projects Explorer",
+  "jurisdiction": "Unincorporated Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.napacounty.gov/2876/Current-Projects-Explorer",
+  "poll_minutes": 1440,
+  "options": {
+    "layer_url": "https://services1.arcgis.com/Ko5rxt00spOfjMqj/ArcGIS/rest/services/Current_PBES_Projects_Public/FeatureServer/0",
+    "id_field": "GlobalID",
+    "out_fields": "*",
+    "where": "Project_PublicView = 'yes'",
+    "page_size": 1000,
+    "created_at_field": "Project_SubDate",
+    "updated_at_field": "Project_StatusDate",
+    "canonical_url_field": "Project_Docs",
+    "project_mapping": {
+      "name_field": "Project_Name",
+      "project_type": "municipal_development",
+      "description_field": "Project_Desc",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "official_tracker_stage",
+      "status_field": "Project_Status",
+      "assertions": {
+        "apn": "ASMT",
+        "planner": "Planner_Name",
+        "planning_case": "Project_PermitNum",
+        "source_project_type": "Project_Type",
+        "address": "Project_Address",
+        "description": "Project_Desc",
+        "application_type": "Project_AppType",
+        "variance_required": "Project_Variance",
+        "winery_project": "Project_Winery",
+        "telecom_project": "Project_Telecom",
+        "appeal": "Project_Appeal",
+        "viewshed_exception": "Project_Viewshed",
+        "official_status_text": "Project_Status",
+        "official_status_date": "Project_StatusDate",
+        "project_documents_url": "Project_Docs"
+      }
+    }
+  }
+}
