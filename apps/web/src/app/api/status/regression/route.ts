@@ -16,6 +16,7 @@ type Fixture = {
   key: string;
   label: string;
   queries: string[];
+  expectedNames: string[];
 };
 
 const FIXTURES: Fixture[] = [
@@ -23,26 +24,31 @@ const FIXTURES: Fixture[] = [
     key: "scotts-valley-casino",
     label: "Scotts Valley casino",
     queries: ["Scotts Valley", "casino"],
+    expectedNames: ["scotts valley casino", "scotts valley casino and tribal housing project"],
   },
   {
     key: "sr37-sears-point-mare-island",
     label: "SR 37 Sears Point–Mare Island",
     queries: ["SR 37", "Sears Point", "Mare Island"],
+    expectedNames: ["state route 37 sears point to mare island improvement project"],
   },
   {
     key: "napa-pipe",
     label: "Napa Pipe",
     queries: ["Napa Pipe"],
+    expectedNames: ["napa pipe"],
   },
   {
     key: "one-lake-canon-station",
     label: "One Lake / Canon Station",
     queries: ["One Lake", "Canon Station"],
+    expectedNames: ["one lake", "canon station"],
   },
   {
     key: "dutch-bros-suisun",
     label: "Dutch Bros Suisun",
     queries: ["Dutch Bros", "Suisun"],
+    expectedNames: ["dutch bros", "dutch bros - restaurant with dual drive-through"],
   },
 ];
 
@@ -66,11 +72,25 @@ export async function GET() {
           for (const result of batch) unique.set(result.id, result);
         }
         const matches = [...unique.values()].slice(0, 12);
+        const canonicalMatches = matches.filter((match) => {
+          const name = match.name.toLocaleLowerCase();
+          return fixture.expectedNames.some(
+            (expected) => name === expected || name.includes(expected) || expected.includes(name),
+          );
+        });
         return {
           key: fixture.key,
           label: fixture.label,
-          found: matches.length > 0,
-          matches: matches.map((match) => ({
+          found: canonicalMatches.length > 0,
+          evidence_found: matches.length > 0,
+          canonical_matches: canonicalMatches.map((match) => ({
+            id: match.id,
+            name: match.name,
+            project_type: match.project_type,
+            mapped: match.geometry !== null,
+            matched_on: match.matched_on,
+          })),
+          search_matches: matches.map((match) => ({
             id: match.id,
             name: match.name,
             project_type: match.project_type,
