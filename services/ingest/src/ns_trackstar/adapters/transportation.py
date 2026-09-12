@@ -36,8 +36,14 @@ def _valid_geometry(value: Any) -> bool:
     if not isinstance(value, dict) or not isinstance(value.get("type"), str):
         return False
     if value["type"] == "GeometryCollection":
-        return isinstance(value.get("geometries"), list)
-    return isinstance(value.get("coordinates"), list)
+        geometries = value.get("geometries")
+        return isinstance(geometries, list) and bool(geometries)
+    coordinates = value.get("coordinates")
+    return isinstance(coordinates, list) and bool(coordinates)
+
+
+def _first_present(*values: Any) -> Any:
+    return next((value for value in values if value is not None and value != ""), None)
 
 
 def _schema_paths(value: Any, prefix: str = "") -> set[str]:
@@ -228,14 +234,20 @@ class WzdxAdapter(_JsonTransportAdapter):
                 "vehicle_impact": properties.get("vehicle_impact"),
                 "beginning_cross_street": properties.get("beginning_cross_street"),
                 "ending_cross_street": properties.get("ending_cross_street"),
-                "project_id": properties.get("project_id") or properties.get("work_zone_id"),
-                "route": properties.get("route") or properties.get("route_id"),
-                "begin_postmile": properties.get("begin_postmile")
-                or properties.get("beginning_postmile")
-                or properties.get("start_milepost"),
-                "end_postmile": properties.get("end_postmile")
-                or properties.get("ending_postmile")
-                or properties.get("end_milepost"),
+                "project_id": _first_present(
+                    properties.get("project_id"), properties.get("work_zone_id")
+                ),
+                "route": _first_present(properties.get("route"), properties.get("route_id")),
+                "begin_postmile": _first_present(
+                    properties.get("begin_postmile"),
+                    properties.get("beginning_postmile"),
+                    properties.get("start_milepost"),
+                ),
+                "end_postmile": _first_present(
+                    properties.get("end_postmile"),
+                    properties.get("ending_postmile"),
+                    properties.get("end_milepost"),
+                ),
                 "geometry_method": "source_provided_wzdx_geometry",
                 "location_accuracy_detail": {
                     "beginning": properties.get("beginning_accuracy"),
@@ -376,18 +388,24 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
             "road_names": road_names,
             "areas": event.get("areas") or [],
             "schedules": event.get("schedules") or [],
-            "source_id": event.get("+source_id") or event.get("source_id"),
-            "source_name": event.get("+source_name") or event.get("source_name"),
-            "route": event.get("+route")
-            or event.get("route")
-            or first_road.get("route")
-            or first_road.get("name"),
-            "begin_postmile": event.get("+begin_postmile")
-            or event.get("begin_postmile")
-            or first_road.get("begin_postmile"),
-            "end_postmile": event.get("+end_postmile")
-            or event.get("end_postmile")
-            or first_road.get("end_postmile"),
+            "source_id": _first_present(event.get("+source_id"), event.get("source_id")),
+            "source_name": _first_present(event.get("+source_name"), event.get("source_name")),
+            "route": _first_present(
+                event.get("+route"),
+                event.get("route"),
+                first_road.get("route"),
+                first_road.get("name"),
+            ),
+            "begin_postmile": _first_present(
+                event.get("+begin_postmile"),
+                event.get("begin_postmile"),
+                first_road.get("begin_postmile"),
+            ),
+            "end_postmile": _first_present(
+                event.get("+end_postmile"),
+                event.get("end_postmile"),
+                first_road.get("end_postmile"),
+            ),
             "road_state": first_road.get("state"),
             "lane_status": first_road.get("+lane_status") or first_road.get("lane_status"),
             "lane_type": first_road.get("+lane_type") or first_road.get("lane_type"),
@@ -418,6 +436,7 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
         events: list[dict[str, Any]] = []
         last_payload: dict[str, Any] | None = None
         pages_fetched = 0
+        events_seen = 0
 
         for page in range(self.max_pages):
             params = self._base_params()
@@ -427,6 +446,7 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
                 raise TypeError("511 Traffic Events response failed required schema invariants")
             last_payload = payload
             pages_fetched += 1
+            events_seen += len(payload["events"])
             batch = [event for event in payload["events"] if isinstance(event, dict)]
             events.extend(batch)
             pagination = payload.get("pagination")
@@ -451,9 +471,9 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
             schema_fingerprint=(
                 _schema_fingerprint(schema_payload, "events") if last_payload is not None else None
             ),
-            parser_yield=len(records) / len(events) if events else 1.0,
+            parser_yield=len(records) / events_seen if events_seen else 1.0,
             metadata={
-                "events_seen": len(events),
+                "events_seen": events_seen,
                 "status_filter": self.config.options.get("status", "ACTIVE"),
                 "pages_fetched": pages_fetched,
             },
