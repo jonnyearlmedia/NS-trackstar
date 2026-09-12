@@ -16,6 +16,7 @@ from ns_trackstar.db import (
     persist_collection,
     start_source_run,
 )
+from ns_trackstar.enrichment import enrich_napa_projects_from_parcels
 from ns_trackstar.registry import build_adapter
 
 
@@ -89,6 +90,7 @@ async def collect(config_path: str, *, write: bool) -> int:
         raise RuntimeError("DATABASE_URL is required when --write is used")
 
     adapter = build_adapter(adapter_name, config)
+    enriched_projects = 0
     async with connect(database_url) as conn:
         source_id, run_id = await _start_run(conn, adapter_name=adapter_name, config=config)
 
@@ -119,6 +121,8 @@ async def collect(config_path: str, *, write: bool) -> int:
                     canary_ok=True,
                     project_mapping=config.options.get("project_mapping"),
                 )
+                if config.key == "napa-county.parcels":
+                    enriched_projects = await enrich_napa_projects_from_parcels(conn)
         except Exception as exc:
             async with conn.transaction():
                 await fail_source_run(
@@ -147,6 +151,7 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "records_changed": summary.records_changed,
                     "projects_created": summary.projects_created,
                     "projects_touched": summary.projects_touched,
+                    "projects_enriched_from_parcels": enriched_projects,
                 },
             },
             indent=2,
