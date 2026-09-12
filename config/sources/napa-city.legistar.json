@@ -4,7 +4,7 @@
   "jurisdiction": "City of Napa",
   "adapter": "legistar",
   "base_url": "https://napacity.legistar.com",
-  "poll_minutes": 120,
+  "poll_minutes": 60,
   "options": {
     "api_base": "https://webapi.legistar.com/v1",
     "client_name": "napacity",
