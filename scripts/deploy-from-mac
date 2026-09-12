@@ -1,0 +1,141 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "This helper is intended to be run from the user's Mac." >&2
+  exit 1
+fi
+
+command -v ssh >/dev/null 2>&1 || { echo "ssh is required." >&2; exit 1; }
+command -v git >/dev/null 2>&1 || { echo "git is required." >&2; exit 1; }
+
+prompt_text() {
+  local title="$1"
+  local message="$2"
+  local default_value="${3:-}"
+  osascript - "$title" "$message" "$default_value" <<'APPLESCRIPT'
+on run argv
+  set titleText to item 1 of argv
+  set messageText to item 2 of argv
+  set defaultText to item 3 of argv
+  try
+    set response to display dialog messageText default answer defaultText buttons {"Cancel", "Continue"} default button "Continue" with title titleText
+    return text returned of response
+  on error number -128
+    return "__NS_TRACKSTAR_CANCELLED__"
+  end try
+end run
+APPLESCRIPT
+}
+
+raw_target="${1:-}"
+if [[ -z "$raw_target" ]]; then
+  raw_target="$(prompt_text "NS Trackstar Deploy" "Oracle VM address or SSH target. Paste the public IP, or a full target such as ubuntu@203.0.113.10." "")"
+fi
+if [[ "$raw_target" == "__NS_TRACKSTAR_CANCELLED__" || -z "$raw_target" ]]; then
+  echo "Deployment cancelled."
+  exit 1
+fi
+
+if [[ "$raw_target" == *@* ]]; then
+  ssh_target="$raw_target"
+else
+  ssh_target="ubuntu@$raw_target"
+fi
+host="${ssh_target#*@}"
+host="${host%%:*}"
+
+if [[ "$host" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+  api_domain="${host//./-}.sslip.io"
+else
+  api_domain="$host"
+fi
+
+cert_email="$(git config user.email || true)"
+if [[ ! "$cert_email" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+  cert_email="$(prompt_text "NS Trackstar Deploy" "Email address for automatic HTTPS certificate notices." "")"
+fi
+if [[ "$cert_email" == "__NS_TRACKSTAR_CANCELLED__" || -z "$cert_email" ]]; then
+  echo "Deployment cancelled."
+  exit 1
+fi
+
+preview_origin="https://ns-trackstar-git-build-phase-0-foundation-jonny-3061s-projects.vercel.app"
+production_origin="https://ns-trackstar.vercel.app"
+web_origins="$preview_origin,$production_origin"
+
+cat <<EOF
+NS Trackstar deployment target:
+  VM: $ssh_target
+  API: https://$api_domain
+  Web: $preview_origin
+EOF
+
+echo "Checking SSH access..."
+if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$ssh_target" 'true'; then
+  echo "SSH access failed. Make sure this Mac can already SSH into the Oracle VM with its SSH key." >&2
+  exit 2
+fi
+
+echo "Bootstrapping Docker/Git on the Oracle VM if needed..."
+ssh -o BatchMode=yes "$ssh_target" 'bash -s' <<'REMOTE'
+set -euo pipefail
+if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y curl git ca-certificates
+fi
+if ! command -v docker >/dev/null 2>&1; then
+  curl -fsSL https://get.docker.com | sudo sh
+fi
+if ! sudo docker compose version >/dev/null 2>&1; then
+  echo "Docker Compose plugin is unavailable after Docker installation." >&2
+  exit 3
+fi
+sudo usermod -aG docker "$USER" || true
+REMOTE
+
+# A fresh SSH session picks up docker-group membership.
+echo "Syncing NS Trackstar and starting the backend..."
+quoted_api=$(printf '%q' "$api_domain")
+quoted_origins=$(printf '%q' "$web_origins")
+quoted_email=$(printf '%q' "$cert_email")
+ssh -o BatchMode=yes "$ssh_target" "bash -s -- $quoted_api $quoted_origins $quoted_email" <<'REMOTE'
+set -euo pipefail
+api_domain="$1"
+web_origins="$2"
+cert_email="$3"
+repo="$HOME/NS-trackstar"
+
+if [[ ! -d "$repo/.git" ]]; then
+  git clone https://github.com/jonnyearlmedia/NS-trackstar.git "$repo"
+fi
+cd "$repo"
+git fetch origin build/phase-0-foundation
+git switch build/phase-0-foundation
+git pull --ff-only origin build/phase-0-foundation
+
+export NS_TRACKSTAR_API_DOMAIN="$api_domain"
+export NS_TRACKSTAR_WEB_ORIGIN="$web_origins"
+export NS_TRACKSTAR_CERT_EMAIL="$cert_email"
+
+if docker info >/dev/null 2>&1; then
+  ./scripts/deploy-oracle.sh
+else
+  # Fallback for a first session where docker group membership has not propagated.
+  sudo -E env \
+    NS_TRACKSTAR_API_DOMAIN="$api_domain" \
+    NS_TRACKSTAR_WEB_ORIGIN="$web_origins" \
+    NS_TRACKSTAR_CERT_EMAIL="$cert_email" \
+    PATH="$PATH" \
+    ./scripts/deploy-oracle.sh
+fi
+REMOTE
+
+cat <<EOF
+
+Backend deployment finished.
+API health: https://$api_domain/health
+Next step: point the Vercel build at https://$api_domain (the assistant can commit that public URL; no secret/env editing is required).
+EOF
