@@ -18,6 +18,7 @@ from ns_trackstar.db import (
 )
 from ns_trackstar.enrichment import (
     enrich_napa_projects_from_parcels,
+    enrich_one_lake_relationships,
     enrich_sr37_sears_point_corridor,
 )
 from ns_trackstar.registry import build_adapter
@@ -95,6 +96,7 @@ async def collect(config_path: str, *, write: bool) -> int:
     adapter = build_adapter(adapter_name, config)
     enriched_projects = 0
     enriched_corridors = 0
+    enriched_relationships = 0
     async with connect(database_url) as conn:
         source_id, run_id = await _start_run(conn, adapter_name=adapter_name, config=config)
 
@@ -129,6 +131,11 @@ async def collect(config_path: str, *, write: bool) -> int:
                     enriched_projects = await enrich_napa_projects_from_parcels(conn)
                 if config.key == "california.ceqanet.napa-solano":
                     enriched_corridors = await enrich_sr37_sears_point_corridor(conn)
+                if config.key in {
+                    "fairfield.one-lake-council-goals",
+                    "fairfield.vanden-canon-overcrossing",
+                }:
+                    enriched_relationships = await enrich_one_lake_relationships(conn)
         except Exception as exc:
             async with conn.transaction():
                 await fail_source_run(
@@ -159,6 +166,7 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "projects_touched": summary.projects_touched,
                     "projects_enriched_from_parcels": enriched_projects,
                     "corridors_enriched": enriched_corridors,
+                    "project_relationships_enriched": enriched_relationships,
                 },
             },
             indent=2,
