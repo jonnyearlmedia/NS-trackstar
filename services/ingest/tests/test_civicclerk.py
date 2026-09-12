@@ -2,7 +2,11 @@ import httpx
 import pytest
 
 from ns_trackstar.adapters.base import SourceConfig
-from ns_trackstar.adapters.civicclerk import CivicClerkAdapter, _wall_clock_datetime
+from ns_trackstar.adapters.civicclerk import (
+    CivicClerkAdapter,
+    _stable_file_list,
+    _wall_clock_datetime,
+)
 
 
 @pytest.fixture
@@ -30,6 +34,36 @@ def test_wall_clock_datetime_does_not_shift_civicclerk_local_time() -> None:
     assert parsed is not None
     assert parsed.hour == 19
     assert parsed.tzinfo is None
+
+
+def test_stable_file_list_ignores_delivery_url_churn() -> None:
+    first = _stable_file_list(
+        [
+            {
+                "id": 77,
+                "fileName": "Staff Report",
+                "downloadUrl": "https://files.example/report?token=old",
+                "expiresAt": "2026-09-12T22:00:00Z",
+            }
+        ]
+    )
+    second = _stable_file_list(
+        [
+            {
+                "id": 77,
+                "fileName": "Staff Report",
+                "downloadUrl": "https://files.example/report?token=new",
+                "expiresAt": "2026-09-12T23:00:00Z",
+            }
+        ]
+    )
+    assert first == second == [{"id": 77, "fileName": "Staff Report"}]
+
+
+def test_stable_file_list_preserves_meaningful_attachment_change() -> None:
+    before = _stable_file_list([{"id": 77, "fileName": "Staff Report"}])
+    after = _stable_file_list([{"id": 77, "fileName": "Revised Staff Report"}])
+    assert before != after
 
 
 @pytest.mark.asyncio
