@@ -1,0 +1,73 @@
+{
+  "key": "california.ceqanet.napa-solano",
+  "name": "California CEQAnet — Napa and Solano Counties",
+  "jurisdiction": "Napa and Solano Counties",
+  "adapter": "ceqanet",
+  "base_url": "https://ceqanet.lci.ca.gov/Search",
+  "poll_minutes": 1440,
+  "options": {
+    "search_url": "https://ceqanet.lci.ca.gov/Search",
+    "project_url_base": "https://ceqanet.lci.ca.gov/Project",
+    "timezone": "America/Los_Angeles",
+    "canary_sch": "2021010044",
+    "min_records": 1,
+    "max_counties_per_record": 4,
+    "queries": [
+      {
+        "County": "Napa",
+        "StartRange": "2020-01-01"
+      },
+      {
+        "County": "Solano",
+        "StartRange": "2020-01-01"
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_title",
+      "project_type": "environmental_review",
+      "description_field": "description",
+      "authority_type": "state_clearinghouse_record",
+      "status_dimension": "environmental",
+      "status_field": "environmental_status",
+      "assertions": {
+        "sch_number": "sch_number",
+        "lead_agency": "lead_agency",
+        "description": "description",
+        "latest_environmental_document_type": "latest_document_type",
+        "latest_environmental_document_title": "latest_document_title",
+        "latest_environmental_document_received": "latest_document_received",
+        "location_description": "location_cross_streets",
+        "apn": "apn",
+        "location_acres": "location_acres",
+        "state_highways": "state_highways",
+        "development_type": "development_type",
+        "local_action": "local_action"
+      },
+      "events": {
+        "items_field": "document_events",
+        "identity_field": "identity",
+        "type_field": "event_type",
+        "occurred_at_field": "occurred_at",
+        "title_field": "title",
+        "summary_field": "summary",
+        "metadata_field": "metadata",
+        "significance": 0.8
+      },
+      "record_links": {
+        "2021010044": {
+          "source_key": "suisun-city.development-calendar",
+          "external_id": "project:suisun-logistics-center",
+          "relationship_type": "environmental_review_for",
+          "confidence": 1.0,
+          "evidence": {
+            "signals": [
+              "identical official project title",
+              "CEQAnet location at State Route 12 and Walters Road",
+              "City of Suisun is lead agency"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

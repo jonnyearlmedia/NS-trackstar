@@ -16,11 +16,13 @@ Government sources → normalized source records → assertions + typed relation
 - CivicClerk public API adapter for Vallejo meetings + structured agenda items
 - reusable eTRAKiT adapter with ASP.NET form-state discovery and direct public record parsing
 - reusable official PDF project-tracker adapter with document hashing and parser canaries
+- CEQAnet CSV ingestion grouped by SCH number with document timeline events
 - source-record persistence + semantic change snapshots
-- config-driven promotion of authoritative source records into canonical projects
+- config-driven promotion and explicit typed source-record links into canonical projects
 - read API for map projects, project detail, events and source health
+- deterministic project/business/address/permit/case/APN/road search
 - real MapLibre + OpenFreeMap web map
-- selected project geometry glow + geometry-aware camera framing
+- selected project geometry glow, geometry-aware framing, timelines and source provenance
 
 ## Local development
 
@@ -35,10 +37,11 @@ Government sources → normalized source records → assertions + typed relation
 9. Ingest Suisun's official Development Calendar: `ns-trackstar-ingest collect config/sources/suisun-city.development-calendar.json --write`.
 10. Ingest City of Napa Legistar: `ns-trackstar-ingest collect config/sources/napa-city.legistar.json --write`.
 11. Ingest Solano County Legistar: `ns-trackstar-ingest collect config/sources/solano-county.legistar.json --write`.
-12. Smoke-test Napa eTRAKiT: `ns-trackstar-ingest collect config/smoke/napa-city.etrakit.json`.
-13. Smoke-test Vallejo eTRAKiT: `ns-trackstar-ingest collect config/smoke/vallejo.etrakit.json`.
-14. Start the API: `python -m ns_trackstar_api`.
-15. Install/start the web app: `pnpm install && pnpm dev`.
+12. Ingest Napa/Solano CEQAnet: `ns-trackstar-ingest collect config/sources/california.ceqanet.napa-solano.json --write`.
+13. Smoke-test Napa eTRAKiT: `ns-trackstar-ingest collect config/smoke/napa-city.etrakit.json`.
+14. Smoke-test Vallejo eTRAKiT: `ns-trackstar-ingest collect config/smoke/vallejo.etrakit.json`.
+15. Start the API: `python -m ns_trackstar_api`.
+16. Install/start the web app: `pnpm install && pnpm dev`.
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.
 

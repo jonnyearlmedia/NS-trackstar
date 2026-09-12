@@ -11,6 +11,7 @@ This file separates production-ready source engines from tenant-specific smoke t
 | Legistar | City of Napa | production ready | Public Web API client `napacity` verified September 11, 2026 with current-window meetings and agenda items; production config promoted. |
 | Legistar | Solano County | production ready | Public Web API client `solano` verified September 11, 2026 with current-window meetings and agenda items; production config promoted. |
 | PDF project tracker | Suisun City | production ready | Official 22-page Development Calendar canary and all 16 configured project pages verified September 11, 2026; exact status text and tracker grouping are preserved separately. |
+| CEQAnet | Napa + Solano Counties | production ready | Official CSV export and SCH canary verified September 11, 2026. Full 2020-present county run produced 1,782 SCH projects from 2,319 unique documents; broad statewide records are excluded deterministically. SCH 2021010044 is explicitly linked to the Suisun tracker project as `environmental_review_for`, with link evidence preserved. |
 | OpenGov public | American Canyon + Benicia | not started | Network-capture discovery before direct HTTP. |
 | Tyler Civic Access | Fairfield | not started | Live request-contract capture required. |
 | Accela ACA | Napa + Solano Counties | not started | Browser/session bootstrap first. |

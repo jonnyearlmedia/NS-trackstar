@@ -31,3 +31,7 @@ The adapter rule is strict: reuse transport and parsing infrastructure without t
 configured page describes one project. It preserves the source page text and document SHA-256;
 stage groupings remain source-specific assertions rather than being flattened into planning or
 construction status.
+
+`ceqanet` reads the official CSV export and groups document history by SCH number. Any link to
+an existing canonical project must be an explicit source-record anchor with typed relationship
+and evidence signals; title similarity alone never merges identities.
