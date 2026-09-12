@@ -1,6 +1,6 @@
-name: Accela Live Diagnostic (one-off)
+name: Accela Live Verification (one-off)
 
-# One structural diagnostic after exact known-record searches returned no parsed rows.
+# Final tenant verification after honoring each ACA form's actual postback action.
 on:
   push:
     paths:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  diagnose:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -20,80 +20,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e "services/ingest[dev]"
-      - name: Inspect exact-record result structure only
+      - name: Verify Solano and Napa Accela tenants
         shell: bash
         run: |
-          python - <<'PY'
-          import asyncio
-          import json
-          from bs4 import BeautifulSoup
-          from ns_trackstar.adapters.accela_aca_live import AccelaAcaAdapter
-          from ns_trackstar.adapters.base import SourceConfig
+          set +e
+          ns-trackstar-ingest collect config/smoke/solano-county.accela.json > /tmp/solano.out 2>&1
+          solano_status=$?
+          echo "===== SOLANO COUNTY ====="
+          cat /tmp/solano.out
 
-          CASES = [
-              ("SOLANO", "https://aca-prod.accela.com/SOLANOCO", "MU-25-01"),
-              ("NAPA", "https://aca-prod.accela.com/NAPACO", "P26-00139"),
-          ]
+          ns-trackstar-ingest collect config/smoke/napa-county.accela.json > /tmp/napa.out 2>&1
+          napa_status=$?
+          echo "===== NAPA COUNTY ====="
+          cat /tmp/napa.out
 
-          async def inspect(label, base_url, record_number):
-              config = SourceConfig(
-                  key=f"debug.{label.lower()}",
-                  name=f"{label} Accela diagnostic",
-                  jurisdiction=label,
-                  base_url=base_url,
-                  poll_minutes=240,
-                  options={
-                      "base_url": base_url,
-                      "modules": ["Planning"],
-                      "min_request_interval_seconds": 1.0,
-                  },
-              )
-              adapter = AccelaAcaAdapter(config)
-              async with adapter._session() as client:
-                  url = adapter._search_url("Planning")
-                  initial_html = await adapter._request(client, "GET", url)
-                  initial = BeautifulSoup(initial_html, "html.parser")
-                  data = adapter._search_post_data(initial, record_number=record_number)
-                  result_html = await adapter._request(client, "POST", url, data=data)
-                  result = BeautifulSoup(result_html, "html.parser")
-
-              tables = []
-              for table in result.find_all("table"):
-                  table_id = table.get("id")
-                  headers = [cell.get_text(" ", strip=True) for cell in table.find_all("th")]
-                  if table_id or headers:
-                      tables.append({"id": table_id, "headers": headers[:12]})
-              detail_links = [
-                  link.get("href")
-                  for link in result.find_all("a", href=True)
-                  if "CapDetail.aspx" in link.get("href", "")
-              ]
-              text = result.get_text(" ", strip=True)
-              phrases = [
-                  phrase
-                  for phrase in (
-                      "No records found",
-                      "No record found",
-                      "No records",
-                      "Search Results",
-                      "Record Number",
-                      "Your search returned",
-                  )
-                  if phrase.casefold() in text.casefold()
-              ]
-              print(json.dumps({
-                  "tenant": label,
-                  "record": record_number,
-                  "title": result.title.get_text(" ", strip=True) if result.title else None,
-                  "response_length": len(result_html),
-                  "tables": tables[:20],
-                  "detail_link_count": len(detail_links),
-                  "messages": phrases,
-              }, indent=2))
-
-          async def main():
-              for case in CASES:
-                  await inspect(*case)
-
-          asyncio.run(main())
-          PY
+          if [ "$solano_status" -ne 0 ] || [ "$napa_status" -ne 0 ]; then
+            exit 1
+          fi
