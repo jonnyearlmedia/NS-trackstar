@@ -136,7 +136,7 @@ async def test_collect_preserves_webforms_state_and_paginates() -> None:
 
 @pytest.mark.asyncio
 async def test_canary_can_require_known_record() -> None:
-    result_html = _PAGE_ONE.replace("BLD26-0001", "KNOWN-123")
+    result_html = _PAGE_TWO.replace("BLD26-0002", "KNOWN-123")
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "GET":
