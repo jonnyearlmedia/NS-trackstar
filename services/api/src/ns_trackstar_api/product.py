@@ -30,6 +30,34 @@ def _briefing_window_sql(window: BriefingWindow) -> tuple[str, dict[str, object]
     return "", {}
 
 
+def _briefing_row(row: dict, *, kind: str) -> dict:
+    event = None
+    if row.get("event_id"):
+        event = {
+            "id": str(row["event_id"]),
+            "title": row["event_title"],
+            "summary": row["event_summary"],
+            "event_type": row["event_type"],
+            "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
+            "observed_at": row["observed_at"].isoformat() if row["observed_at"] else None,
+            "significance": float(row["event_significance"] or 0),
+        }
+    return {
+        "id": str(row["id"]),
+        "name": row["canonical_name"],
+        "project_type": row["project_type"],
+        "last_activity_at": row["last_activity_at"].isoformat() if row["last_activity_at"] else None,
+        "importance_score": float(row["importance_score"] or 0),
+        "briefing_score": float(row["briefing_score"] or 0),
+        "briefing_kind": kind,
+        "geometry": row["geometry"],
+        "statuses": row["statuses"],
+        "summary": row["project_summary"],
+        "source_count": row["source_count"],
+        "event": event,
+    }
+
+
 @router.get("/projects/{project_id}/context")
 async def project_context(project_id: UUID, request: Request) -> dict:
     project_cursor = await request.app.state.db.execute(
@@ -243,28 +271,84 @@ async def briefing(
         """,
         params,
     )
-    rows = await cursor.fetchall()
-    return [
-        {
-            "id": str(row["id"]),
-            "name": row["canonical_name"],
-            "project_type": row["project_type"],
-            "last_activity_at": row["last_activity_at"].isoformat() if row["last_activity_at"] else None,
-            "importance_score": float(row["importance_score"] or 0),
-            "briefing_score": float(row["briefing_score"] or 0),
-            "geometry": row["geometry"],
-            "statuses": row["statuses"],
-            "summary": row["project_summary"],
-            "source_count": row["source_count"],
-            "event": {
-                "id": str(row["event_id"]),
-                "title": row["event_title"],
-                "summary": row["event_summary"],
-                "event_type": row["event_type"],
-                "occurred_at": row["occurred_at"].isoformat() if row["occurred_at"] else None,
-                "observed_at": row["observed_at"].isoformat() if row["observed_at"] else None,
-                "significance": float(row["event_significance"] or 0),
-            },
-        }
-        for row in rows
-    ]
+    changed_rows = await cursor.fetchall()
+    results = [_briefing_row(row, kind="change") for row in changed_rows]
+
+    if window != "all" or len(results) >= limit:
+        return results
+
+    fallback_cursor = await request.app.state.db.execute(
+        f"""
+        WITH source_counts AS (
+          SELECT psr.project_id, COUNT(DISTINCT psr.source_record_id)::int AS source_count
+          FROM project_source_record psr
+          GROUP BY psr.project_id
+        )
+        SELECT
+          p.id,
+          p.canonical_name,
+          p.project_type,
+          p.last_activity_at,
+          p.importance_score,
+          ST_AsGeoJSON(p.primary_geometry)::json AS geometry,
+          COALESCE(
+            (SELECT jsonb_object_agg(dimension, value)
+             FROM project_status_dimension psd
+             WHERE psd.project_id = p.id),
+            '{{}}'::jsonb
+          ) AS statuses,
+          COALESCE(
+            p.summary_cache,
+            (SELECT a.value #>> '{{}}'
+             FROM assertion a
+             WHERE a.project_id = p.id AND a.field = 'description'
+             ORDER BY a.observed_at DESC LIMIT 1)
+          ) AS project_summary,
+          COALESCE(sc.source_count, 0) AS source_count,
+          NULL::uuid AS event_id,
+          NULL::text AS event_title,
+          NULL::text AS event_summary,
+          NULL::text AS event_type,
+          NULL::timestamptz AS occurred_at,
+          NULL::timestamptz AS observed_at,
+          0::numeric AS event_significance,
+          (
+            LEAST(1, GREATEST(0, COALESCE(p.importance_score, 0))) * 0.65
+            + LEAST(COALESCE(sc.source_count, 0), 5) / 5.0 * 0.35
+          ) AS briefing_score
+        FROM project p
+        LEFT JOIN source_counts sc ON sc.project_id = p.id
+        WHERE p.primary_geometry IS NOT NULL
+        {consumer_filter}
+          AND (
+            COALESCE(sc.source_count, 0) >= 2
+            OR COALESCE(p.importance_score, 0) >= 0.2
+            OR EXISTS (
+              SELECT 1
+              FROM project_status_dimension meaningful_status
+              WHERE meaningful_status.project_id = p.id
+                AND lower(meaningful_status.value) <> ALL(%(terminal_statuses)s)
+            )
+          )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM project_status_dimension terminal_status
+            WHERE terminal_status.project_id = p.id
+              AND lower(terminal_status.value) = ANY(%(terminal_statuses)s)
+          )
+        ORDER BY briefing_score DESC, p.last_activity_at DESC NULLS LAST, p.canonical_name
+        LIMIT %(limit)s
+        """,
+        {"limit": limit, "terminal_statuses": list(TERMINAL_STATUS_VALUES)},
+    )
+    fallback_rows = await fallback_cursor.fetchall()
+    seen = {item["id"] for item in results}
+    for row in fallback_rows:
+        item = _briefing_row(row, kind="current_context")
+        if item["id"] in seen:
+            continue
+        results.append(item)
+        seen.add(item["id"])
+        if len(results) >= limit:
+            break
+    return results
