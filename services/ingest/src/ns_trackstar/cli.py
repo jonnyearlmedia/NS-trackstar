@@ -201,14 +201,13 @@ async def enrich_all() -> int:
     if not database_url:
         raise RuntimeError("DATABASE_URL is required for enrichment")
 
-    async with connect(database_url) as conn:
-        async with conn.transaction():
-            summary = {
-                "napa_projects_enriched_from_parcels": await enrich_napa_projects_from_parcels(conn),
-                "solano_projects_enriched_from_parcels": await enrich_solano_projects_from_parcels(conn),
-                "corridors_enriched": await enrich_sr37_sears_point_corridor(conn),
-                "project_relationships_enriched": await enrich_one_lake_relationships(conn),
-            }
+    async with connect(database_url) as conn, conn.transaction():
+        summary = {
+            "napa_projects_enriched_from_parcels": await enrich_napa_projects_from_parcels(conn),
+            "solano_projects_enriched_from_parcels": await enrich_solano_projects_from_parcels(conn),
+            "corridors_enriched": await enrich_sr37_sears_point_corridor(conn),
+            "project_relationships_enriched": await enrich_one_lake_relationships(conn),
+        }
 
     print(json.dumps({"enrichment": "complete", **summary}, indent=2))
     return 0
