@@ -73,6 +73,15 @@ type ChangeEvent = ProjectEvent & {
   summary: string | null;
 };
 
+type CatalogProject = {
+  id: string;
+  name: string;
+  project_type: string;
+  last_activity_at: string | null;
+  has_geometry: boolean;
+  delivery_stage: string | null;
+};
+
 type SearchResult = {
   id: string;
   name: string;
@@ -127,8 +136,10 @@ function routeProjectId() {
 export function MapExplorer({ initialProjectId }: { initialProjectId?: string }) {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [projectType, setProjectType] = useState<string | null>(null);
-  const [view, setView] = useState<"map" | "changes">("map");
+  const [view, setView] = useState<"map" | "list" | "changes">("map");
   const [coverage, setCoverage] = useState<MapCoverage | null>(null);
+  const [catalog, setCatalog] = useState<CatalogProject[]>([]);
+  const [catalogState, setCatalogState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [changesState, setChangesState] = useState<"loading" | "done" | "error">("loading");
   const [selected, setSelected] = useState<MapProject | null>(null);
@@ -226,12 +237,43 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
     return () => controller.abort();
   }, [projectType, timeWindow]);
 
+  useEffect(() => {
+    if (view !== "list") return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ window: timeWindow });
+    if (projectType) params.set("project_type", projectType);
+    setCatalogState("loading");
+    fetch(`${API_BASE}/projects?${params}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Project catalog returned ${response.status}`);
+        return response.json() as Promise<CatalogProject[]>;
+      })
+      .then((projects) => {
+        setCatalog(projects);
+        setCatalogState("done");
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCatalogState("error");
+      });
+    return () => controller.abort();
+  }, [projectType, timeWindow, view]);
+
   function selectProject(project: MapProject) {
     setSelected(project);
     setSelectedProjectId(project.id);
     setDetail(null);
     setEvents([]);
     window.history.pushState({}, "", `/projects/${project.id}`);
+  }
+
+  function selectProjectById(projectId: string) {
+    setSelected(null);
+    setSelectedProjectId(projectId);
+    setDetail(null);
+    setEvents([]);
+    window.history.pushState({}, "", `/projects/${projectId}`);
+    setView("map");
   }
 
   function clearSelection() {
@@ -265,6 +307,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
       deliveryStage: result.statuses.delivery_stage ?? result.statuses.official_tracker_stage ?? null,
       geometry: result.geometry,
     });
+    setView("map");
     setSearchOpen(false);
   }
 
@@ -344,11 +387,45 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
         <button className={view === "map" ? "active" : ""} onClick={() => setView("map")} type="button">
           <span>Map</span>
         </button>
+        <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button">
+          <span>List</span>
+        </button>
         <button className={view === "changes" ? "active" : ""} onClick={() => setView("changes")} type="button">
           <span>Updates</span>
           {changes.length ? <b>{Math.min(changes.length, 99)}</b> : null}
         </button>
       </div>
+
+      {view === "list" ? (
+        <section className="updatesSheet" aria-label="Project catalog">
+          <div className="sheetHandle" />
+          <header className="updatesHeader">
+            <div>
+              <p className="cardMeta">{activeFilter.toUpperCase()} · {catalog.length.toLocaleString()} PROJECTS</p>
+              <h2>Project catalog</h2>
+            </div>
+            <button className="roundClose" aria-label="Return to map" onClick={() => setView("map")} type="button">×</button>
+          </header>
+          {catalogState === "loading" ? <p className="emptyMessage">Loading the canonical project catalog…</p> : null}
+          {catalogState === "error" ? <p className="errorMessage">The project catalog is temporarily unavailable.</p> : null}
+          {catalogState === "done" && catalog.length === 0 ? <p className="emptyMessage">No projects match these filters.</p> : null}
+          <ol className="updateList">
+            {catalog.map((project) => (
+              <li key={project.id}>
+                <button onClick={() => selectProjectById(project.id)} type="button">
+                  <span className="updateMeta">
+                    <time dateTime={project.last_activity_at ?? undefined}>{eventDate(project.last_activity_at)}</time>
+                    <em>{project.has_geometry ? "Mapped" : "Location pending"}</em>
+                  </span>
+                  <strong>{project.name}</strong>
+                  <b>{project.project_type.replaceAll("_", " ")}</b>
+                  {project.delivery_stage ? <small>{project.delivery_stage.replaceAll("_", " ")}</small> : null}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       {view === "changes" ? (
         <section className="updatesSheet" aria-label="Recent project changes">
@@ -366,14 +443,7 @@ export function MapExplorer({ initialProjectId }: { initialProjectId?: string })
           <ol className="updateList">
             {changes.map((change) => (
               <li key={change.id}>
-                <button
-                  onClick={() => {
-                    setSelectedProjectId(change.project_id);
-                    window.history.pushState({}, "", `/projects/${change.project_id}`);
-                    setView("map");
-                  }}
-                  type="button"
-                >
+                <button onClick={() => selectProjectById(change.project_id)} type="button">
                   <span className="updateMeta">
                     <time dateTime={change.occurred_at ?? change.observed_at}>{eventDate(change.occurred_at ?? change.observed_at)}</time>
                     <em>{readableValue(change.event_type).replaceAll("_", " ")}</em>
