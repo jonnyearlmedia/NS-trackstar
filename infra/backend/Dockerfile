@@ -22,4 +22,4 @@ COPY --chown=trackstar:trackstar infra/collector_scheduler.py /app/infra/collect
 USER trackstar
 
 EXPOSE 8000
-CMD ["uvicorn", "ns_trackstar_api.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]
+CMD ["uvicorn", "ns_trackstar_api.product_app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]
