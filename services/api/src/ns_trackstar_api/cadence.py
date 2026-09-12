@@ -16,6 +16,19 @@ def _latest_outcome(success: bool | None, records_changed: int | None) -> str | 
     return "changed" if int(records_changed or 0) > 0 else "checked_no_change"
 
 
+def _stability_state(attempts: int, successful_runs: int) -> tuple[str, float | None]:
+    if attempts <= 0:
+        return "insufficient_history", None
+    success_rate = successful_runs / attempts
+    if attempts < 3:
+        return "insufficient_history", success_rate
+    if success_rate >= 0.9:
+        return "stable", success_rate
+    if success_rate >= 0.75:
+        return "watch", success_rate
+    return "unstable", success_rate
+
+
 def _missed_expected_check(
     *,
     last_attempt_at: datetime | None,
@@ -111,9 +124,11 @@ async def source_cadence_audit(
     now = datetime.now(UTC)
     items = []
     for row in rows:
+        attempts = int(row["attempts"] or 0)
         successful_runs = int(row["successful_runs"] or 0)
         runs_with_changes = int(row["runs_with_changes"] or 0)
         change_run_rate = runs_with_changes / successful_runs if successful_runs else None
+        stability_state, success_rate = _stability_state(attempts, successful_runs)
         poll_interval_minutes = int(row["poll_interval_minutes"])
         missed_check, expected_by, overdue_minutes = _missed_expected_check(
             last_attempt_at=row["last_attempt_at"],
@@ -131,6 +146,8 @@ async def source_cadence_audit(
                 "poll_interval_minutes": poll_interval_minutes,
                 "enabled": bool(row["enabled"]),
                 "health_state": row["health_state"],
+                "stability_state": stability_state,
+                "success_rate": round(success_rate, 4) if success_rate is not None else None,
                 "last_attempt_at": row["last_attempt_at"].isoformat() if row["last_attempt_at"] else None,
                 "last_success_at": row["last_success_at"].isoformat() if row["last_success_at"] else None,
                 "last_content_change_at": (
@@ -142,7 +159,7 @@ async def source_cadence_audit(
                 "missed_expected_check": missed_check,
                 "overdue_minutes": overdue_minutes,
                 "consecutive_failures": int(row["consecutive_failures"] or 0),
-                "attempts": int(row["attempts"] or 0),
+                "attempts": attempts,
                 "successful_runs": successful_runs,
                 "runs_with_changes": runs_with_changes,
                 "records_changed": int(row["records_changed"] or 0),
@@ -179,6 +196,8 @@ async def source_cadence_audit(
             "source_count": len(items),
             "checked_at": now.isoformat(),
             "missed_expected_checks": sum(1 for item in items if item["missed_expected_check"]),
+            "unstable_sources": sum(1 for item in items if item["stability_state"] == "unstable"),
+            "watch_sources": sum(1 for item in items if item["stability_state"] == "watch"),
             "note": (
                 "Descriptive audit only. Polling changes require source-by-source review of "
                 "change frequency, source cost/restrictions, and public freshness value."
