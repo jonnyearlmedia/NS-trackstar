@@ -45,6 +45,7 @@ const FIXTURES: Fixture[] = [
     label: "Napa Pipe",
     queries: ["Napa Pipe"],
     expectedNames: ["napa pipe"],
+    requiredSourceKeys: ["napa-city.napa-pipe-amendments"],
   },
   {
     key: "one-lake-canon-station",
