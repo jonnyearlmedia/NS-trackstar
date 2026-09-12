@@ -1,4 +1,4 @@
-import { MapExplorerV5 } from "@/components/map-explorer-v5";
+import { MapExplorerV6 } from "@/components/map-explorer-v6";
 
 export default async function ProjectPage({
   params,
@@ -8,7 +8,7 @@ export default async function ProjectPage({
   const { id } = await params;
   return (
     <main className="shell">
-      <MapExplorerV5 initialProjectId={id} />
+      <MapExplorerV6 initialProjectId={id} />
     </main>
   );
 }
