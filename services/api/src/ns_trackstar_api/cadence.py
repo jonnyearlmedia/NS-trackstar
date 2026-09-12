@@ -1,10 +1,35 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
 router = APIRouter()
+
+
+def _latest_outcome(success: bool | None, records_changed: int | None) -> str | None:
+    if success is None:
+        return None
+    if not success:
+        return "failed"
+    return "changed" if int(records_changed or 0) > 0 else "checked_no_change"
+
+
+def _missed_expected_check(
+    *,
+    last_attempt_at: datetime | None,
+    poll_interval_minutes: int,
+    now: datetime,
+) -> tuple[bool, datetime | None, int | None]:
+    if last_attempt_at is None:
+        return True, None, None
+    if last_attempt_at.tzinfo is None:
+        last_attempt_at = last_attempt_at.replace(tzinfo=UTC)
+    grace_minutes = max(15, round(poll_interval_minutes * 0.25))
+    expected_by = last_attempt_at + timedelta(minutes=poll_interval_minutes + grace_minutes)
+    overdue_minutes = max(0, int((now - expected_by).total_seconds() // 60))
+    return now > expected_by, expected_by, overdue_minutes
 
 
 @router.get("/admin/sources/cadence")
@@ -35,47 +60,66 @@ async def source_cadence_audit(
           sh.last_success_at,
           sh.last_content_change_at,
           sh.consecutive_failures,
-          COUNT(sr.id) FILTER (
-            WHERE sr.started_at >= now() - (%(days)s * interval '1 day')
-          )::int AS attempts,
-          COUNT(sr.id) FILTER (
-            WHERE sr.started_at >= now() - (%(days)s * interval '1 day')
-              AND sr.success IS TRUE
-          )::int AS successful_runs,
-          COUNT(sr.id) FILTER (
-            WHERE sr.started_at >= now() - (%(days)s * interval '1 day')
-              AND sr.success IS TRUE
-              AND sr.records_changed > 0
-          )::int AS runs_with_changes,
-          COALESCE(SUM(sr.records_changed) FILTER (
-            WHERE sr.started_at >= now() - (%(days)s * interval '1 day')
-              AND sr.success IS TRUE
-          ), 0)::int AS records_changed,
-          ROUND(AVG(sr.response_latency_ms) FILTER (
-            WHERE sr.started_at >= now() - (%(days)s * interval '1 day')
-              AND sr.success IS TRUE
-          ))::int AS avg_response_latency_ms
+          COALESCE(stats.attempts, 0)::int AS attempts,
+          COALESCE(stats.successful_runs, 0)::int AS successful_runs,
+          COALESCE(stats.runs_with_changes, 0)::int AS runs_with_changes,
+          COALESCE(stats.records_changed, 0)::int AS records_changed,
+          stats.avg_response_latency_ms,
+          latest.success AS latest_success,
+          latest.records_returned AS latest_records_returned,
+          latest.records_changed AS latest_records_changed,
+          latest.started_at AS latest_started_at,
+          latest.finished_at AS latest_finished_at,
+          latest.error_type AS latest_error_type,
+          latest.error_message AS latest_error_message
         FROM source s
         LEFT JOIN source_health sh ON sh.source_id = s.id
-        LEFT JOIN source_run sr ON sr.source_id = s.id
-        GROUP BY
-          s.id,
-          sh.health_state,
-          sh.last_attempt_at,
-          sh.last_success_at,
-          sh.last_content_change_at,
-          sh.consecutive_failures
+        LEFT JOIN LATERAL (
+          SELECT
+            COUNT(*)::int AS attempts,
+            COUNT(*) FILTER (WHERE success IS TRUE)::int AS successful_runs,
+            COUNT(*) FILTER (
+              WHERE success IS TRUE AND records_changed > 0
+            )::int AS runs_with_changes,
+            COALESCE(SUM(records_changed) FILTER (WHERE success IS TRUE), 0)::int AS records_changed,
+            ROUND(AVG(response_latency_ms) FILTER (WHERE success IS TRUE))::int
+              AS avg_response_latency_ms
+          FROM source_run
+          WHERE source_id = s.id
+            AND started_at >= now() - (%(days)s * interval '1 day')
+        ) stats ON true
+        LEFT JOIN LATERAL (
+          SELECT
+            success,
+            records_returned,
+            records_changed,
+            started_at,
+            finished_at,
+            error_type,
+            error_message
+          FROM source_run
+          WHERE source_id = s.id
+          ORDER BY started_at DESC
+          LIMIT 1
+        ) latest ON true
         ORDER BY s.poll_interval_minutes, s.source_key
         """,
         {"days": days},
     )
     rows = await cursor.fetchall()
 
+    now = datetime.now(UTC)
     items = []
     for row in rows:
         successful_runs = int(row["successful_runs"] or 0)
         runs_with_changes = int(row["runs_with_changes"] or 0)
         change_run_rate = runs_with_changes / successful_runs if successful_runs else None
+        poll_interval_minutes = int(row["poll_interval_minutes"])
+        missed_check, expected_by, overdue_minutes = _missed_expected_check(
+            last_attempt_at=row["last_attempt_at"],
+            poll_interval_minutes=poll_interval_minutes,
+            now=now,
+        )
         items.append(
             {
                 "source_key": row["source_key"],
@@ -84,7 +128,7 @@ async def source_cadence_audit(
                 "jurisdiction": row["jurisdiction"],
                 "authority_class": row["authority_class"],
                 "collector_type": row["collector_type"],
-                "poll_interval_minutes": int(row["poll_interval_minutes"]),
+                "poll_interval_minutes": poll_interval_minutes,
                 "enabled": bool(row["enabled"]),
                 "health_state": row["health_state"],
                 "last_attempt_at": row["last_attempt_at"].isoformat() if row["last_attempt_at"] else None,
@@ -94,6 +138,9 @@ async def source_cadence_audit(
                     if row["last_content_change_at"]
                     else None
                 ),
+                "expected_next_check_by": expected_by.isoformat() if expected_by else None,
+                "missed_expected_check": missed_check,
+                "overdue_minutes": overdue_minutes,
                 "consecutive_failures": int(row["consecutive_failures"] or 0),
                 "attempts": int(row["attempts"] or 0),
                 "successful_runs": successful_runs,
@@ -105,6 +152,23 @@ async def source_cadence_audit(
                     if row["avg_response_latency_ms"] is not None
                     else None
                 ),
+                "latest_run": {
+                    "outcome": _latest_outcome(
+                        row["latest_success"],
+                        row["latest_records_changed"],
+                    ),
+                    "success": row["latest_success"],
+                    "records_returned": int(row["latest_records_returned"] or 0),
+                    "records_changed": int(row["latest_records_changed"] or 0),
+                    "started_at": (
+                        row["latest_started_at"].isoformat() if row["latest_started_at"] else None
+                    ),
+                    "finished_at": (
+                        row["latest_finished_at"].isoformat() if row["latest_finished_at"] else None
+                    ),
+                    "error_type": row["latest_error_type"],
+                    "error_message": row["latest_error_message"],
+                },
             }
         )
 
@@ -113,6 +177,8 @@ async def source_cadence_audit(
         "metadata": {
             "window_days": days,
             "source_count": len(items),
+            "checked_at": now.isoformat(),
+            "missed_expected_checks": sum(1 for item in items if item["missed_expected_check"]),
             "note": (
                 "Descriptive audit only. Polling changes require source-by-source review of "
                 "change frequency, source cost/restrictions, and public freshness value."
