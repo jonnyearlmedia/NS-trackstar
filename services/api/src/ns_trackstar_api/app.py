@@ -261,6 +261,47 @@ async def map_projects(
     }
 
 
+@app.get("/projects")
+async def project_catalog(
+    time_window: Annotated[TimeWindow, Query(alias="window")] = "all",
+    project_type: Annotated[str | None, Query(max_length=80)] = None,
+) -> list[dict]:
+    time_filter, type_filter, params = _project_scope(time_window, project_type)
+    cursor = await app.state.db.execute(
+        f"""
+        SELECT
+          p.id,
+          p.canonical_name,
+          p.project_type,
+          p.last_activity_at,
+          (p.primary_geometry IS NOT NULL) AS has_geometry,
+          MAX(psd.value) FILTER (WHERE psd.dimension = 'delivery_stage') AS delivery_stage
+        FROM project p
+        LEFT JOIN project_status_dimension psd ON psd.project_id = p.id
+        WHERE true
+        {time_filter}
+        {type_filter}
+        GROUP BY p.id
+        ORDER BY p.last_activity_at DESC NULLS LAST, p.canonical_name
+        """,
+        params,
+    )
+    rows = await cursor.fetchall()
+    return [
+        {
+            "id": str(row["id"]),
+            "name": row["canonical_name"],
+            "project_type": row["project_type"],
+            "last_activity_at": (
+                row["last_activity_at"].isoformat() if row["last_activity_at"] else None
+            ),
+            "has_geometry": bool(row["has_geometry"]),
+            "delivery_stage": row["delivery_stage"],
+        }
+        for row in rows
+    ]
+
+
 @app.get("/changes")
 async def changes(
     time_window: Annotated[TimeWindow, Query(alias="window")] = "week",
