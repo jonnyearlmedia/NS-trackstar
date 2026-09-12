@@ -5,9 +5,8 @@ from dataclasses import dataclass, field
 
 from ns_trackstar.models import RelationshipType
 
-# These identifiers can name a specific physical project in an issuing system. They are useful
-# evidence, but permit/case numbers can repeat across jurisdictions, so they are not by themselves
-# enough to collapse two canonical projects.
+# These identifiers name a specific physical project in the issuing system. Parcel and
+# environmental-review identifiers are intentionally excluded: either can span multiple projects.
 PHYSICAL_PROJECT_IDENTIFIER_TYPES = frozenset(
     {
         "caltrans_ea",
@@ -37,21 +36,16 @@ def has_project_identifier(evidence: MatchEvidence) -> bool:
 
 
 def has_strong_same_project_evidence(evidence: MatchEvidence) -> bool:
-    """Require an explicit cross-reference or an identifier plus a corroborating signal.
+    """Accept only explicit cross-references or identifiers for a specific issued project.
 
-    A shared parcel, name, address or overlapping geometry is useful corroboration, but none of
-    those signals alone proves identity. This intentionally biases Trackstar toward keeping two
-    records separate rather than making a bad merge that would misstate the real world.
+    Names, parcels, addresses and geometry are useful corroboration but are never sufficient by
+    themselves to collapse identity. That keeps same-brand sites and multiple projects on one
+    parcel distinct unless an issuing-system identifier or explicit official reference ties them.
     """
 
     if evidence.explicit_same_project_references:
         return True
-    return has_project_identifier(evidence) and (
-        evidence.normalized_address_match
-        or evidence.normalized_name_match
-        or evidence.geometry_overlap
-        or bool(evidence.shared_apns)
-    )
+    return has_project_identifier(evidence)
 
 
 def identity_collapse_allowed(
