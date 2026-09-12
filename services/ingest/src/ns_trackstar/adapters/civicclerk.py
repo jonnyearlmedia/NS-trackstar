@@ -36,6 +36,49 @@ def _walk_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return flattened
 
 
+_STABLE_FILE_FIELDS = (
+    "id",
+    "fileId",
+    "fileName",
+    "name",
+    "title",
+    "type",
+    "documentType",
+    "description",
+)
+
+
+def _stable_file_list(value: Any) -> list[dict[str, Any]]:
+    """Keep attachment identity/content while dropping request-volatile metadata.
+
+    CivicClerk can return file objects containing delivery URLs or other metadata that
+    may change independently of the public meeting record. Trackstar should detect an
+    added, removed, renamed, or retyped file, not a regenerated URL/token.
+    """
+    if not isinstance(value, list):
+        return []
+
+    stable: list[dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        normalized = {
+            field: item[field]
+            for field in _STABLE_FILE_FIELDS
+            if field in item and item[field] not in (None, "")
+        }
+        if normalized:
+            stable.append(normalized)
+    return sorted(
+        stable,
+        key=lambda item: (
+            str(item.get("id") or item.get("fileId") or ""),
+            str(item.get("fileName") or item.get("name") or item.get("title") or ""),
+            str(item.get("type") or item.get("documentType") or ""),
+        ),
+    )
+
+
 class CivicClerkAdapter(CollectorAdapter):
     """Read Vallejo-style CivicClerk public OData and structured agendas."""
 
@@ -159,7 +202,7 @@ class CivicClerkAdapter(CollectorAdapter):
             "agenda_id": event.get("agendaId") or None,
             "agenda_name": event.get("agendaName"),
             "location": event.get("eventLocation"),
-            "published_files": event.get("publishedFiles") or [],
+            "published_files": _stable_file_list(event.get("publishedFiles")),
             "virtual_meeting_url": event.get("externalMediaUrl"),
             "youtube_video_id": event.get("youtubeVideoId"),
             "media_stream_url": event.get("mediaStreamPath"),
@@ -206,7 +249,7 @@ class CivicClerkAdapter(CollectorAdapter):
                 "title": item.get("agendaObjectItemName"),
                 "is_section": bool(item.get("isSection")),
                 "sort_order": item.get("sortOrder"),
-                "attachments": item.get("attachmentsList") or [],
+                "attachments": _stable_file_list(item.get("attachmentsList")),
             }
             records.append(
                 NormalizedRecord(
