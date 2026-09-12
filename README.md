@@ -15,6 +15,7 @@ Government sources → normalized source records → assertions + typed relation
 - City of Napa Public Works CIP + Water CIP through the same ArcGIS adapter
 - CivicClerk public API adapter for Vallejo meetings + structured agenda items
 - reusable eTRAKiT adapter with ASP.NET form-state discovery and direct public record parsing
+- reusable official PDF project-tracker adapter with document hashing and parser canaries
 - source-record persistence + semantic change snapshots
 - config-driven promotion of authoritative source records into canonical projects
 - read API for map projects, project detail, events and source health
@@ -25,15 +26,22 @@ Government sources → normalized source records → assertions + typed relation
 
 1. Copy `.env.example` to `.env`.
 2. Start PostGIS with `docker compose up -d db`.
-3. Apply `db/migrations/0001_core.sql` to the database.
+3. Apply every `db/migrations/*.sql` file in filename order.
 4. Install the ingestion service: `pip install -e "services/ingest[dev]"`.
 5. Install the API: `pip install -e "services/api[dev]"`.
 6. Ingest Napa Public Works CIP: `ns-trackstar-ingest collect config/sources/napa-city.public-works-cip.json --write`.
 7. Ingest Napa Water CIP: `ns-trackstar-ingest collect config/sources/napa-city.water-cip.json --write`.
 8. Ingest Vallejo meetings/agendas: `ns-trackstar-ingest collect config/sources/vallejo.civicclerk.json --write`.
-9. Smoke-test Napa eTRAKiT: `ns-trackstar-ingest collect config/smoke/napa-city.etrakit.json`.
-10. Smoke-test Vallejo eTRAKiT: `ns-trackstar-ingest collect config/smoke/vallejo.etrakit.json`.
-11. Start the API: `python -m ns_trackstar_api`.
-12. Install/start the web app: `pnpm install && pnpm dev`.
+9. Ingest Suisun's official Development Calendar: `ns-trackstar-ingest collect config/sources/suisun-city.development-calendar.json --write`.
+10. Ingest City of Napa Legistar: `ns-trackstar-ingest collect config/sources/napa-city.legistar.json --write`.
+11. Ingest Solano County Legistar: `ns-trackstar-ingest collect config/sources/solano-county.legistar.json --write`.
+12. Smoke-test Napa eTRAKiT: `ns-trackstar-ingest collect config/smoke/napa-city.etrakit.json`.
+13. Smoke-test Vallejo eTRAKiT: `ns-trackstar-ingest collect config/smoke/vallejo.etrakit.json`.
+14. Start the API: `python -m ns_trackstar_api`.
+15. Install/start the web app: `pnpm install && pnpm dev`.
 
 The implementation source of truth lives in `docs/MASTER_SPEC.md`.
+
+The upstream PostGIS 16 image is amd64-only as of this setup. Compose pins
+`POSTGIS_PLATFORM=linux/amd64` by default so Docker Desktop or Colima can run it on Apple
+Silicon. Override the variable only when using a compatible alternate image/platform.
