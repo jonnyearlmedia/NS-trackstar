@@ -179,7 +179,7 @@ function consumerType(projectType: string) {
   return "Local project";
 }
 
-function humanEventHeadline(event: ProjectEvent) {
+function humanEventHeadline(event: Pick<ProjectEvent, "event_type" | "title" | "summary">) {
   if (event.event_type === "ceqa_document_received") return "A new environmental review document was filed.";
   if (event.event_type?.endsWith("_changed")) return event.title.replaceAll("_", " ");
   if (event.summary && event.summary !== event.title) return event.summary;
