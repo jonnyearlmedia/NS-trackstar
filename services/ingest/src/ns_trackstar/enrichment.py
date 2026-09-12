@@ -230,3 +230,84 @@ async def enrich_sr37_sears_point_corridor(conn: psycopg.AsyncConnection) -> int
         """
     )
     return len(locations)
+
+
+async def enrich_one_lake_relationships(conn: psycopg.AsyncConnection) -> int:
+    """Create the official One Lake alias and its typed Vanden/Canon relationship.
+
+    The City Council goals report explicitly coordinates the Vanden/Canon work with
+    the One Lake developer. This is a relationship, not an identity merge.
+    """
+
+    await conn.execute(
+        """
+        WITH master AS (
+          SELECT p.id AS project_id, sr.id AS source_record_id
+          FROM source s
+          JOIN source_record sr ON sr.source_id = s.id
+          JOIN project_source_record psr ON psr.source_record_id = sr.id
+          JOIN project p ON p.id = psr.project_id
+          WHERE s.source_key = 'fairfield.one-lake-council-goals'
+            AND sr.external_id = 'one-lake-vanden-canon-2025-q3'
+          ORDER BY p.created_at
+          LIMIT 1
+        )
+        INSERT INTO project_alias (project_id, alias, alias_type, source_record_id)
+        SELECT project_id, 'Canon Station', 'official_development_alias', source_record_id
+        FROM master
+        ON CONFLICT (project_id, alias) DO UPDATE SET
+          alias_type = EXCLUDED.alias_type,
+          source_record_id = EXCLUDED.source_record_id
+        """
+    )
+
+    cursor = await conn.execute(
+        """
+        WITH master AS (
+          SELECT p.id AS project_id, sr.id AS source_record_id
+          FROM source s
+          JOIN source_record sr ON sr.source_id = s.id
+          JOIN project_source_record psr ON psr.source_record_id = sr.id
+          JOIN project p ON p.id = psr.project_id
+          WHERE s.source_key = 'fairfield.one-lake-council-goals'
+            AND sr.external_id = 'one-lake-vanden-canon-2025-q3'
+          ORDER BY p.created_at
+          LIMIT 1
+        ),
+        infrastructure AS (
+          SELECT p.id AS project_id
+          FROM source s
+          JOIN source_record sr ON sr.source_id = s.id
+          JOIN project_source_record psr ON psr.source_record_id = sr.id
+          JOIN project p ON p.id = psr.project_id
+          WHERE s.source_key = 'fairfield.vanden-canon-overcrossing'
+            AND sr.external_id = 'vanden-canon-overcrossing-2025-q3'
+          ORDER BY p.created_at
+          LIMIT 1
+        )
+        INSERT INTO project_relationship (
+          from_project_id, to_project_id, relationship_type,
+          confidence, source_record_id, evidence
+        )
+        SELECT
+          master.project_id,
+          infrastructure.project_id,
+          'related_infrastructure',
+          1,
+          master.source_record_id,
+          jsonb_build_object(
+            'signal', 'Fairfield Council Goals directs coordination with the One Lake developer on Vanden Road widening and grade separation',
+            'source', 'Council Goals FY 2023-25 (Mar-25) Report'
+          )
+        FROM master CROSS JOIN infrastructure
+        WHERE master.project_id <> infrastructure.project_id
+        ON CONFLICT (from_project_id, to_project_id, relationship_type) DO UPDATE SET
+          confidence = EXCLUDED.confidence,
+          source_record_id = EXCLUDED.source_record_id,
+          evidence = EXCLUDED.evidence,
+          updated_at = now()
+        RETURNING id
+        """
+    )
+    relationships = await cursor.fetchall()
+    return len(relationships)
