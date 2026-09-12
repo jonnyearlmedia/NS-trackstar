@@ -4,7 +4,7 @@
   "jurisdiction": "City of Benicia",
   "adapter": "arcgis_rest",
   "base_url": "https://www.ci.benicia.ca.us/currentdevelopment",
-  "poll_minutes": 1440,
+  "poll_minutes": 240,
   "options": {
     "layer_url": "https://services5.arcgis.com/eclQh1J6mUFYeV4m/arcgis/rest/services/CDD_Current_Planning_Applications/FeatureServer/0",
     "id_field": "FID",
