@@ -124,6 +124,28 @@
   stroke-linejoin: round;
 }
 
+/* Category identity must stay visually consistent from browse -> map -> card. */
+[class*="categoryGrid"] button[data-category="development"] i {
+  color: #28745c !important;
+  background: #eaf5f0 !important;
+}
+[class*="categoryGrid"] button[data-category="roads"] i {
+  color: #bc6714 !important;
+  background: #fff3e5 !important;
+}
+[class*="categoryGrid"] button[data-category="utilities"] i {
+  color: #197a8f !important;
+  background: #e8f6f8 !important;
+}
+[class*="categoryGrid"] button[data-category="places"] i {
+  color: #5364c5 !important;
+  background: #eef0ff !important;
+}
+[class*="categoryGrid"] [class*="categorySelected"] i {
+  color: #fff !important;
+  background: rgba(255,255,255,.16) !important;
+}
+
 @media (max-width: 600px) {
   [class*="bottomNav"] button {
     min-width: 108px !important;
