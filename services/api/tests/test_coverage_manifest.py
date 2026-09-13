@@ -112,26 +112,32 @@ def test_parcels_and_ceqa_alone_do_not_make_development_coverage():
 
     scorecard = build_scorecard()
     by_key = {item["key"]: item for item in scorecard["jurisdictions"]}
-    # St. Helena and Calistoga left this list on September 13, 2026 when each city's
-    # own project pages were ingested, and Dixon left it later the same day when its
-    # CEQA review page turned out to be that city's actual planning pipeline. The rule
-    # is unchanged: each moved because a development source now returns records, not
-    # because reference data started counting. The three that remain have nothing local.
+    # This list has emptied steadily through September 13, 2026, and every departure
+    # was a source that began returning records, never reference data starting to
+    # count. St. Helena and Calistoga left on their own project pages; Dixon on its
+    # CEQA review page; Rio Vista, Dixon and Suisun City on permit systems that turned
+    # out to live on hosts their blocked websites never pointed at.
+    #
+    # Development and permits are tracked separately now, because they stopped moving
+    # together: Rio Vista has thousands of permit records and still publishes no
+    # planning pipeline at all.
     for key in ("vacaville", "rio-vista", "yountville"):
         rows = {row["category"]: row for row in by_key[key]["categories"]}
         # These jurisdictions genuinely do get statewide CEQA filings, and full county
         # spatial truth: parcels, address-level geocoding and jurisdiction boundaries.
         assert rows["ceqa_environmental"]["state"] == "partial"
         assert rows["gis_spatial"]["state"] == "strong"
-        # ...but neither ever reads as local development or permit coverage. Knowing
-        # exactly where a project would sit is not knowing that one exists.
+        # ...but neither ever reads as local development coverage. Knowing exactly
+        # where a project would sit is not knowing that one exists.
         #
         # The assertion is "not covered" rather than one exact label, because a
-        # category legitimately moves between missing and blocked as work proceeds:
-        # Dixon's permits became blocked once its Tyler portal was found and its
-        # contract turned out to need a browser capture. Both still mean not covered,
-        # and pinning the label would make that progress look like a regression.
+        # category legitimately moves between missing and blocked as work proceeds.
+        # Both still mean not covered, and pinning the label would make that progress
+        # look like a regression.
         assert rows["current_development"]["state"] in {"missing", "blocked"}
+
+    for key in ("vacaville", "yountville"):
+        rows = {row["category"]: row for row in by_key[key]["categories"]}
         assert rows["permits"]["state"] in {"missing", "blocked"}
 
 

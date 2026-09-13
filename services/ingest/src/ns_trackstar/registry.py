@@ -11,6 +11,7 @@ from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.civicplus_project_index import CivicPlusProjectIndexAdapter
 from ns_trackstar.adapters.civicweb import CivicWebAdapter
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
+from ns_trackstar.adapters.energov_css import EnerGovCivicAccessAdapter
 from ns_trackstar.adapters.envisio import EnvisioAdapter
 from ns_trackstar.adapters.escribe import EScribeAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
@@ -20,6 +21,7 @@ from ns_trackstar.adapters.heading_project_list import HeadingProjectListAdapter
 from ns_trackstar.adapters.html_table import HtmlTableAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.linked_project_pages import LinkedProjectPagesAdapter
+from ns_trackstar.adapters.maintstar_public import MaintStarPublicAdapter
 from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.opencities_project_list import OpenCitiesProjectListAdapter
@@ -40,6 +42,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "civicweb": CivicWebAdapter,
     "courtlistener": CourtListenerAdapter,
     "ceqanet": CeqanetAdapter,
+    "energov_css": EnerGovCivicAccessAdapter,
     "envisio": EnvisioAdapter,
     "escribe": EScribeAdapter,
     "etrakit": ETrakitAdapter,
@@ -49,6 +52,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "html_table": HtmlTableAdapter,
     "legistar": LegistarAdapter,
     "linked_project_pages": LinkedProjectPagesAdapter,
+    "maintstar_public": MaintStarPublicAdapter,
     "opencities_map": OpenCitiesMapAdapter,
     "opencities_project_list": OpenCitiesProjectListAdapter,
     "official_document_set": OfficialDocumentSetAdapter,

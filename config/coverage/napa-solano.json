@@ -1074,7 +1074,14 @@
           ]
         },
         "permits": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "suisun-city.energov",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Tyler EnerGov Civic Access, found through the one page on the city's own site that links to it. Narrow by the city's choice rather than by ours: Suisun publishes 121 permits against 9,531 code cases, so most of what is available is code enforcement rather than building activity, and the agency's own totals are reported beside what was kept."
         },
         "government_meetings": {
           "evidence": [
@@ -1272,10 +1279,14 @@
           "limitation": "Dixon publishes no planning-case database. This is the city's CEQA review page, which is where a Dixon project becomes public: project name, clearinghouse number, location, written proposal and hearing documents. Entries run from 1994 to the present under a single 'under review' heading, so the section label is recorded as a hint and each project's real status is read from its own text."
         },
         "permits": {
-          "evidence": [],
-          "blocker": {
-            "reason": "Dixon has moved to Tyler's new Civic Access experience, and that tenant has anonymous public record search switched off. Its own route guard answers isEnable false for /public-records, /search and /records; /projects is enabled but requires authentication, and the navigation menu the portal serves offers only Home, Applications and Invoices. The legacy EnerGov search route still answers 500, which is why six hand-built payloads failed: it is retired for this tenant rather than mis-addressed. Verified under a real browser on an ordinary network September 13, 2026. This is an agency configuration choice, not a missing request contract, so no further request capture would change it."
-          }
+          "evidence": [
+            {
+              "source": "dixon.energov",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Tyler EnerGov Civic Access. Reached only after correcting a wrong conclusion: the city's new Civic Access UI genuinely has record search switched off, but the legacy API is live and needs four tenant headers a browser sends and a hand-built request does not. Without them every payload returns HTTP 500, which is indistinguishable from a retired route. Inspections and licences are deliberately not collected - they are not projects and are 81% of the file. The index serves no offset past 10,000 rows, so a run is a recency window and never the whole file; the agency's own total is reported next to what was kept."
         },
         "government_meetings": {
           "evidence": [
@@ -1371,7 +1382,14 @@
           "evidence": []
         },
         "permits": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "rio-vista.maintstar",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "MaintStar, on a host entirely separate from the city's website, which answers 403 from Cloudflare to every client. The portal's own configuration advertises anonymous search as enabled and the collector refuses to proceed if that ever changes, rather than hammering a door the city has closed. Discovery is by substring query because the API publishes no usable total - it returns -1 on every page - so the set of queries walked is config and is reported per run. Every row's description comes back as the literal string '(Confidential)' for anonymous callers; that is recorded as absent and never as a description."
         },
         "government_meetings": {
           "evidence": [

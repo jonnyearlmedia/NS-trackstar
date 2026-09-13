@@ -1,0 +1,28 @@
+{
+  "key": "suisun-city.energov",
+  "name": "Suisun City Tyler EnerGov Permits and Code Cases",
+  "jurisdiction": "Suisun City",
+  "adapter": "energov_css",
+  "base_url": "https://cityofsuisuncityca-energovweb.tylerhost.net/apps/selfservice",
+  "poll_minutes": 240,
+  "options": {
+    "tenant_name": "SuisunCityCA",
+    "tenant_id": "1",
+    "tenant_culture": "en-US",
+    "record_types": [
+      "permit",
+      "plan",
+      "code_case",
+      "project"
+    ],
+    "page_size": 100,
+    "max_pages_per_module": 40,
+    "max_pages_per_run": 160,
+    "recency_days": 365,
+    "timezone": "America/Los_Angeles",
+    "min_expected_results": 1,
+    "min_request_interval_seconds": 0.5,
+    "_record_types": "Suisun City publishes 12,637 records: 121 permits, 9,531 code cases, 2,985 inspections and no plans, projects or licences. The code cases are the bulk of the file and are kept, because code enforcement against a property is jurisdiction activity; the inspections are not collected. plan and project are named here even though both are currently zero, so that the day the city starts filing them the collector already reads them rather than waiting for someone to notice.",
+    "_tenant_name_case": "tenantName is sent back to Tyler verbatim as three headers and is case-sensitive in the URL host but written \"SuisunCityCA\" in the app's own requests. It is stored as the app sends it."
+  }
+}

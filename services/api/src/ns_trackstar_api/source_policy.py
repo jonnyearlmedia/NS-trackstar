@@ -129,6 +129,13 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "The city's engineering list of active and recently completed capital "
         "projects; staff edit it on business days as a project moves.",
     ),
+    "dixon.energov": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "Dixon's permit system, which this branch spent a day recording as blocked "
+        "before finding it needed four headers. A same-day status change on a permit "
+        "is real news; the index serves no offset past 10,000 rows, so the run is a "
+        "recency window rather than a full file and says so.",
+    ),
     "dixon.granicus": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed where a newly posted agenda is the earliest public "
@@ -208,6 +215,13 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "spatial_reference", "rare", 1440, 10080,
         "Zoning is context for what a site may become, and is amended rarely.",
     ),
+    "rio-vista.maintstar": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "The only door into Rio Vista other than its meeting feed. The city's website "
+        "refuses automated clients entirely, so this permit and code-case system - on a "
+        "host of its own that advertises anonymous search as enabled - is what stands "
+        "between that city and having no record of its own building activity at all.",
+    ),
     "rio-vista.granicus": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed where a newly posted agenda is the earliest public "
@@ -256,6 +270,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "solano-county.parcels": SourceFreshnessPolicy(
         "parcel_reference", "rare", 1440, 10080,
         "Parcel geometry/reference data changes slowly and should not be polled like an activity feed.",
+    ),
+    "suisun-city.energov": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "Suisun City's first permit source. The city publishes only 121 permits "
+        "against 9,531 code cases, so this is a narrow slice of its building activity "
+        "and the collector reports the agency's own totals beside what it kept.",
     ),
     "suisun-city.granicus": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
