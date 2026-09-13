@@ -185,6 +185,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "project_specific_record", "rare", 1440, 10080,
         "Single-project official notice/document evidence, not a continuously changing tracker.",
     ),
+    "vacaville.escribe": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Council, Planning Commission and the Parks "
+        "and Recreation Commission; a newly posted agenda is the earliest public "
+        "signal that a project is about to be decided.",
+    ),
     "vallejo.civicclerk": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Meeting/agendum feed where same-day changes matter; current 120-minute polling is temporary while churn is audited.",

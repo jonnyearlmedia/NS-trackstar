@@ -1045,7 +1045,13 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "vacaville.escribe",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The portal's calendar publishes the current year only. Its archive sits behind a separate paged endpoint that is not ingested, so Trackstar carries what Vacaville is deciding now, not what it decided in 2024."
         },
         "cip_construction": {
           "evidence": []

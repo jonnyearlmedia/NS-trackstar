@@ -10,6 +10,7 @@ from ns_trackstar.adapters.ceqanet import CeqanetAdapter
 from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.civicplus_project_index import CivicPlusProjectIndexAdapter
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
+from ns_trackstar.adapters.escribe import EScribeAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.granicus_rss import GranicusRssAdapter
@@ -31,6 +32,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "civicplus_project_index": CivicPlusProjectIndexAdapter,
     "courtlistener": CourtListenerAdapter,
     "ceqanet": CeqanetAdapter,
+    "escribe": EScribeAdapter,
     "etrakit": ETrakitAdapter,
     "federal_register": FederalRegisterAdapter,
     "granicus_rss": GranicusRssAdapter,
