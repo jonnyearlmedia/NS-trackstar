@@ -67,15 +67,17 @@ export function ExplorePanel(props: Props) {
   return (
     <section className={styles.freeExploreBar} aria-label="Free Explore controls">
       <button className={styles.areaPill} onClick={props.onExpand} type="button">
-        <span><strong>{label}</strong><small>{props.viewport ? `${count.toLocaleString()} showing` : "Loading"}</small></span><b>↑</b>
+        <span><strong>{label}</strong><small>{props.viewport ? `${count.toLocaleString()} showing` : "Loading projects…"}</small></span><b>↑</b>
       </button>
       <div className={styles.pillScroller}>
         {CATEGORIES.map((item) => (
           <button className={props.category === item.key ? styles.pillSelected : ""} key={item.key} onClick={() => props.onCategory(item.key)} type="button">{item.label}</button>
         ))}
-        <button onClick={props.onBrowse} type="button">Browse projects</button>
-        {props.canBrief ? <button onClick={props.onBrief} type="button">▶ Brief</button> : null}
         <button className={styles.filterPill} onClick={props.onFilters} aria-label="Open filters" type="button"><FilterIcon /></button>
+      </div>
+      <div className={extra.compactFooter}>
+        <button onClick={props.onBrowse} type="button">Browse projects</button>
+        {props.canBrief ? <button onClick={props.onBrief} type="button">▶ Brief this area</button> : <button onClick={props.onExpand} type="button">Browse this area</button>}
       </div>
       {(props.lifecycle !== "current" || props.timeWindow !== "all") ? (
         <div className={extra.activeChips} aria-label="Active filters">
