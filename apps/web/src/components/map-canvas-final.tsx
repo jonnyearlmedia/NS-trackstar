@@ -2,9 +2,10 @@
 
 import type { Feature, Point } from "geojson";
 import { useEffect, useRef, useState } from "react";
-import { installFinalLayers, SOURCES, updateMapData, updateSelected, updateUser } from "./map-final-layers";
+import { installFinalLayers, updateMapData, updateSelected, updateUser } from "./map-final-layers";
 import { loadViewportTruth } from "./map-final-data";
-import { categoryCounts, lifecycleCounts, minimumPriorityForZoom, NAPA_SOLANO_BOUNDS, readSavedViewport, LAST_VIEWPORT_KEY, type ConsumerCategory, type LifecycleFilter, type MapCoverage, type MapProject, type MapViewportState, type TimeWindow, type UserLocation, type ViewportBounds } from "./map-final-model";
+import { categoryCounts, lifecycleCounts, minimumPriorityForZoom, readSavedViewport, LAST_VIEWPORT_KEY, type ConsumerCategory, type LifecycleFilter, type MapCoverage, type MapProject, type MapViewportState, type TimeWindow, type UserLocation, type ViewportBounds } from "./map-final-model";
+import { INITIAL_CENTER, INITIAL_ZOOM, savedViewportIsReasonable } from "./service-area";
 
 const REVIEW_PRIORITY = 0.4;
 
@@ -83,7 +84,7 @@ export function MapCanvasFinal(props: Props) {
   }, [props.selectedProject, props.briefingActive]);
 
   useEffect(() => {
-    if (props.resetNonce) mapRef.current?.fitBounds(NAPA_SOLANO_BOUNDS, { padding: { top: 100, right: 18, bottom: 140, left: 18 }, duration: 700, essential: true });
+    if (props.resetNonce) mapRef.current?.easeTo({ center: INITIAL_CENTER, zoom: INITIAL_ZOOM, duration: 700, essential: true });
   }, [props.resetNonce]);
   useEffect(() => {
     if (!props.restoreNonce || !props.restoreBounds) return;
@@ -100,10 +101,12 @@ export function MapCanvasFinal(props: Props) {
       if (disposed || !containerRef.current) return;
       maplibre.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const saved = readSavedViewport();
+      const useSaved = Boolean(saved && savedViewportIsReasonable(saved.center));
       const map = new maplibre.Map({
         container: containerRef.current,
         style: "https://tiles.openfreemap.org/styles/liberty",
-        ...(saved ? { center: saved.center, zoom: saved.zoom } : { bounds: NAPA_SOLANO_BOUNDS, fitBoundsOptions: { padding: { top: 100, right: 18, bottom: 140, left: 18 } } }),
+        center: useSaved && saved ? saved.center : INITIAL_CENTER,
+        zoom: useSaved && saved ? Math.max(9, saved.zoom) : INITIAL_ZOOM,
         attributionControl: false,
       });
       mapRef.current = map;
