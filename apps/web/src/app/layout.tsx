@@ -8,6 +8,7 @@ import "./editorial-polish.css";
 import "./interaction-polish.css";
 import "./content-polish.css";
 import "./map-hierarchy-polish.css";
+import "./release-ui-pass.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
