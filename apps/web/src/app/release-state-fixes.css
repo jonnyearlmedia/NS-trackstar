@@ -52,4 +52,24 @@ button:disabled {
     padding-left: 14px !important;
     padding-right: 14px !important;
   }
+
+  /* Do not shrink MapLibre's click targets back down after the release pass. */
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  /* Keep the product name visible on small phones; only the regional subtitle
+     yields space to search. */
+  [class*="topBar"] [class*="brand"] > span:last-child {
+    display: grid !important;
+  }
+  [class*="topBar"] [class*="brand"] strong {
+    font-size: 14.5px !important;
+  }
+  [class*="topBar"] [class*="brand"] small {
+    display: none !important;
+  }
 }
