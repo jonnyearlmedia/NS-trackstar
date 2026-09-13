@@ -40,7 +40,7 @@ Napa County (uninc)     OK     OK     OK    OK    OK    OK   OK    --
 Yountville              --     --     OK    --    OK    OK   OK    --
 St. Helena              OK     --     OK    --    OK    OK   OK    --
 Calistoga               OK     --     OK    ~~    OK    OK   OK    --
-Vallejo                 OK     OK     OK    --    OK    OK   OK    --
+Vallejo                 OK     OK     OK    --    OK    OK   OK    OK
 Benicia                 OK     XX     OK    OK    OK    OK   OK    --
 Fairfield               ~~     --     OK    OK    OK    OK   OK    --
 Suisun City             OK     --     OK    --    OK    OK   OK    --
@@ -54,8 +54,8 @@ Solano County (uninc)   OK     OK     OK    OK    OK    OK   OK    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **62 strong, 44 partial, 3 blocked,
-31 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **63 strong, 44 partial, 3 blocked,
+30 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -93,15 +93,25 @@ Verified reachable and unbuilt, so no excuse exists:
   and a written status outlook, and the county publishes 24 road and facility
   construction projects. Both were reachable while both agencies' websites were
   not. Check the agency's GIS org before calling a CIP unreachable.
-- **Fourteen have no procurement source.** No longer untouched, but no longer a
-  simple gap either. Three platforms were identified and two of them are blocked in
-  ways worth recording rather than retrying: American Canyon and Suisun City both
-  run OpenGov Procurement, whose portal answers `cf-mitigated: challenge` from
-  Cloudflare, and Vallejo runs PlanetBids portal 42510, whose single-page app serves
-  its own index page in place of every asset and API path from this network, so its
-  real request contract cannot be read here. Calistoga and Yountville publish bids
-  as prose on their own pages, which is reachable but carries no per-bid structure.
-  Ten remain unexamined.
+- **Thirteen have no procurement source.** Vallejo is done and it broke the
+  category open: 239 bids with stage, due date, NAICS codes, address, contact and a
+  written scope. The entry this replaces said PlanetBids "serves its own index page
+  in place of every asset and API path ... so its real request contract cannot be
+  read here", which was a true observation and a wrong conclusion. The app host
+  answers unknown paths with the app; the API is a different host entirely, and the
+  portal publishes its name in a runtime config file it serves to every visitor.
+  When a single-page app appears to have no API, read the config it ships before
+  concluding it cannot be read.
+
+  American Canyon and Suisun City remain blocked on OpenGov Procurement, and that
+  one was retested from an ordinary residential network on the same day ABC was
+  reclassified: it does not move. `cf-mitigated: challenge` comes back for a
+  self-identifying client and a browser user agent alike, so this challenge is a
+  property of the site rather than of our egress, and it is settled rather than
+  something to retry from yet another network. Calistoga and Yountville publish bids
+  as prose on their own pages, reachable but carrying no per-bid structure. Ten
+  remain unexamined, and the Vallejo result says to check each one for a vendor
+  portal before assuming a city publishes nothing structured.
 
 Blocked, with the specific reason:
 

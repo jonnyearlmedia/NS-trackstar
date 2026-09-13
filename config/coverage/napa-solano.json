@@ -792,7 +792,14 @@
           }
         },
         "procurement": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "vallejo.planetbids",
+              "scope": "recurring_tracker",
+              "role": "bids_and_awards"
+            }
+          ],
+          "limitation": "PlanetBids publishes the agency's whole bid history, not only open solicitations, and the stage word is the agency's own: Bidding, Closed, Awarded, Canceled, Award Pending. Attachments are recorded by name, size and upload date; no download URL is synthesised from the server path the API exposes. The API throttles with an empty HTTP 202, which the collector waits out, and a run that walks fewer pages than the agency reports says so in its metadata rather than under-reporting quietly."
         },
         "specialized_regulatory": {
           "evidence": [

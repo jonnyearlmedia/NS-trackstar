@@ -22,6 +22,7 @@ from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.opencities_project_list import OpenCitiesProjectListAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
+from ns_trackstar.adapters.planetbids import PlanetBidsAdapter
 from ns_trackstar.adapters.primegov import PrimeGovAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
 from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
@@ -48,6 +49,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "opencities_project_list": OpenCitiesProjectListAdapter,
     "official_document_set": OfficialDocumentSetAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
+    "planetbids": PlanetBidsAdapter,
     "primegov": PrimeGovAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
     "bayarea_511_traffic": BayArea511TrafficAdapter,
