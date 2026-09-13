@@ -28,6 +28,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "active_project_tracker", "within_day", 120, 240,
         "Active municipal construction/development tracker; same-day stage/project edits are useful.",
     ),
+    "benicia.granicus": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed where a newly posted agenda is the earliest public "
+        "signal that a project is about to be decided.",
+    ),
     "benicia.current-planning-applications": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "Current planning application inventory; useful changes are typically municipal business-day edits.",
@@ -55,6 +60,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "fairfield.vanden-canon-overcrossing": SourceFreshnessPolicy(
         "project_specific_record", "rare", 1440, 10080,
         "Project-specific official record; useful as evidence but not a fast-changing feed.",
+    ),
+    "dixon.granicus": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed where a newly posted agenda is the earliest public "
+        "signal that a project is about to be decided.",
     ),
     "federal-register.napa-solano": SourceFreshnessPolicy(
         "regulatory_watch", "daily", 1440, 1440,
@@ -112,6 +122,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "napa-county.zoning": SourceFreshnessPolicy(
         "spatial_reference", "rare", 1440, 10080,
         "Zoning is context for what a site may become, and is amended rarely.",
+    ),
+    "rio-vista.granicus": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed where a newly posted agenda is the earliest public "
+        "signal that a project is about to be decided.",
     ),
     "solano-county.city-boundaries": SourceFreshnessPolicy(
         "spatial_reference", "rare", 1440, 10080,

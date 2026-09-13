@@ -748,7 +748,14 @@
           }
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "benicia.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
         },
         "cip_construction": {
           "evidence": []
@@ -1087,7 +1094,14 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "dixon.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
         },
         "cip_construction": {
           "evidence": []
@@ -1166,7 +1180,14 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "rio-vista.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
         },
         "cip_construction": {
           "evidence": []
