@@ -1,5 +1,17 @@
 /* State-specific fixes that must beat the generic release shell. */
 
+/* Positron is already deliberately quiet. Keep the coastal atmosphere subtle
+   enough that streets, neighborhoods, and project anchors still feel grounded. */
+.trackstarApp::before {
+  background:
+    linear-gradient(180deg, rgba(230, 246, 252, .11), transparent 20%),
+    linear-gradient(0deg, rgba(241, 247, 244, .08), transparent 24%) !important;
+}
+.mapAtmosphere,
+.mapAtmosphere.selected {
+  background: linear-gradient(180deg, rgba(244, 250, 252, .09), transparent 20%, transparent 78%, rgba(238, 246, 248, .08)) !important;
+}
+
 /* Briefing intentionally keeps the editorial moment even though it reuses the
    project-card container. */
 .briefingCard.briefingCard {
