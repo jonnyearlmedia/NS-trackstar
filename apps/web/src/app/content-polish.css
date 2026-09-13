@@ -18,6 +18,22 @@
   color: #42616e !important;
   background: #edf4f6;
 }
+.contentResultIcon[data-category="development"] {
+  color: #28745c !important;
+  background: #eaf5f0 !important;
+}
+.contentResultIcon[data-category="roads"] {
+  color: #bc6714 !important;
+  background: #fff3e5 !important;
+}
+.contentResultIcon[data-category="utilities"] {
+  color: #197a8f !important;
+  background: #e8f6f8 !important;
+}
+.contentResultIcon[data-category="places"] {
+  color: #5364c5 !important;
+  background: #eef0ff !important;
+}
 .contentResultIcon svg {
   width: 20px;
   height: 20px;
@@ -79,8 +95,7 @@
 }
 @media (hover: hover) {
   .contentResultRow:hover .contentResultIcon {
-    color: #0b67c7 !important;
-    background: #e8f3fd;
+    filter: saturate(1.06) brightness(.98);
   }
   .contentResultRow:hover .contentResultArrow {
     color: #fff !important;
