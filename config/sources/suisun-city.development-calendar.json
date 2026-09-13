@@ -4,7 +4,7 @@
   "jurisdiction": "City of Suisun City",
   "adapter": "pdf_project_tracker",
   "base_url": "https://www.suisun.com/News-articles/Development-Calendar",
-  "poll_minutes": 1440,
+  "poll_minutes": 240,
   "options": {
     "document_url": "https://www.suisun.com/files/sharedassets/suisuncity/v/1/training/resources/images/michaels-images/development-calendar-update-final.pdf",
     "min_page_count": 22,
