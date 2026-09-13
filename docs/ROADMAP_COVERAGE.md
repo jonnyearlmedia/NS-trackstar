@@ -42,7 +42,7 @@ St. Helena              OK     --     OK    --    OK    OK   OK    --
 Calistoga               OK     --     OK    ~~    OK    OK   OK    --
 Vallejo                 OK     OK     OK    --    OK    OK   OK    --
 Benicia                 OK     XX     OK    OK    OK    OK   OK    --
-Fairfield               ~~     --     XX    OK    OK    OK   OK    --
+Fairfield               ~~     --     OK    OK    OK    OK   OK    --
 Suisun City             OK     --     OK    --    OK    OK   OK    --
 Vacaville               --     --     OK    --    OK    OK   OK    --
 Dixon                   --     XX     OK    OK    OK    OK   OK    --
@@ -54,8 +54,8 @@ Solano County (uninc)   --     XX     OK    OK    OK    OK   OK    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **58 strong, 44 partial, 5 blocked,
-33 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **59 strong, 44 partial, 5 blocked,
+32 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -66,8 +66,12 @@ Verified reachable and unbuilt, so no excuse exists:
 - **St. Helena permits and CIP.** Meetings and development are now built. The
   city publishes finaled permits as a page per year rather than a feed, and no
   CIP page has been found yet.
-- **One jurisdiction still has no meeting feed: Fairfield.** Thirteen of fourteen
-  are covered. None of them was found by guessing a hostname. Napa County is on
+- **Every one of the fourteen now has a meeting feed.** Fairfield was the last,
+  and it closed the same way the other hard ones did: the platform is a host of
+  its own, `pub-fairfield.escribemeetings.com`, while the city's website still
+  answers 403. Its NovusAGENDA portal was a migrated-away tenant, not a broken
+  request: sent correctly the search is genuinely empty, though 2019 agendas
+  still resolve by id. None of them was found by guessing a hostname. Napa County is on
   Legistar (`napa.legistar.com`, client `napa`); Suisun City on Granicus
   (`suisuncityca.granicus.com`, view 1); American Canyon on Granicus
   (`americancanyon.granicus.com`, views 16 and 18); St. Helena on CivicClerk
@@ -131,14 +135,6 @@ Blocked, with the specific reason:
   or Akamai block from somewhere else before believing it.
 - **Fairfield and Rio Vista city sites** — challenged 403. Retest from another
   network before concluding anything.
-- **Fairfield meetings (NovusAGENDA)** — the portal is reachable at
-  `fairfield.novusagenda.com/agendapublic/`, unlike the city site. Its meeting list
-  renders empty until an ASP.NET search postback runs, and a plain form post with
-  the page's own `__VIEWSTATE` returns the same empty grid, so the grid is loaded
-  by an async partial postback whose exact request has not been captured. Same
-  class of blocker as Dixon's Tyler portal: it needs one Playwright capture of the
-  portal's own request, not more guessing. The form contract found so far is
-  recorded in `SOURCE_STATUS.md`.
 - **511 live traffic** — collectors written and tested, never run with a key. The
   collector container could not even receive the key until this session; that is
   fixed, so one run settles it.

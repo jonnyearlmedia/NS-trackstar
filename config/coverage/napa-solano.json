@@ -928,7 +928,13 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "fairfield.escribe",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Fairfield moved off NovusAGENDA, which still serves individual agendas from 2019 by id while its meeting search returns nothing for any date range. The live feed is the eScribe public portal on a host separate from the city website, which still refuses automated requests."
         },
         "cip_construction": {
           "evidence": [
