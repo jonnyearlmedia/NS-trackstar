@@ -559,3 +559,59 @@ async def enrich_projects_from_address_points(conn: psycopg.AsyncConnection) -> 
         )
         placed += len(await cursor.fetchall())
     return placed
+
+
+async def enrich_project_images_from_assertions(conn: psycopg.AsyncConnection) -> int:
+    """Turn an `image_url` assertion into a showable project image.
+
+    The first attempt at pictures hand-listed four URLs from a research report, and
+    three of them named projects Trackstar does not collect, so nothing displayed. A
+    hand-kept list of images for projects we do not hold is not a feature, it is a
+    second inventory to maintain and a second thing to go stale.
+
+    This reads what the collectors already bring back. Any source that maps an
+    `image_url` assertion contributes; Vacaville and Fairfield both run EasyCIP, which
+    publishes a photograph per capital project, and both deliver it inside an HTML
+    ``<img src="...">`` fragment rather than as a bare URL, so it is extracted.
+
+    Nothing is marked cleared. These are agencies' own photographs on their own
+    hosting; ``reference_only`` permits pointing a reader at the agency's copy with
+    attribution and forbids copying it onto our storage, which the schema enforces.
+    A project that already has a chosen hero keeps it.
+    """
+
+    cursor = await conn.execute(
+        """
+        INSERT INTO project_image (
+          project_id, source_url, asset_url, image_type, publisher, attribution,
+          is_official, rights_status, asset_resolution_status, is_hero,
+          hero_selected_at, sort_order, retrieved_at, last_verified_at, why_useful
+        )
+        SELECT DISTINCT ON (a.project_id)
+          a.project_id,
+          COALESCE(a.source_url, sr.canonical_url, s.base_url),
+          extracted.url,
+          'HERO', s.name, s.name, TRUE,
+          'reference_only', 'resolved', TRUE, now(), 1,
+          a.observed_at, now(),
+          'Published by the agency on its own capital-project record.'
+        FROM assertion a
+        JOIN source s ON s.id = a.source_id
+        LEFT JOIN source_record sr ON sr.id = a.source_record_id
+        CROSS JOIN LATERAL (
+          SELECT COALESCE(
+            (regexp_match(a.value, 'src="(https?://[^"]+)"'))[1],
+            CASE WHEN a.value ~ '^https?://' THEN a.value END
+          ) AS url
+        ) AS extracted
+        WHERE a.field = 'image_url'
+          AND extracted.url IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM project_image existing
+            WHERE existing.project_id = a.project_id AND existing.is_hero
+          )
+        ORDER BY a.project_id, a.observed_at DESC
+        ON CONFLICT (project_id, asset_url) WHERE asset_url IS NOT NULL DO NOTHING
+        """
+    )
+    return cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else 0

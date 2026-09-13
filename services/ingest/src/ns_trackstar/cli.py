@@ -19,6 +19,7 @@ from ns_trackstar.db import (
 from ns_trackstar.enrichment import (
     enrich_napa_projects_from_parcels,
     enrich_one_lake_relationships,
+    enrich_project_images_from_assertions,
     enrich_project_jurisdictions,
     enrich_projects_from_address_points,
     enrich_solano_projects_from_parcels,
@@ -103,6 +104,7 @@ async def collect(config_path: str, *, write: bool) -> int:
     enriched_relationships = 0
     stamped_jurisdictions = 0
     placed_from_addresses = 0
+    images_attached = 0
     async with connect(database_url) as conn:
         source_id, run_id = await _start_run(conn, adapter_name=adapter_name, config=config)
 
@@ -168,6 +170,12 @@ async def collect(config_path: str, *, write: bool) -> int:
 
                 if config.key == "napa-county.addresses":
                     placed_from_addresses = await enrich_projects_from_address_points(conn)
+
+                # Any source can supply an image_url assertion, so this runs after every
+                # write rather than being gated on one source key. A one-off backfill
+                # would have shown pictures once and never again for anything collected
+                # afterwards.
+                images_attached = await enrich_project_images_from_assertions(conn)
         except Exception as exc:
             async with conn.transaction():
                 await fail_source_run(

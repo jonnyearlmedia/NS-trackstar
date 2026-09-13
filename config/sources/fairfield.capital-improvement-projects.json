@@ -43,7 +43,8 @@
         "completion_date": "EstimatedCompletion",
         "construction_start": "ConstructionStart",
         "construction_end": "ConstructionEnd",
-        "fiscal_year": "ProjectYear"
+        "fiscal_year": "ProjectYear",
+        "image_url": "ProjectImage_URL"
       }
     }
   }

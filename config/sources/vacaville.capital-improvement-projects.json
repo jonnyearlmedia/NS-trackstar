@@ -38,7 +38,8 @@
         "lead_department": "PROJECT_DEPARTMENT",
         "construction_start": "CONSTRUCTION_START_DATE",
         "construction_end": "CONSTRUCTION_COMPLETION_DATE",
-        "contact": "CONTACT"
+        "contact": "CONTACT",
+        "image_url": "IMAGE_URL_RAW"
       }
     }
   }

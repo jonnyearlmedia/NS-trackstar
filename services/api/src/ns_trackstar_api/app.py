@@ -672,7 +672,19 @@ async def project_detail(project_id: UUID) -> dict:
                  AND rights_status IN ('reference_only', 'cleared')
              ) pi),
             '[]'::jsonb
-          ) AS images
+          ) AS images,
+          (SELECT jsonb_build_object(
+             'headline', c.headline,
+             'what_is_this', c.what_is_this,
+             'whats_happening', c.whats_happening,
+             'whats_happening_at', c.whats_happening_at,
+             'whats_next', c.whats_next,
+             'why_care', c.why_care,
+             'written_at', c.written_at,
+             'evidence_urls', c.evidence_urls
+           )
+           FROM project_curated_content c
+           WHERE c.project_id = p.id) AS curated
         FROM project p
         WHERE p.id = %s
         """,
@@ -706,6 +718,27 @@ async def project_detail(project_id: UUID) -> dict:
         events=events,
     )
 
+    # A written answer beats a composed one, field by field rather than all-or-nothing:
+    # a curated headline should not suppress a composed "what's next" that nobody has
+    # written yet. Composition stays the floor, never the ceiling.
+    curated = row.get("curated") or {}
+    explained = explainer.to_dict()
+    if curated:
+        for key in ("what_is_this", "whats_happening", "whats_next"):
+            if curated.get(key):
+                explained[key] = curated[key]
+        if curated.get("why_care"):
+            explained["why_care"] = [
+                {"label": fact.get("label"), "value": fact.get("value"), "field": None, "source_url": None}
+                for fact in curated["why_care"]
+            ]
+        if curated.get("whats_happening_at"):
+            explained["whats_happening_at"] = curated["whats_happening_at"]
+        explained["headline"] = curated.get("headline")
+        # A reader deserves to know a person wrote this, and what they wrote it from.
+        explained["written_by_editor"] = True
+        explained["evidence_urls"] = curated.get("evidence_urls") or []
+
     return {
         "id": str(row["id"]),
         "name": row["canonical_name"],
@@ -714,13 +747,13 @@ async def project_detail(project_id: UUID) -> dict:
             row["last_activity_at"].isoformat() if row["last_activity_at"] else None
         ),
         "geometry": row["geometry"],
-        "summary": row.get("summary_cache") or explainer.what_is_this,
+        "summary": curated.get("headline") or row.get("summary_cache") or explainer.what_is_this,
         "location": row["location"],
         "statuses": statuses,
         "assertions": assertions,
         "sources": row["sources"],
         "images": row.get("images") or [],
-        "explainer": explainer.to_dict(),
+        "explainer": explained,
         "evidence_sections": compose_evidence_sections(assertions),
     }
 
