@@ -1,9 +1,9 @@
-import { MapExplorerV6 } from "@/components/map-explorer-v6";
+import { TrackstarFinal } from "@/components/trackstar-final";
 
 export default function HomePage() {
   return (
     <main className="shell">
-      <MapExplorerV6 />
+      <TrackstarFinal />
     </main>
   );
 }
