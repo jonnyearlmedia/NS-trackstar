@@ -187,6 +187,37 @@ Blocked, with the specific reason:
   stays unpromoted: it carries no county label, and no rectangle separates these two
   counties from Sonoma without also excluding Calistoga.
 
+## The projects people actually search for
+
+Coverage counts cells. A resident counts one thing: whether the project they asked
+about is right. Those are not the same measurement, and until today only the first
+one was being taken.
+
+Eighty high-interest projects - ten in each of the eight jurisdictions where the
+service area's attention concentrates - were probed against the live API on
+September 13, 2026. **Thirty are findable. Fifteen of those are placed on the map.**
+Fifty cannot be found at all. That set lives in
+`fixtures/high-interest/portfolio.json`, with each entry's tier measured
+rather than asserted, and `scripts/probe-high-interest.py` re-measures it and exits
+non-zero when a project falls out of the guaranteed tier.
+
+Three things about that number are worth stating plainly.
+
+It is not a search ranking. There is no government list of top projects and Trackstar
+has no query log yet, so the set is an editorial judgement from scale, construction
+impact, recency, controversy and name recognition. It should be replaced by real
+query logs the moment there are any.
+
+Fifteen of the thirty are found but unmapped - Trackstar knows Fairview at Northgate,
+the Costco project, exists and cannot defensibly place it. That is the gap a resident
+sees first, and it is a different problem from the fifty that are missing entirely.
+
+And the fifty are the honest headline. Broad source coverage is at 66 strong cells and
+climbing; the projects a person would actually type into the box are at 30 of 80. More
+sources will not close that on their own, because the gap is entity resolution and
+naming as much as ingestion: the pipeline holds "Minor Amendment to the Watson Ranch
+Specific Plan" where a resident types "Watson Ranch".
+
 ## Order of work
 
 1. Everything reachable from wherever you are, before anything blocked. The
