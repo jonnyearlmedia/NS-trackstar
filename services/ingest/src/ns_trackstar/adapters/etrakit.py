@@ -527,6 +527,27 @@ class ETrakitAdapter(CollectorAdapter):
                     )
         return queries
 
+    def _partition_plan(
+        self, *, today: datetime | None = None
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Order the partitions for this run and decide how much budget each one gets.
+
+        Spending the budget first-come starves the partitions at the end of the list:
+        with eleven partitions and a budget of 500, the first five consume it and the
+        rest are never discovered on any run, because the query order is deterministic.
+        So every partition gets an equal share of the budget, and the order rotates
+        daily so the remainder does not always land on the same one.
+        """
+
+        queries = self._partition_queries(today=today)
+        if not queries:
+            return [], self.max_candidates_per_run
+
+        reference = today or datetime.now(self.timezone)
+        offset = reference.toordinal() % len(queries)
+        rotated = queries[offset:] + queries[:offset]
+        return rotated, max(1, self.max_candidates_per_run // len(queries))
+
     async def collect(self) -> CollectorResult:
         candidates: list[tuple[str, str]] = []
         for item in self.explicit_records:
@@ -537,20 +558,32 @@ class ETrakitAdapter(CollectorAdapter):
             if candidate not in candidates:
                 candidates.append(candidate)
 
-        partition_queries = self._partition_queries()
+        partition_queries, partition_share = self._partition_plan()
         truncated = False
 
         async with self._session() as client:
-            for query_value in [*self.searches, *partition_queries]:
-                query = dict(query_value)
-                for candidate in await self._search_ids(client, query):
+            # Explicitly configured searches are deliberate and keep the whole budget.
+            for query_value in self.searches:
+                for candidate in await self._search_ids(client, dict(query_value)):
                     if candidate not in candidates:
                         candidates.append(candidate)
                 if len(candidates) >= self.max_candidates_per_run:
-                    # Stop discovering rather than fetching an unbounded detail list.
-                    # The next run picks up where the budget ran out.
                     truncated = True
                     break
+
+            if not truncated:
+                for query_value in partition_queries:
+                    taken = 0
+                    for candidate in await self._search_ids(client, dict(query_value)):
+                        if candidate in candidates:
+                            continue
+                        candidates.append(candidate)
+                        taken += 1
+                        if taken >= partition_share:
+                            break
+                    if len(candidates) >= self.max_candidates_per_run:
+                        truncated = True
+                        break
 
             records: list[NormalizedRecord] = []
             missing = 0
@@ -571,6 +604,7 @@ class ETrakitAdapter(CollectorAdapter):
                 "records_missing": missing,
                 "search_queries": len(self.searches),
                 "discovery_partitions": len(partition_queries),
+                "candidates_per_partition": partition_share,
                 "explicit_records": len(self.explicit_records),
                 "candidate_budget_reached": truncated,
             },

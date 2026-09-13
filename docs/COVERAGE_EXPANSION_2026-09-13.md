@@ -90,7 +90,22 @@ recorded as a spatial derivation rather than an agency claim.
 **Permits in the two largest cities.** Vallejo and Napa eTRAKiT were promoted
 once recurring discovery became safe. eTRAKiT has no recently-changed feed, so
 discovery walks the record-number space by prefix and year under a page cap and
-a per-run candidate budget.
+a per-run candidate budget. Both tenants returned 500 records at a parser yield
+of 1.0 with zero detail pages missing: Vallejo across 11 partitions, Napa across
+10.
+
+Those first two live runs earned their keep. Both returned *exactly* the budget,
+which is what prompted re-reading the loop and finding that the budget was spent
+first-come across a deterministic query order. The first five partitions consumed
+all of it on every run, so Vallejo's ME, EL and AP records would never have been
+discovered on any run at all. Each partition now gets an equal share and the
+order rotates daily.
+
+Two eTRAKiT limitations remain and are not fixed. A record whose number falls
+outside the configured prefixes is not discovered. And because eTRAKiT returns
+results in ascending record-number order, each run samples the oldest records of
+each prefix-year rather than the newest, which is the wrong end for an activity
+tracker. Prioritising recent records is follow-up work.
 
 **Business-opening evidence.** The California ABC adapter parses all three daily
 statewide reports and filters by ABC's own structured county column. Tenant

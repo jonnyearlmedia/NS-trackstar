@@ -1,4 +1,6 @@
+from datetime import datetime
 from urllib.parse import parse_qs
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -273,3 +275,94 @@ async def test_search_paginates_telerik_next_button(config: SourceConfig) -> Non
         "project:PL23-0135",
         "project:PL23-0136",
     ]
+
+
+
+def partitioned_adapter(max_candidates: int = 500) -> ETrakitAdapter:
+    return ETrakitAdapter(
+        SourceConfig(
+            key="vallejo.etrakit",
+            name="Vallejo eTRAKiT",
+            jurisdiction="City of Vallejo",
+            base_url="https://vall-trk.aspgov.com/eTRAKiT",
+            poll_minutes=240,
+            options={
+                "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
+                "canary_kinds": ["permit"],
+                "searches": [],
+                "explicit_records": [],
+                "max_candidates_per_run": max_candidates,
+                "discovery_partitions": [
+                    {
+                        "kind": "permit",
+                        "search_by_value": "Permit_Main.PERMIT_NO",
+                        "prefixes": ["BP", "PL", "ME", "EL"],
+                        "years_back": 1,
+                        "max_pages": 5,
+                    },
+                    {
+                        "kind": "project",
+                        "search_by_value": "Project_Main.PROJECT_NO",
+                        "prefixes": ["AP"],
+                        "years_back": 2,
+                        "max_pages": 3,
+                    },
+                ],
+            },
+        )
+    )
+
+
+def test_partitions_expand_by_prefix_and_year():
+    adapter = partitioned_adapter()
+    today = datetime(2026, 9, 13, tzinfo=ZoneInfo("America/Los_Angeles"))
+    values = [query["value"] for query in adapter._partition_queries(today=today)]
+
+    assert values == [
+        "BP26", "BP25", "PL26", "PL25", "ME26", "ME25", "EL26", "EL25",
+        "AP26", "AP25", "AP24",
+    ]
+    assert all(query["operator_value"] == "BEGINS WITH" for query in adapter._partition_queries(today=today))
+
+
+def test_the_year_rolls_forward_without_a_config_edit():
+    adapter = partitioned_adapter()
+    next_year = datetime(2027, 1, 4, tzinfo=ZoneInfo("America/Los_Angeles"))
+    values = [query["value"] for query in adapter._partition_queries(today=next_year)]
+    assert values[:2] == ["BP27", "BP26"]
+
+
+def test_every_partition_gets_a_share_so_none_is_ever_starved():
+    """First-come budgeting silently starved the tail: with a deterministic query
+    order the same early partitions spent the whole budget on every run, so ME, EL
+    and AP records were never discovered at all."""
+
+    adapter = partitioned_adapter(max_candidates=500)
+    queries, share = adapter._partition_plan(
+        today=datetime(2026, 9, 13, tzinfo=ZoneInfo("America/Los_Angeles"))
+    )
+
+    assert len(queries) == 11
+    assert share == 45  # 500 // 11
+    assert share * len(queries) <= 500
+    # Every configured prefix is still represented after the rotation.
+    assert {query["value"][:2] for query in queries} == {"BP", "PL", "ME", "EL", "AP"}
+
+
+def test_the_partition_order_rotates_between_runs():
+    adapter = partitioned_adapter()
+    zone = ZoneInfo("America/Los_Angeles")
+    first, _ = adapter._partition_plan(today=datetime(2026, 9, 13, tzinfo=zone))
+    second, _ = adapter._partition_plan(today=datetime(2026, 9, 14, tzinfo=zone))
+
+    assert [q["value"] for q in first] != [q["value"] for q in second]
+    # Rotation reorders the same set; it never drops or invents a partition.
+    assert sorted(q["value"] for q in first) == sorted(q["value"] for q in second)
+
+
+def test_a_share_is_never_zero_even_with_more_partitions_than_budget():
+    adapter = partitioned_adapter(max_candidates=3)
+    _queries, share = adapter._partition_plan(
+        today=datetime(2026, 9, 13, tzinfo=ZoneInfo("America/Los_Angeles"))
+    )
+    assert share == 1
