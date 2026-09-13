@@ -73,6 +73,32 @@ function ringCentroid(ring: Position[]): Coordinate | null {
   return [xSum / (3 * crossSum), ySum / (3 * crossSum)];
 }
 
+function pointInRing(point: Coordinate, ring: Position[]) {
+  let inside = false;
+  const points = ring.map(coordinate).filter((value): value is Coordinate => Boolean(value));
+  for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    const crosses = (yi > point[1]) !== (yj > point[1]) && point[0] < ((xj - xi) * (point[1] - yi)) / ((yj - yi) || Number.EPSILON) + xi;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function polygonAnchor(rings: Position[][]): Coordinate | null {
+  const outer = rings[0];
+  if (!outer) return null;
+  const centroid = ringCentroid(outer);
+  if (centroid) {
+    const inOuter = pointInRing(centroid, outer);
+    const inHole = rings.slice(1).some((hole) => pointInRing(centroid, hole));
+    if (inOuter && !inHole) return centroid;
+  }
+  // A boundary midpoint is always defensible when a centroid would land outside
+  // a concave parcel or inside a hole.
+  return midpointAlong(outer);
+}
+
 function average(points: Position[]): Coordinate | null {
   const valid = points.map(coordinate).filter((value): value is Coordinate => Boolean(value));
   if (!valid.length) return null;
@@ -92,11 +118,10 @@ export function representativeCoordinate(geometry: Geometry): Coordinate | null 
       return longest ? midpointAlong(longest) : null;
     }
     case "Polygon":
-      return geometry.coordinates[0] ? ringCentroid(geometry.coordinates[0]) : null;
+      return polygonAnchor(geometry.coordinates);
     case "MultiPolygon": {
-      const rings = geometry.coordinates.flatMap((polygon) => polygon[0] ? [polygon[0]] : []);
-      const largest = rings.sort((a, b) => Math.abs(ringArea(b)) - Math.abs(ringArea(a)))[0];
-      return largest ? ringCentroid(largest) : null;
+      const polygons = [...geometry.coordinates].sort((a, b) => Math.abs(ringArea(b[0] ?? [])) - Math.abs(ringArea(a[0] ?? [])));
+      return polygons[0] ? polygonAnchor(polygons[0]) : null;
     }
     case "GeometryCollection": {
       for (const child of geometry.geometries) {
