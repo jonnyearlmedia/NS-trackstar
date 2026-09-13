@@ -1,0 +1,20 @@
+{
+  "key": "federal-register.napa-solano",
+  "name": "Federal Register — Napa and Solano Counties",
+  "jurisdiction": "United States",
+  "adapter": "federal_register",
+  "base_url": "https://www.federalregister.gov/",
+  "poll_minutes": 1440,
+  "options": {
+    "api_url": "https://www.federalregister.gov/api/v1/documents.json",
+    "canary_document_number": "2024-23655",
+    "start_date": "2020-01-01",
+    "per_page": 100,
+    "max_pages_per_term": 5,
+    "terms": [
+      "Napa County California",
+      "Solano County California",
+      "Scotts Valley Band of Pomo Indians"
+    ]
+  }
+}

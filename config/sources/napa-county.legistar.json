@@ -1,0 +1,19 @@
+{
+  "key": "napa-county.legistar",
+  "name": "Napa County Legistar Meetings and Agenda Items",
+  "jurisdiction": "Napa County",
+  "adapter": "legistar",
+  "base_url": "https://napa.legistar.com",
+  "poll_minutes": 60,
+  "options": {
+    "api_base": "https://webapi.legistar.com/v1",
+    "client_name": "napa",
+    "portal_url": "https://napa.legistar.com",
+    "lookback_days": 30,
+    "lookahead_days": 120,
+    "page_size": 100,
+    "fetch_event_items": true,
+    "min_request_interval_seconds": 0.5,
+    "timezone": "America/Los_Angeles"
+  }
+}

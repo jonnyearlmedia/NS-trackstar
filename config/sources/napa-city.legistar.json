@@ -1,0 +1,19 @@
+{
+  "key": "napa-city.legistar",
+  "name": "City of Napa Legistar Meetings and Agenda Items",
+  "jurisdiction": "City of Napa",
+  "adapter": "legistar",
+  "base_url": "https://napacity.legistar.com",
+  "poll_minutes": 60,
+  "options": {
+    "api_base": "https://webapi.legistar.com/v1",
+    "client_name": "napacity",
+    "portal_url": "https://napacity.legistar.com",
+    "lookback_days": 30,
+    "lookahead_days": 120,
+    "page_size": 100,
+    "fetch_event_items": true,
+    "min_request_interval_seconds": 0.5,
+    "timezone": "America/Los_Angeles"
+  }
+}

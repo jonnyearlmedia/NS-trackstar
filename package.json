@@ -1,0 +1,14 @@
+{
+  "name": "ns-trackstar",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "dev": "pnpm --filter @ns-trackstar/web dev",
+    "build": "pnpm --filter @ns-trackstar/web build",
+    "typecheck": "pnpm --filter @ns-trackstar/web typecheck",
+    "ui:gate": "node scripts/ui-debt-gate.mjs"
+  },
+  "dependencies": {
+    "next": "latest"
+  }
+}

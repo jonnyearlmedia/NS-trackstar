@@ -1,0 +1,109 @@
+.page {
+  min-height: 100dvh;
+  padding: 28px 18px 56px;
+  color: #17232a;
+  background: #eef5f7;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+.shell {
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+.back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: #315664;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.hero {
+  margin-top: 14px;
+  padding: 28px;
+  border: 1px solid rgba(25,48,59,.09);
+  border-radius: 24px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 20px 56px rgba(27,57,71,.13);
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: #6e818a;
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: .09em;
+}
+.hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 7vw, 44px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+.lead {
+  margin: 16px 0 0;
+  color: #4e626c;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.section {
+  margin-top: 14px;
+  padding: 22px 24px;
+  border: 1px solid rgba(25,48,59,.08);
+  border-radius: 20px;
+  background: rgba(255,255,255,.93);
+}
+.section h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  letter-spacing: -.025em;
+}
+.section p,
+.section li {
+  color: #526872;
+  font-size: 14px;
+  line-height: 1.58;
+}
+.section ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+.actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.primary,
+.secondary {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 760;
+  text-decoration: none;
+}
+.primary {
+  color: #fff;
+  background: #0b67c7;
+}
+.secondary {
+  color: #315664;
+  border: 1px solid rgba(25,48,59,.10);
+  background: #f6f9fa;
+}
+.code {
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #314a55;
+  background: #f3f7f8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+@media (max-width: 520px) {
+  .page { padding: 18px 12px 36px; }
+  .hero { padding: 22px 18px; border-radius: 20px; }
+  .section { padding: 19px 18px; }
+}

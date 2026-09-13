@@ -1,0 +1,399 @@
+/* Trackstar release UI pass
+   Final visual QA layer. This intentionally loads last and resolves remaining
+   hierarchy/spacing inconsistencies without changing product behavior. */
+
+:root {
+  --ts-ink: #1b3039;
+  --ts-muted: #697d86;
+  --ts-rule: rgba(31, 55, 66, .09);
+  --ts-surface: rgba(255,255,255,.97);
+  --ts-blue: #0b67c7;
+}
+
+/* Chrome */
+[class*="topBar"] {
+  align-items: center !important;
+}
+[class*="brand"] strong {
+  font-size: 20px !important;
+  font-weight: 780 !important;
+  line-height: 1 !important;
+}
+[class*="brand"] small {
+  margin-top: 3px !important;
+  font-size: 10px !important;
+  font-weight: 760 !important;
+  line-height: 1 !important;
+}
+[class*="searchButton"] {
+  min-height: 48px !important;
+  padding: 0 15px !important;
+}
+[class*="searchButton"] span {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+}
+
+/* Explore control card */
+[class*="freeExploreBar"] {
+  overflow: hidden;
+}
+[class*="freeExploreBar"] [class*="areaPill"] {
+  border-bottom: 1px solid var(--ts-rule) !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 5px !important;
+}
+[class*="freeExploreBar"] [class*="areaPill"] > span {
+  gap: 8px !important;
+}
+[class*="freeExploreBar"] [class*="pillScroller"] {
+  padding-bottom: 4px !important;
+}
+[class*="freeExploreBar"] [class*="compactFooter"] {
+  border-top: 1px solid var(--ts-rule);
+  padding-top: 8px;
+}
+
+/* Project sheet: calm Apple-map-like information hierarchy. */
+[class*="projectCard"] {
+  padding: 6px 18px 18px !important;
+  border-radius: 22px !important;
+  background: var(--ts-surface) !important;
+  box-shadow: 0 20px 58px rgba(27, 54, 68, .18) !important;
+}
+/* Last layer to declare this wins, so this is the value that actually applies.
+   48dvh is 298px on an iPhone while the peek's content runs to 535px, which
+   sliced the body copy mid-glyph and cut off "Details & official sources". */
+[class*="projectCard"]:not([class*="projectCardExpanded"]) {
+  max-height: min(64dvh, 520px) !important;
+}
+[class*="projectCardExpanded"] {
+  max-height: min(82dvh, 780px) !important;
+}
+[class*="projectTopLine"] {
+  min-height: 46px !important;
+  margin: 0 0 6px !important;
+}
+[class*="breadcrumb"] {
+  min-height: 40px !important;
+  padding: 0 !important;
+  color: #60737c !important;
+  font-size: 12.5px !important;
+  font-weight: 650 !important;
+}
+[class*="projectActions"] button {
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  background: #f4f8f9 !important;
+}
+.projectIdentity {
+  gap: 10px !important;
+  margin: 3px 0 11px !important;
+}
+.projectIdentityIcon {
+  width: 38px !important;
+  height: 38px !important;
+  flex-basis: 38px !important;
+  border-radius: 12px !important;
+}
+.projectIdentityIcon svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+.projectIdentity small {
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  letter-spacing: .065em !important;
+}
+.projectIdentity strong {
+  font-size: 12.5px !important;
+  font-weight: 690 !important;
+  line-height: 1.25 !important;
+}
+[class*="projectTitleBlock"] {
+  gap: 8px !important;
+}
+[class*="projectTitleBlock"] h2 {
+  max-width: none !important;
+  margin: 0 !important;
+  color: #172b34 !important;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif !important;
+  font-size: clamp(26px, 5vw, 32px) !important;
+  font-weight: 760 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.028em !important;
+  text-wrap: pretty !important;
+}
+[class*="approximateBadge"] {
+  padding: 6px 9px !important;
+  font-size: 10.5px !important;
+}
+.projectRule {
+  margin-top: 14px !important;
+  background: var(--ts-rule) !important;
+}
+.projectOverview {
+  margin-top: 12px !important;
+}
+.projectOverview [class*="sectionLabel"] {
+  margin-bottom: 6px !important;
+  font-size: 10.5px !important;
+  line-height: 1.2 !important;
+}
+[class*="projectLead"] {
+  font-size: 14.5px !important;
+  font-weight: 440 !important;
+  line-height: 1.56 !important;
+  letter-spacing: -.003em !important;
+}
+[class*="latestBlock"] {
+  gap: 5px !important;
+  margin-top: 15px !important;
+  padding: 13px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--ts-rule) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+[class*="latestBlock"] small {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+[class*="latestBlock"] strong {
+  font-size: 14px !important;
+  font-weight: 690 !important;
+  line-height: 1.42 !important;
+}
+[class*="latestBlock"] span {
+  font-size: 11.5px !important;
+}
+[class*="detailsButton"] {
+  min-height: 48px !important;
+  margin-top: 15px !important;
+  padding: 0 14px !important;
+  border-radius: 13px !important;
+  font-size: 13px !important;
+}
+[class*="projectScroll"] {
+  padding-bottom: 10px !important;
+}
+
+/* Browse / Updates */
+[class*="updatesPanel"] {
+  padding: 16px 16px 0 !important;
+  border-radius: 22px !important;
+  background: var(--ts-surface) !important;
+}
+[class*="updatesHeader"] {
+  padding-bottom: 12px !important;
+  border-bottom-color: var(--ts-rule) !important;
+}
+[class*="updatesHeader"] p {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+[class*="updatesHeader"] h2 {
+  margin: 4px 0 !important;
+  font-size: 26px !important;
+  line-height: 1.1 !important;
+}
+[class*="updatesHeader"] > div > span {
+  font-size: 12.5px !important;
+  line-height: 1.4 !important;
+}
+.contentResultRow {
+  grid-template-columns: 42px minmax(0, 1fr) 32px !important;
+  min-height: 82px !important;
+  gap: 12px !important;
+  padding: 13px 4px !important;
+}
+.contentResultIcon {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 13px !important;
+}
+.contentResultIcon svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+.contentResultCopy {
+  gap: 4px !important;
+}
+.contentResultCopy small {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+.contentResultCopy strong {
+  font-size: 14px !important;
+  line-height: 1.36 !important;
+}
+.contentResultCopy em {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+.contentResultArrow {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+/* Modal sheets */
+[class*="modalSheet"] {
+  padding: 16px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.985) !important;
+}
+[class*="modalSheet"] header {
+  padding-bottom: 4px;
+}
+[class*="modalSheet"] header p {
+  font-size: 10px !important;
+}
+[class*="modalSheet"] header h2 {
+  margin-top: 4px !important;
+  font-size: 27px !important;
+  line-height: 1.08 !important;
+}
+[class*="modalSheet"] section {
+  margin-top: 20px !important;
+}
+[class*="modalSheet"] section h3 {
+  margin-bottom: 9px !important;
+  font-size: 10.5px !important;
+}
+[class*="filterChoices"] button {
+  min-height: 52px !important;
+  padding: 0 14px !important;
+  border-radius: 13px !important;
+  font-size: 13px !important;
+}
+.filterChoiceLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.filterChoiceIcon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #526a75;
+  background: #edf3f5;
+}
+.filterChoiceIcon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[class*="modalSheet"] footer {
+  gap: 8px !important;
+  margin-top: 20px !important;
+}
+[class*="modalSheet"] footer button,
+[class*="locationConfirm"] {
+  min-height: 48px !important;
+  font-size: 13px !important;
+}
+
+/* Search */
+[class*="searchOverlay"] > header {
+  min-height: 68px;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px !important;
+}
+[class*="searchOverlay"] form {
+  height: 48px !important;
+  border-radius: 14px !important;
+}
+[class*="searchBody"] {
+  padding: 12px 14px 34px !important;
+}
+[class*="searchHint"] {
+  padding: 16px !important;
+  border-radius: 16px !important;
+}
+[class*="searchHint"] strong {
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+}
+[class*="searchHint"] span {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Briefing keeps editorial character but gets more comfortable leading. */
+.briefingHeadline {
+  max-width: 16ch !important;
+  font-size: clamp(32px, 7vw, 44px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.038em !important;
+}
+.briefingStory strong {
+  font-size: 18px !important;
+  line-height: 1.28 !important;
+}
+
+/* Desktop sizing */
+@media (min-width: 720px) {
+  [class*="projectCard"],
+  [class*="updatesPanel"],
+  [class*="orientationPanel"] {
+    width: min(420px, calc(100vw - 36px)) !important;
+  }
+  [class*="projectCard"]:not([class*="projectCardExpanded"]) {
+    max-height: min(68dvh, 610px) !important;
+  }
+  [class*="projectCardExpanded"] {
+    max-height: min(84dvh, 820px) !important;
+  }
+  [class*="modalSheet"] {
+    width: min(520px, calc(100vw - 32px)) !important;
+    margin: 0 auto !important;
+  }
+  [class*="searchOverlay"] > header,
+  [class*="searchBody"] {
+    width: min(780px, calc(100vw - 32px));
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Phones */
+@media (max-width: 719px) {
+  [class*="projectCard"],
+  [class*="updatesPanel"],
+  [class*="orientationPanel"],
+  [class*="freeExploreBar"] {
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+  }
+  [class*="projectTitleBlock"] h2 {
+    font-size: clamp(25px, 7.5vw, 31px) !important;
+    line-height: 1.13 !important;
+  }
+  [class*="projectActions"] button,
+  [class*="modalSheet"] header > button {
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  .contentResultRow {
+    min-height: 80px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  [class*="freeExploreBar"] [class*="pillScroller"] button {
+    min-height: 40px !important;
+    font-size: 11px !important;
+  }
+  [class*="projectTitleBlock"] h2 {
+    font-size: clamp(24px, 7.2vw, 29px) !important;
+  }
+}

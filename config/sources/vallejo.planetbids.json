@@ -1,0 +1,23 @@
+{
+  "key": "vallejo.planetbids",
+  "name": "City of Vallejo PlanetBids Bid Opportunities",
+  "jurisdiction": "City of Vallejo",
+  "adapter": "planetbids",
+  "base_url": "https://vendors.planetbids.com/portal/42510",
+  "poll_minutes": 360,
+  "options": {
+    "agency_id": "42510",
+    "timezone": "America/Los_Angeles",
+    "per_page": 30,
+    "max_pages": 20,
+    "fetch_details": true,
+    "fetch_documents": true,
+    "min_expected_bids": 1,
+    "min_request_interval_seconds": 1.0,
+    "detail_stages": [
+      "Bidding",
+      "Award Pending",
+      "Awarded"
+    ]
+  }
+}

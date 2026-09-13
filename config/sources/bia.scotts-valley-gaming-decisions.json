@@ -1,0 +1,87 @@
+{
+  "key": "bia.scotts-valley-gaming-decisions",
+  "name": "BIA Scotts Valley Gaming Decisions",
+  "jurisdiction": "United States",
+  "adapter": "official_document_set",
+  "base_url": "https://www.bia.gov/as-ia/oig/gaming-land-decisions",
+  "poll_minutes": 1440,
+  "options": {
+    "allowed_hosts": ["www.bia.gov"],
+    "canary_external_id": "scotts-valley-2026-07-30-reconsideration",
+    "documents": [
+      {
+        "external_id": "scotts-valley-2025-01-10-trust-acquisition",
+        "document_url": "https://www.bia.gov/sites/default/files/media_document/scotts_valley_band_of_pomo_indians%2C_january_10%2C_2025%2C_trust_acquisition_decision_letter.pdf",
+        "action_date": "2025-01-10",
+        "agency": "U.S. Department of the Interior, Office of the Assistant Secretary - Indian Affairs",
+        "title": "Trust Acquisition Decision Letter",
+        "action_type": "trust_acquisition_decision",
+        "tribe": "Scotts Valley Band of Pomo Indians of California",
+        "site_name": "Vallejo Site",
+        "legal_theory": "Restored Lands",
+        "canary_markers": ["Scotts Valley Band of Pomo Indians", "Vallejo Site"],
+        "status_assertions": [
+          {
+            "dimension": "land_status",
+            "value": "trust_acquisition_approved",
+            "authority_type": "federal_decision",
+            "direct": true
+          },
+          {
+            "dimension": "federal_authorization",
+            "value": "trust_acquisition_approved",
+            "authority_type": "federal_decision",
+            "direct": true
+          },
+          {
+            "dimension": "gaming_eligibility",
+            "value": "restored_lands_exception_approved",
+            "authority_type": "federal_decision",
+            "direct": true
+          }
+        ]
+      },
+      {
+        "external_id": "scotts-valley-2025-03-28-partial-reconsideration",
+        "document_url": "https://www.bia.gov/sites/default/files/media_document/2025.03.28_correction_scotts_valley_band_of_pomo_indians_partial_reconsideration_of_01.10.25_deci.pdf",
+        "action_date": "2025-03-27",
+        "agency": "U.S. Department of the Interior, Office of the Secretary",
+        "title": "Partial Reconsideration of January 10, 2025 Decision (Corrected)",
+        "action_type": "gaming_eligibility_reconsideration_opened",
+        "tribe": "Scotts Valley Band of Pomo Indians of California",
+        "site_name": "Vallejo Site",
+        "supersedes_external_id": "scotts-valley-2025-01-10-trust-acquisition",
+        "canary_markers": ["temporarily rescind", "Gaming Eligibility Determination"],
+        "status_assertions": [
+          {
+            "dimension": "gaming_eligibility",
+            "value": "temporarily_rescinded_for_reconsideration",
+            "authority_type": "federal_decision",
+            "direct": true
+          }
+        ]
+      },
+      {
+        "external_id": "scotts-valley-2026-07-30-reconsideration",
+        "document_url": "https://www.bia.gov/sites/default/files/media_document/508_compliant_scotts_valley_opinion_7-30-2026.pdf",
+        "action_date": "2026-07-30",
+        "agency": "U.S. Department of the Interior, Office of the Assistant Secretary - Indian Affairs",
+        "title": "Reconsideration of the January 10, 2025 Decision",
+        "action_type": "gaming_eligibility_reconsideration_decided",
+        "tribe": "Scotts Valley Band of Pomo Indians of California",
+        "site_name": "Vallejo Site",
+        "legal_theory": "Restored Lands",
+        "supersedes_external_id": "scotts-valley-2025-03-28-partial-reconsideration",
+        "canary_markers": ["Scotts Valley Band of Pomo Indians", "Restored Lands Exception"],
+        "status_assertions": [
+          {
+            "dimension": "gaming_eligibility",
+            "value": "restored_lands_exception_disapproved",
+            "authority_type": "federal_decision",
+            "direct": true
+          }
+        ]
+      }
+    ]
+  }
+}

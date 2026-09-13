@@ -1,0 +1,129 @@
+/* State-specific fixes that must beat the generic release shell. */
+
+/* Positron is already deliberately quiet. Keep the coastal atmosphere subtle
+   enough that streets, neighborhoods, and project anchors still feel grounded. */
+.trackstarApp::before {
+  background:
+    linear-gradient(180deg, rgba(230, 246, 252, .11), transparent 20%),
+    linear-gradient(0deg, rgba(241, 247, 244, .08), transparent 24%) !important;
+}
+.mapAtmosphere,
+.mapAtmosphere.selected {
+  background: linear-gradient(180deg, rgba(244, 250, 252, .09), transparent 20%, transparent 78%, rgba(238, 246, 248, .08)) !important;
+}
+
+/* Briefing intentionally keeps the editorial moment even though it reuses the
+   project-card container. */
+.briefingCard.briefingCard {
+  padding-top: 0 !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 239, 250, .86), transparent 38%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%) !important;
+}
+
+/* The normal project peek is a summary, not a scroll-heavy article. Expanded
+   details restore the full overview naturally. */
+[class*="projectCard"]:not([class*="projectCardExpanded"]):not(.briefingCard) .projectOverview [class*="projectLead"] {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+/* A dense-area Browse action still shows the actual list. Category shortcuts
+   are optional narrowing aids, not a gate that replaces the results. */
+.browseCategoryStrip {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid rgba(31,55,66,.08);
+  scrollbar-width: none;
+}
+.browseCategoryStrip::-webkit-scrollbar { display: none; }
+.browseCategoryStrip button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid rgba(31,55,66,.08);
+  border-radius: 11px;
+  color: #566d78;
+  background: #f6f9fa;
+  font-size: 11px;
+  font-weight: 680;
+}
+.browseCategoryStrip button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.browseCategoryStrip button[data-category="development"] svg { color: #28745c; }
+.browseCategoryStrip button[data-category="roads"] svg { color: #bc6714; }
+.browseCategoryStrip button[data-category="utilities"] svg { color: #197a8f; }
+.browseCategoryStrip button[data-category="places"] svg { color: #5364c5; }
+
+/* Category meaning survives settings and overlap/chooser states too. */
+.filterChoiceIcon[data-category="development"],
+.overlapCategoryIcon[data-category="development"] { color: #28745c !important; background: #eaf5f0 !important; }
+.filterChoiceIcon[data-category="roads"],
+.overlapCategoryIcon[data-category="roads"] { color: #bc6714 !important; background: #fff3e5 !important; }
+.filterChoiceIcon[data-category="utilities"],
+.overlapCategoryIcon[data-category="utilities"] { color: #197a8f !important; background: #e8f6f8 !important; }
+.filterChoiceIcon[data-category="places"],
+.overlapCategoryIcon[data-category="places"] { color: #5364c5 !important; background: #eef0ff !important; }
+
+/* Modal backdrop stays restrained rather than returning to the old black-glass
+   visual language. */
+[class*="scrim"] {
+  background: rgba(31, 48, 57, .24) !important;
+  backdrop-filter: blur(8px) saturate(.9) !important;
+}
+
+/* Give controls a physical pressed response without turning everything into
+   floating Material buttons. */
+button:not(:disabled):active {
+  transform: translateY(0) scale(.985) !important;
+  transition-duration: .06s !important;
+}
+button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+@media (max-width: 719px) {
+  .briefingCard.briefingCard {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Do not shrink MapLibre's click targets back down after the release pass. */
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    transform: none !important;
+  }
+
+  /* 44px is the spec's minimum interactive height for ordinary mobile controls. */
+  .browseCategoryStrip button { min-height: 44px; }
+}
+
+@media (max-width: 390px) {
+  /* Keep the product name visible on small phones; only the regional subtitle
+     yields space to search. */
+  [class*="topBar"] [class*="brand"] > span:last-child {
+    display: grid !important;
+  }
+  [class*="topBar"] [class*="brand"] strong {
+    font-size: 14.5px !important;
+  }
+  [class*="topBar"] [class*="brand"] small {
+    display: none !important;
+  }
+}

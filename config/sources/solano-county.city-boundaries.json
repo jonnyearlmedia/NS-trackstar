@@ -1,0 +1,20 @@
+{
+  "key": "solano-county.city-boundaries",
+  "name": "Solano County Incorporated City Boundaries",
+  "jurisdiction": "Solano County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/CityBoundaries_publicview/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/CityBoundaries_publicview/FeatureServer/0",
+    "id_field": "NAME",
+    "out_fields": ["OBJECTID", "NAME", "Agency", "GLOBALID", "Last_Updat"],
+    "where": "1=1",
+    "page_size": 100,
+    "updated_at_field": "Last_Updat",
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 7,
+    "max_expected_records": 7,
+    "canary_fields": ["NAME", "Agency"]
+  }
+}

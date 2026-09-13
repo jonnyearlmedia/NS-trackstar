@@ -1,0 +1,824 @@
+{
+  "_what_this_is": "The projects a resident of this service area is most likely to search for. Trackstar is not judged on how many records it holds; it is judged on whether the project someone actually asked about is right. This file is that list, and the state of each entry was measured against the live API, not asserted.",
+  "_how_to_read_it": "tier 'guaranteed' means the project is found and placed today and a regression that loses it is a failure. tier 'found_unmapped' means Trackstar knows the project exists but cannot defensibly place it, which is a real gap a resident would notice on the map. tier 'watchlist' means the project is high-interest and Trackstar cannot find it at all - it is a target, and it must not be allowed to fail a build, because a gate that is always red is a gate nobody reads.",
+  "_selection": "There is no government ranking of 'top projects' and no Trackstar search log yet, so this set is an editorial judgement from project scale, construction impact, recency, controversy and how likely a normal person is to recognise the name. It is a target set, not a measured search ranking, and it should be replaced by real query logs the moment there are any.",
+  "measured_against": "https://15-204-82-184.sslip.io",
+  "measured_at": "2026-09-13",
+  "projects": [
+    {
+      "key": "watson-ranch-riversound",
+      "label": "Watson Ranch / RiverSound",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Watson Ranch"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Minor Amendment to the Watson Ranch Specific Plan",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "oat-hill",
+      "label": "Oat Hill",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Oat Hill"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Oat Hill Multifamily Project",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "giovannoni-logistics-park",
+      "label": "Giovannoni Logistics Park",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Giovannoni Logistics Park"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "napa-logistics-park-phase-ii",
+      "label": "Napa Logistics Park Phase II",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Napa Logistics Park Phase II"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "paoli-watson-lane-annexation",
+      "label": "Paoli / Watson Lane Annexation",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Paoli"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Paoli /Watson Lane Annexation",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "sdg-commerce-217",
+      "label": "SDG Commerce 217",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "SDG Commerce 217"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "sdg-commerce-330",
+      "label": "SDG Commerce 330",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "SDG Commerce 330"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "napa-airport-corporate-center",
+      "label": "Napa Airport Corporate Center",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Napa Airport Corporate Center"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Napa Airport Corporate Center Project",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "green-island-road-reconstruction-widening",
+      "label": "Green Island Road Reconstruction & Widening",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Green Island Road Reconstruction & Widening"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Green Island Road Reconstruction & Widening Project",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "southeast-area-specific-plan",
+      "label": "Southeast Area Specific Plan",
+      "jurisdiction": "American Canyon",
+      "queries": [
+        "Southeast Area Specific Plan"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "fairview-at-northgate-fairview-plaza",
+      "label": "Fairview at Northgate / Fairview Plaza",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Fairview at Northgate"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Fairview at Northgate (Costco)",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "mare-island-specific-plan-update",
+      "label": "Mare Island Specific Plan Update",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Mare Island Specific Plan Update"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "vallejo-waterfront-specific-plan-update",
+      "label": "Vallejo Waterfront Specific Plan Update",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Vallejo Waterfront Specific Plan Update"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "downtown-vallejo-specific-plan-update",
+      "label": "Downtown Vallejo Specific Plan Update",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Downtown Vallejo Specific Plan Update"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "solano360-implementation",
+      "label": "Solano360 implementation",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Solano360 implementation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "blue-rock-springs",
+      "label": "Blue Rock Springs",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Blue Rock Springs"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Blue Rock Springs",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "borges-ranch",
+      "label": "Borges Ranch",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Borges Ranch"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Borges Ranch (Formal Submittal)",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "waterstone-phase-2a-2b",
+      "label": "Waterstone Phase 2A/2B",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Waterstone Phase 2A/2B"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Waterstone Phase 2A/2B",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "vista-cove",
+      "label": "Vista Cove",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Vista Cove"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Vista Cove",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "coral-sea-village-8c",
+      "label": "Coral Sea Village 8C",
+      "jurisdiction": "Vallejo",
+      "queries": [
+        "Coral Sea Village 8C"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "riversound-napa-pipe",
+      "label": "RiverSound / Napa Pipe",
+      "jurisdiction": "Napa",
+      "queries": [
+        "RiverSound"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "first-street-napa-phase-ii",
+      "label": "First Street Napa Phase II",
+      "jurisdiction": "Napa",
+      "queries": [
+        "First Street Napa Phase II"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "harvest-park",
+      "label": "Harvest Park",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Harvest Park"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "napa-riverline",
+      "label": "Napa RiverLine",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Napa RiverLine"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "jefferson-trower-affordable-homeownership",
+      "label": "Jefferson / Trower Affordable Homeownership",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Jefferson"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Jefferson Delaware Parcel Split",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "westwood-neighborhood-improvements",
+      "label": "Westwood Neighborhood Improvements",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Westwood Neighborhood Improvements"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "lincoln-avenue-safety-improvements",
+      "label": "Lincoln Avenue Safety Improvements",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Lincoln Avenue Safety Improvements"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "salvador-avenue-complete-streets",
+      "label": "Salvador Avenue Complete Streets",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Salvador Avenue Complete Streets"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Salvador Avenue Complete Streets",
+      "observed_project_type": "public_works",
+      "mapped": true
+    },
+    {
+      "key": "five-way-intersection-improvements",
+      "label": "Five-Way Intersection Improvements",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Five-Way Intersection Improvements"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Five-Way Intersection Improvements",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "playground-retrofit-phase-ii",
+      "label": "Playground Retrofit Phase II",
+      "jurisdiction": "Napa",
+      "queries": [
+        "Playground Retrofit Phase II"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "villages-at-fairfield-lago-vista",
+      "label": "Villages at Fairfield / Lago Vista",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Villages at Fairfield"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "one-lake-canon-station",
+      "label": "One Lake / Canon Station",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "One Lake"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "One Lake",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "pacific-flyway-center",
+      "label": "Pacific Flyway Center",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Pacific Flyway Center"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Pacific Flyway Center",
+      "observed_project_type": "environmental_review",
+      "mapped": false
+    },
+    {
+      "key": "green-valley-3-apartments",
+      "label": "Green Valley 3 Apartments",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Green Valley 3 Apartments"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Green Valley 3 Apartments Project",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "80-12-industrial-center",
+      "label": "80-12 Industrial Center",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "80-12 Industrial Center"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "80-12 Industrial Center",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "aurora-at-green-valley",
+      "label": "Aurora at Green Valley",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Aurora at Green Valley"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "west-texas-complete-streets",
+      "label": "West Texas Complete Streets",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "West Texas Complete Streets"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "lopes-road-landslide-pipeline-reconstruction",
+      "label": "Lopes Road Landslide & Pipeline Reconstruction",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Lopes Road Landslide & Pipeline Reconstruction"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "markeley-lane-reconnection",
+      "label": "Markeley Lane Reconnection",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Markeley Lane Reconnection"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "peabody-road-widening-phase-1",
+      "label": "Peabody Road Widening Phase 1",
+      "jurisdiction": "Fairfield",
+      "queries": [
+        "Peabody Road Widening Phase 1"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "rose-estates",
+      "label": "Rose Estates",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Rose Estates"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Rose Estates: The proposed project includes development of 1,080 dwelling units (excluding State Density Bonus Law units) and approximately 250,000 square feet of nonresidential use.",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "eastern-gateway-infrastructure-master-plan",
+      "label": "Eastern Gateway Infrastructure Master Plan",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Eastern Gateway Infrastructure Master Plan"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "port-modernization",
+      "label": "Port Modernization",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Port Modernization"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "urban-waterfront-enhancement",
+      "label": "Urban Waterfront Enhancement",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Urban Waterfront Enhancement"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "marina-breakwater-rehabilitation",
+      "label": "Marina Breakwater Rehabilitation",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Marina Breakwater Rehabilitation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "lopes-road-water-pipeline-reconstruction",
+      "label": "Lopes Road & Water Pipeline Reconstruction",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "Lopes Road & Water Pipeline Reconstruction"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "east-4th-east-5th-east-l-streetscape",
+      "label": "East 4th/East 5th/East L Streetscape",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "East 4th/East 5th/East L Streetscape"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "2026-pavement-rehabilitation",
+      "label": "2026 Pavement Rehabilitation",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "2026 Pavement Rehabilitation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "2026-curb-ramp-project",
+      "label": "2026 Curb Ramp Project",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "2026 Curb Ramp Project"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "2027-pavement-rehabilitation",
+      "label": "2027 Pavement Rehabilitation",
+      "jurisdiction": "Benicia",
+      "queries": [
+        "2027 Pavement Rehabilitation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "downtown-suisun-california-forever-property-program",
+      "label": "Downtown Suisun / California Forever property program",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Downtown Suisun"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "highway-12-logistics",
+      "label": "Highway 12 Logistics",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Highway 12 Logistics"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Highway 12 Logistics Center",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "almond-gardens",
+      "label": "Almond Gardens",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Almond Gardens"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Almond Gardens Apartments",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "mccoy-creek-mixed-use",
+      "label": "McCoy Creek Mixed-Use",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "McCoy Creek Mixed-Use"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "olive-tree-ranch",
+      "label": "Olive Tree Ranch",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Olive Tree Ranch"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Olive Tree Ranch",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "awanta",
+      "label": "Awanta",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Awanta"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Awanta Project",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "lotz-residences",
+      "label": "Lotz Residences",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Lotz Residences"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Lotz Residences",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "suisun-city-dental-restaurant",
+      "label": "Suisun City Dental / Restaurant",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Suisun City Dental"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Suisun City Dental",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "dutch-bros",
+      "label": "Dutch Bros",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Dutch Bros"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Dutch Bros",
+      "observed_project_type": "municipal_development",
+      "mapped": true
+    },
+    {
+      "key": "montebello-vista-park",
+      "label": "Montebello Vista Park",
+      "jurisdiction": "Suisun City",
+      "queries": [
+        "Montebello Vista Park"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "general-plan-update",
+      "label": "General Plan Update",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "General Plan Update"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "City of American Canyon General Plan Update",
+      "observed_project_type": "environmental_review",
+      "mapped": false
+    },
+    {
+      "key": "bonny-s-vineyard-winery",
+      "label": "Bonny's Vineyard Winery",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Bonny's Vineyard Winery"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "regional-climate-action-and-adaptation-plan",
+      "label": "Regional Climate Action and Adaptation Plan",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Regional Climate Action and Adaptation Plan"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Napa County Regional Climate Action and Adaptation Plan",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "campbell-creek-fish-passage",
+      "label": "Campbell Creek Fish Passage",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Campbell Creek Fish Passage"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "550-wall-road-landslide",
+      "label": "550 Wall Road Landslide",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "550 Wall Road Landslide"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "chiles-pope-valley-road",
+      "label": "Chiles Pope Valley Road",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Chiles Pope Valley Road"
+      ],
+      "tier": "guaranteed",
+      "observed_name": "Chiles Pope Valley Bank Stabilization (Notification of Lake or Streambed Alteration, No. EPIMSNAP-31256-R3)",
+      "observed_project_type": "environmental_review",
+      "mapped": true
+    },
+    {
+      "key": "children-s-services-expansion",
+      "label": "Children's Services Expansion",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Children's Services Expansion"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "agricultural-building-rehabilitation",
+      "label": "Agricultural Building Rehabilitation",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "Agricultural Building Rehabilitation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "1127-first-street-hvac-roof",
+      "label": "1127 First Street HVAC/Roof",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "1127 First Street HVAC/Roof"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "white-sulphur-spring-road-slide-repair",
+      "label": "White Sulphur Spring Road Slide Repair",
+      "jurisdiction": "Unincorporated Napa County",
+      "queries": [
+        "White Sulphur Spring Road Slide Repair"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "sr-37-sears-point-to-mare-island",
+      "label": "SR 37 Sears Point to Mare Island",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "SR 37 Sears Point to Mare Island"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "stevenson-bridge-rehabilitation",
+      "label": "Stevenson Bridge Rehabilitation",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Stevenson Bridge Rehabilitation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "farm-to-market-phase-4",
+      "label": "Farm to Market Phase 4",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Farm to Market Phase 4"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "benicia-road-complete-streets",
+      "label": "Benicia Road Complete Streets",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Benicia Road Complete Streets"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "liberty-island-road-vacation",
+      "label": "Liberty Island Road Vacation",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Liberty Island Road Vacation"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "one-water-framework",
+      "label": "One Water Framework",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "One Water Framework"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "bess-regulatory-program",
+      "label": "BESS Regulatory Program",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "BESS Regulatory Program"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "affordable-housing-pocket-neighborhood-initiative",
+      "label": "Affordable Housing & Pocket Neighborhood Initiative",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Affordable Housing & Pocket Neighborhood Initiative"
+      ],
+      "tier": "watchlist"
+    },
+    {
+      "key": "california-forever-east-solano-regulatory-monitoring",
+      "label": "California Forever / East Solano regulatory monitoring",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "California Forever"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "California Forever (CF) Infill Development",
+      "observed_project_type": "municipal_development",
+      "mapped": false
+    },
+    {
+      "key": "middle-green-valley-specific-plan",
+      "label": "Middle Green Valley Specific Plan",
+      "jurisdiction": "Unincorporated Solano County",
+      "queries": [
+        "Middle Green Valley Specific Plan"
+      ],
+      "tier": "found_unmapped",
+      "observed_name": "Middle Green Valley Specific Plan Project",
+      "observed_project_type": "environmental_review",
+      "mapped": false
+    }
+  ],
+  "measured_counts": {
+    "guaranteed": 15,
+    "watchlist": 50,
+    "found_unmapped": 15
+  }
+}

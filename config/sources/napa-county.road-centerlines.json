@@ -1,0 +1,35 @@
+{
+  "key": "napa-county.road-centerlines",
+  "name": "Napa County Public Road Centerlines",
+  "jurisdiction": "Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Road_Centerlines/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Road_Centerlines/FeatureServer/0",
+    "id_field": "centerlineid",
+    "out_fields": [
+      "objectid",
+      "centerlineid",
+      "fullname",
+      "altrtename",
+      "stroute",
+      "strtetype",
+      "ctyroute",
+      "owned_by",
+      "maintained_by",
+      "jurisdiction",
+      "community",
+      "fromleft",
+      "toleft",
+      "fromright",
+      "toright"
+    ],
+    "where": "1=1",
+    "page_size": 2000,
+    "expected_geometry_type": "esriGeometryPolyline",
+    "min_expected_records": 6000,
+    "max_expected_records": 60000,
+    "canary_fields": ["centerlineid", "fullname", "jurisdiction", "community"]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "key": "napa-county.accela",
+  "name": "Napa County Accela Citizen Access (Building and Planning)",
+  "jurisdiction": "Napa County",
+  "adapter": "accela_aca",
+  "base_url": "https://aca-prod.accela.com/NAPACO",
+  "poll_minutes": 240,
+  "options": {
+    "base_url": "https://aca-prod.accela.com/NAPACO",
+    "modules": [
+      "Building",
+      "Planning"
+    ],
+    "lookback_days": 365,
+    "lookahead_days": 0,
+    "max_pages": 20,
+    "fetch_details": false,
+    "min_request_interval_seconds": 1.0,
+    "timezone": "America/Los_Angeles"
+  }
+}

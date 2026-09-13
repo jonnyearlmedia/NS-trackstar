@@ -1,0 +1,29 @@
+{
+  "key": "fairfield.escribe",
+  "name": "City of Fairfield eScribe Meetings and Agendas",
+  "jurisdiction": "City of Fairfield",
+  "adapter": "escribe",
+  "base_url": "https://pub-fairfield.escribemeetings.com",
+  "poll_minutes": 120,
+  "options": {
+    "portal_url": "https://pub-fairfield.escribemeetings.com",
+    "timezone": "America/Los_Angeles",
+    "lookback_days": 365,
+    "lookahead_days": 180,
+    "slice_days": 120,
+    "min_expected_meetings": 10,
+    "min_request_interval_seconds": 0.5,
+    "project_mapping": {
+      "project_type": "government_meeting",
+      "authority_type": "government_record",
+      "name_fields": ["meeting_title"],
+      "assertions": {
+        "meeting_body": "meeting_body",
+        "meeting_date": "meeting_date",
+        "meeting_location": "meeting_location",
+        "address": "meeting_address",
+        "project_page": "agenda_url"
+      }
+    }
+  }
+}

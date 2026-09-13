@@ -1,0 +1,39 @@
+{
+  "key": "fairfield.development-activity",
+  "name": "Fairfield Development Activity",
+  "jurisdiction": "City of Fairfield",
+  "adapter": "html_table",
+  "base_url": "https://www.fairfield.ca.gov/government/city-departments/community-development/planning-division/development-activity",
+  "poll_minutes": 1440,
+  "options": {
+    "fetch_mode": "browser_session",
+    "browser_channel": "chrome",
+    "browser_timeout_ms": 30000,
+    "table_selector": "table",
+    "columns": [
+      "planning_case",
+      "name",
+      "location_description",
+      "source_project_type"
+    ],
+    "skip_rows": 2,
+    "id_field": "planning_case",
+    "expected_project_count": 20,
+    "canary_markers": [
+      "FILE NO",
+      "PROJECT NAME",
+      "PROJECT LOCATION",
+      "PROJECT TYPE"
+    ],
+    "project_mapping": {
+      "name_field": "name",
+      "project_type": "municipal_development",
+      "authority_type": "official_curated_project_tracker",
+      "assertions": {
+        "planning_case": "planning_case",
+        "location_description": "location_description",
+        "source_project_type": "source_project_type"
+      }
+    }
+  }
+}

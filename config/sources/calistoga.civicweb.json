@@ -1,0 +1,24 @@
+{
+  "key": "calistoga.civicweb",
+  "name": "City of Calistoga CivicWeb Meetings and Agendas",
+  "jurisdiction": "City of Calistoga",
+  "adapter": "civicweb",
+  "base_url": "https://calistoga.civicweb.net",
+  "poll_minutes": 120,
+  "options": {
+    "portal_url": "https://calistoga.civicweb.net",
+    "list_path": "/Portal/MeetingTypeList.aspx",
+    "min_expected_meetings": 10,
+    "project_mapping": {
+      "project_type": "government_meeting",
+      "authority_type": "government_record",
+      "name_fields": ["meeting_title"],
+      "assertions": {
+        "meeting_body": "meeting_body",
+        "meeting_date": "meeting_date",
+        "official_status_text": "meeting_status_note",
+        "project_page": "project_page"
+      }
+    }
+  }
+}

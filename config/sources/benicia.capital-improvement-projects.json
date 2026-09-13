@@ -1,0 +1,79 @@
+{
+  "key": "benicia.capital-improvement-projects",
+  "name": "City of Benicia Capital Improvement Projects",
+  "jurisdiction": "City of Benicia",
+  "adapter": "linked_project_pages",
+  "base_url": "https://www.ci.benicia.ca.us/cip",
+  "poll_minutes": 240,
+  "options": {
+    "index_url": "https://www.ci.benicia.ca.us/cip",
+    "content_selector": "div.content-main-container",
+    "detail_content_selector": "div.content-main-container",
+    "item_selector": "article.summaryDisplay h2 a.item",
+    "id_query_param": "DE",
+    "fetch_details": true,
+    "max_projects": 60,
+    "min_expected_projects": 10,
+    "min_request_interval_seconds": 0.5,
+    "group_stages": {
+      "active": "under_construction",
+      "upcoming": "planned",
+      "completed": "completed"
+    },
+    "detail_section_tags": [
+      "strong",
+      "b",
+      "h2",
+      "h3",
+      "h4"
+    ],
+    "section_aliases": {
+      "scope_of_work": [
+        "scope"
+      ],
+      "schedule_text": [
+        "tentative_project_schedule",
+        "project_schedule",
+        "construction_schedule"
+      ],
+      "cost_text": [
+        "construction_cost",
+        "final_construction_cost",
+        "cost"
+      ],
+      "funding_text": [
+        "funding_source",
+        "funding"
+      ],
+      "resident_impact": [
+        "potential_resident_impact",
+        "construction_hours"
+      ],
+      "latest_update": [
+        "updates"
+      ]
+    },
+    "project_mapping": {
+      "name_fields": [
+        "name"
+      ],
+      "project_type": "public_works",
+      "description_field": "description",
+      "authority_type": "official_curated_project_tracker",
+      "assertions": {
+        "description": "description",
+        "index_section": "index_section",
+        "lifecycle_stage": "index_lifecycle_hint",
+        "project_page": "project_page",
+        "scope_of_work": "scope_of_work",
+        "schedule_text": "schedule_text",
+        "estimated_cost": "cost_text",
+        "funding": "funding_text",
+        "contractor": "contractor",
+        "resident_impact": "resident_impact",
+        "official_additional_info": "latest_update",
+        "contact_name": "project_contact"
+      }
+    }
+  }
+}

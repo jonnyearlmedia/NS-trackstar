@@ -1,0 +1,47 @@
+{
+  "key": "napa-city.public-works-cip",
+  "name": "City of Napa Public Works Capital Improvement Projects",
+  "jurisdiction": "City of Napa",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.cityofnapa.org",
+  "poll_minutes": 120,
+  "options": {
+    "layer_url": "https://gis.cityofnapa.org/arcgis/rest/services/Internal/Public_Works_Capital_Improvement_Projects/FeatureServer/2",
+    "id_field": "GlobalID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "created_at_field": "created_date",
+    "updated_at_field": "last_edited_date",
+    "canonical_url_field": "website",
+    "project_mapping": {
+      "name_field": "ProjectName",
+      "project_type": "public_works",
+      "description_field": "Description",
+      "authority_type": "issuing_agency_gis",
+      "status_dimension": "delivery_stage",
+      "status_field": "ProjectStatus",
+      "assertions": {
+        "source_project_type": "ProjectType",
+        "project_number": "ProjectNo",
+        "description": "Description",
+        "funding": "Funding",
+        "estimated_cost": "ProjectCost",
+        "length_miles": "LengthMiles",
+        "design_year": "Design_Year",
+        "construction_year": "Construction_Year",
+        "completion_date": "ActualCompletionDate",
+        "project_page": "Project_Page"
+      }
+    },
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 20,
+    "max_expected_records": 5000,
+    "canary_fields": [
+      "ProjectName",
+      "ProjectStatus",
+      "ProjectNo",
+      "ProjectType"
+    ]
+  }
+}

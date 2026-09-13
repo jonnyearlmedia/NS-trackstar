@@ -1,0 +1,31 @@
+{
+  "key": "yountville.primegov",
+  "name": "Town of Yountville PrimeGov Meetings and Agendas",
+  "jurisdiction": "Town of Yountville",
+  "adapter": "primegov",
+  "base_url": "https://townofyountville.primegov.com",
+  "poll_minutes": 120,
+  "options": {
+    "portal_url": "https://townofyountville.primegov.com",
+    "timezone": "America/Los_Angeles",
+    "archive_years": 2,
+    "min_expected_meetings": 10,
+    "min_request_interval_seconds": 0.5,
+    "exclude_title_patterns": [
+      "^PRIMEGOV FORM SUBMISSION TEST"
+    ],
+    "project_mapping": {
+      "project_type": "government_meeting",
+      "authority_type": "government_record",
+      "name_fields": [
+        "meeting_title"
+      ],
+      "assertions": {
+        "meeting_body": "meeting_body",
+        "meeting_date": "meeting_date",
+        "meeting_location": "meeting_location",
+        "project_page": "project_page"
+      }
+    }
+  }
+}

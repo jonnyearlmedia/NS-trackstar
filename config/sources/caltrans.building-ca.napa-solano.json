@@ -1,0 +1,62 @@
+{
+  "key": "caltrans.building-ca.napa-solano",
+  "name": "Caltrans Building California Projects — Napa and Solano",
+  "jurisdiction": "Napa and Solano Counties",
+  "adapter": "arcgis_rest",
+  "base_url": "https://build.ca.gov/",
+  "poll_minutes": 720,
+  "options": {
+    "layer_url": "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/SB1/BuildingCA_Projects/FeatureServer/0",
+    "id_field": "BCAProjectID",
+    "out_fields": "*",
+    "where": "CountyName = 'Napa' OR CountyName = 'Solano' OR CountyName = 'Napa, Solano' OR CountyName = 'Solano, Napa'",
+    "page_size": 1000,
+    "created_at_field": "created_date",
+    "updated_at_field": "last_edited_date",
+    "expected_geometry_type": "esriGeometryMultipoint",
+    "min_expected_records": 50,
+    "max_expected_records": 1000,
+    "canary_fields": [
+      "BCAProjectID",
+      "ProjectID",
+      "ProjectTitle",
+      "ProjectStatus",
+      "ProjectDescription",
+      "SB1Funds",
+      "IIJAFunds",
+      "TotalCost",
+      "CountyName",
+      "Agency"
+    ],
+    "project_mapping": {
+      "name_field": "ProjectTitle",
+      "project_type": "transportation_project",
+      "description_field": "ProjectDescription",
+      "authority_type": "official_caltrans_project_gis",
+      "status_dimension": "official_program_status",
+      "status_field": "ProjectStatus",
+      "assertions": {
+        "building_california_project_id": "BCAProjectID",
+        "project_number": "ProjectID",
+        "program_code": "ProgramCode",
+        "description": "ProjectDescription",
+        "official_status_text": "ProjectStatus",
+        "program": "Program",
+        "category": "Category",
+        "sb1_funding": "SB1Funds",
+        "iija_funding": "IIJAFunds",
+        "total_cost": "TotalCost",
+        "fiscal_year": "FiscalYear",
+        "is_sb1": "IsSB1",
+        "is_iija": "IsIIJA",
+        "is_on_state_highway_system": "IsOnSHS",
+        "county": "CountyName",
+        "city": "CityName",
+        "caltrans_district": "CT_District",
+        "implementing_agency": "Agency",
+        "implementing_agency_id": "AgencyID",
+        "official_data_updated": "DateUpdated"
+      }
+    }
+  }
+}
