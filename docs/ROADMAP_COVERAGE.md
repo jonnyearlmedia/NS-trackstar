@@ -164,16 +164,23 @@ Blocked, with the specific reason:
   sites. Neither city is dark because of it: Fairfield now has meetings on eScribe
   and 87 capital projects from its own ArcGIS org, and Rio Vista has meetings on
   Granicus. The website was never the only door.
-- **511 live traffic** — collectors written and tested, never run with a key. The
-  collector container could not even receive the key until this session; that is
-  fixed, so one run settles it.
+- **511 live traffic** is done, and the key was never missing. It was in the
+  operator's own Keychain under `com.ns-trackstar.secrets`, where
+  `scripts/with-secrets` has always looked for it, and unreachable only from a
+  remote container. The run that settled it also caught a defect that would have
+  shipped: the endpoint accepts the `bbox` parameter the config was passing and
+  ignores it, so the first run returned 18 "service area" events of which one was in
+  Napa and the rest were in Sonoma, San Mateo, Santa Cruz, Marin, Alameda and Santa
+  Clara. Events are now kept by 511's own county label. The WZDx work-zone feed
+  stays unpromoted: it carries no county label, and no rectangle separates these two
+  counties from Sonoma without also excluding Calistoga.
 
 ## Order of work
 
 1. Everything reachable from wherever you are, before anything blocked. The
    meeting sweep and St. Helena are finished for every jurisdiction this container
    can reach.
-2. 511, because it is one run with a key that already exists.
+2. ~~511~~ done. What it cost: the key was on the operator's machine all along.
 3. The browser bootstrap tier: Accela for both counties, then Dixon Tyler. Permits
    is the weakest category and this is most of the fix.
 4. CIP across twelve jurisdictions.

@@ -45,6 +45,13 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed where a newly posted agenda is the earliest public "
         "signal that a project is about to be decided.",
     ),
+    "bayarea-511.traffic-events": SourceFreshnessPolicy(
+        "state_project_watch", "same_day", 15, 60,
+        "Live traffic incidents and long-term Caltrans construction on state routes "
+        "through the two counties. A closure that starts this morning is worth knowing "
+        "this morning, which is the one source here where minutes rather than hours "
+        "are the unit; 511 regenerates the feed continuously.",
+    ),
     "benicia.capital-improvement-projects": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "The city's own capital project pages, carrying scope, schedule, cost, "

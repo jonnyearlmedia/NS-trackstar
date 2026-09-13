@@ -150,13 +150,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -259,13 +260,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -352,13 +354,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -450,13 +453,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -555,13 +559,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -679,13 +684,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -783,13 +789,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": [
@@ -900,13 +907,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1007,13 +1015,14 @@
             {
               "source": "fairfield.vanden-canon-overcrossing",
               "scope": "project_specific"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1103,13 +1112,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1200,13 +1210,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1298,13 +1309,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1387,13 +1399,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []
@@ -1494,13 +1507,14 @@
             {
               "source": "caltrans.building-ca.napa-solano",
               "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
             }
           ],
-          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
-          "blocker": {
-            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
-            "smoke_source": "bayarea-511.traffic-events-smoke"
-          }
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
           "evidence": []

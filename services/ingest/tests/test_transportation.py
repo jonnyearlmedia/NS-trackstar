@@ -13,11 +13,13 @@ from ns_trackstar.models import LocationAccuracy
 from ns_trackstar.registry import build_adapter
 
 
-def wzdx_config(*, token_env: str | None = None) -> SourceConfig:
+def wzdx_config(*, token_env: str | None = None, bbox: list[float] | None = None) -> SourceConfig:
     options: dict[str, object] = {
         "endpoint_url": "https://example.test/traffic/wzdx",
         "request_params": {"includeAllDefinedEnums": "false"},
     }
+    if bbox:
+        options["bbox"] = bbox
     if token_env:
         options["api_key_env"] = token_env
     return SourceConfig(
@@ -30,7 +32,7 @@ def wzdx_config(*, token_env: str | None = None) -> SourceConfig:
     )
 
 
-def traffic_config(*, max_pages: int = 3) -> SourceConfig:
+def traffic_config(*, max_pages: int = 3, service_area_names: list[str] | None = None) -> SourceConfig:
     return SourceConfig(
         key="test.511-traffic",
         name="Test 511 Traffic",
@@ -44,6 +46,7 @@ def traffic_config(*, max_pages: int = 3) -> SourceConfig:
             "bbox": [-122.75, 37.95, -121.55, 38.9],
             "page_size": 1,
             "max_pages": max_pages,
+            "service_area_names": service_area_names or [],
         },
     )
 
@@ -300,3 +303,92 @@ async def test_511_retries_429_and_honors_retry_after(
 
     assert attempts == 2
     sleep.assert_awaited_once_with(7.0)
+
+
+@pytest.mark.asyncio
+async def test_traffic_events_keep_only_the_counties_511_itself_labels() -> None:
+    """The bbox request parameter is accepted and ignored by this endpoint.
+
+    A run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and
+    Solano coverage, so the filter is 511's own `areas[].name` and the yield is
+    measured against the events that survive it rather than against the whole Bay
+    Area - a filter rate dressed as a parse rate can never catch a parse break.
+    """
+    events = [
+        {
+            "id": "napa-1",
+            "status": "ACTIVE",
+            "event_type": "CONSTRUCTION",
+            "headline": "Roadwork on CA-128",
+            "areas": [{"name": "Napa"}],
+            "geography": {"type": "Point", "coordinates": [-122.4, 38.5]},
+            "roads": [{"name": "CA-128"}],
+            "updated": "2026-09-13T15:00:00Z",
+        },
+        {
+            "id": "sonoma-1",
+            "status": "ACTIVE",
+            "event_type": "CONSTRUCTION",
+            "headline": "Roadwork on CA-116",
+            "areas": [{"name": "Sonoma"}],
+            "geography": {"type": "Point", "coordinates": [-122.9, 38.5]},
+            "roads": [{"name": "CA-116"}],
+            "updated": "2026-09-13T15:00:00Z",
+        },
+        {
+            "id": "sanmateo-1",
+            "status": "ACTIVE",
+            "event_type": "CONSTRUCTION",
+            "headline": "Roadwork on CA-84",
+            "areas": [{"name": "San Mateo"}],
+            "geography": {"type": "Point", "coordinates": [-122.3, 37.2]},
+            "roads": [{"name": "CA-84"}],
+            "updated": "2026-09-13T15:00:00Z",
+        },
+    ]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"events": events, "pagination": {}})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        os.environ["TEST_511_API_KEY"] = "test-token"
+        adapter = BayArea511TrafficAdapter(
+            traffic_config(service_area_names=["Napa", "Solano"]), client=client
+        )
+        result = await adapter.collect()
+
+    assert [r.normalized_payload.get("event_id") or r.external_id for r in result.records]
+    assert len(result.records) == 1
+    assert result.metadata["events_seen"] == 3
+    assert result.metadata["service_area_events"] == 1
+    assert result.parser_yield == 1.0
+
+
+@pytest.mark.asyncio
+async def test_wzdx_keeps_a_work_zone_that_only_partly_reaches_the_service_area() -> None:
+    """A work zone is a line. Testing one representative point would drop a closure
+    that starts outside the service area and ends inside it, which is exactly the
+    closure a resident on that road needs to know about."""
+    def feature(fid: str, coords: list[list[float]]) -> dict:
+        base = wzdx_payload()["features"][0]
+        return {**base, "id": fid, "geometry": {"type": "LineString", "coordinates": coords}}
+
+    feed = wzdx_payload(
+        features=[
+            feature("crosses-in", [[-123.0, 38.4], [-122.3, 38.5]]),
+            feature("far-away", [[-121.0, 37.2], [-121.1, 37.3]]),
+        ]
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=feed)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = WzdxAdapter(
+            wzdx_config(bbox=[-122.64, 38.03, -121.59, 38.87]), client=client
+        )
+        result = await adapter.collect()
+
+    assert result.metadata["features_seen"] == 2
+    assert result.metadata["service_area_features"] == 1
+    assert result.parser_yield == 1.0

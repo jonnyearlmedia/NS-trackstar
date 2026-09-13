@@ -1,18 +1,27 @@
 {
-  "key": "bayarea-511.traffic-events-smoke",
-  "name": "511 SF Bay Traffic Events Smoke Test",
+  "key": "bayarea-511.traffic-events",
+  "name": "511 SF Bay Traffic Events (Napa and Solano)",
   "jurisdiction": "Napa and Solano Counties",
   "adapter": "bayarea_511_traffic",
   "base_url": "https://api.511.org/traffic/events",
-  "poll_minutes": 5,
+  "poll_minutes": 15,
   "options": {
     "endpoint_url": "https://api.511.org/traffic/events",
     "api_key_env": "BAYAREA_511_API_KEY",
     "api_key_param": "api_key",
     "status": "ACTIVE",
-    "bbox": [-122.75, 37.95, -121.55, 38.9],
+    "bbox": [
+      -122.75,
+      37.95,
+      -121.55,
+      38.9
+    ],
     "page_size": 500,
     "max_pages": 3,
-    "timeout_seconds": 30
+    "timeout_seconds": 30,
+    "service_area_names": [
+      "Napa",
+      "Solano"
+    ]
   }
 }

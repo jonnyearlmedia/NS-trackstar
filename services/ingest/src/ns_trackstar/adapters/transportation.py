@@ -87,6 +87,42 @@ def _retry_after_seconds(response: httpx.Response) -> float | None:
         return max(0.0, (retry_at - datetime.now(UTC)).total_seconds())
 
 
+
+def _coordinates(value: Any) -> list[tuple[float, float]]:
+    """Every (lon, lat) pair in a GeoJSON geometry, at any nesting depth."""
+
+    points: list[tuple[float, float]] = []
+
+    def walk(node: Any) -> None:
+        if (
+            isinstance(node, list)
+            and len(node) >= 2
+            and all(isinstance(part, (int, float)) for part in node[:2])
+        ):
+            points.append((float(node[0]), float(node[1])))
+            return
+        if isinstance(node, list):
+            for part in node:
+                walk(part)
+
+    walk((value or {}).get("coordinates"))
+    return points
+
+
+def _intersects_bbox(geometry: Any, bbox: tuple[float, float, float, float]) -> bool:
+    """True when any vertex of the geometry falls inside the service-area box.
+
+    A work zone is a line, so testing one representative point would drop a closure
+    that starts outside the service area and ends inside it - which is precisely the
+    closure a resident on that road cares about.
+    """
+
+    west, south, east, north = bbox
+    return any(
+        west <= lon <= east and south <= lat <= north for lon, lat in _coordinates(geometry)
+    )
+
+
 class _JsonTransportAdapter(CollectorAdapter):
     def __init__(self, config: SourceConfig, *, client: httpx.AsyncClient | None = None) -> None:
         super().__init__(config)
@@ -167,6 +203,19 @@ class _JsonTransportAdapter(CollectorAdapter):
 
 class WzdxAdapter(_JsonTransportAdapter):
     """Collect a WZDx RoadEventFeed while retaining its complete GeoJSON features."""
+
+    def __init__(self, config: SourceConfig, *, client: httpx.AsyncClient | None = None) -> None:
+        super().__init__(config, client=client)
+        # The 511 feed covers the whole nine-county Bay Area. Without a service-area
+        # box this source puts a thousand San Jose lane closures on a map of Napa and
+        # Solano, which is not coverage, it is noise. The box is config, not code,
+        # because it is a service-area decision rather than a property of WZDx.
+        box = config.options.get("bbox")
+        self.bbox: tuple[float, float, float, float] | None = (
+            (float(box[0]), float(box[1]), float(box[2]), float(box[3]))
+            if isinstance(box, (list, tuple)) and len(box) == 4
+            else None
+        )
 
     def _request_params(self) -> dict[str, Any]:
         params = self.config.options.get("request_params") or {}
@@ -276,23 +325,32 @@ class WzdxAdapter(_JsonTransportAdapter):
         if not self._valid_feed(payload):
             raise TypeError("WZDx response failed required RoadEventFeed invariants")
         features = payload["features"]
-        records = [
-            record
+        in_area = [
+            feature
             for feature in features
             if isinstance(feature, dict)
-            if (record := self._record(feature)) is not None
+            and (self.bbox is None or _intersects_bbox(feature.get("geometry"), self.bbox))
+        ]
+        records = [
+            record for feature in in_area if (record := self._record(feature)) is not None
         ]
         feed_info = payload["road_event_feed_info"]
         return CollectorResult(
             records=records,
+            # The denominator is the features inside the service area, not the whole
+            # Bay Area. Dividing by the feed would report a healthy run at 0.02 and
+            # would move the same direction for a quiet week in Napa as for a real
+            # parse break, so the number could never catch what it exists to catch.
+            parser_yield=len(records) / len(in_area) if in_area else 1.0,
             schema_fingerprint=_schema_fingerprint(payload, "features"),
-            parser_yield=len(records) / len(features) if features else 1.0,
             metadata={
                 "feed_version": feed_info.get("version"),
                 "feed_updated_at": feed_info.get("update_date"),
                 "publisher": feed_info.get("publisher"),
                 "data_sources": len(feed_info.get("data_sources") or []),
                 "features_seen": len(features),
+                "service_area_features": len(in_area),
+                "service_area_bbox": list(self.bbox) if self.bbox else None,
             },
         )
 
@@ -304,6 +362,16 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
         super().__init__(config, client=client)
         self.page_size = min(max(int(config.options.get("page_size", 500)), 1), 1000)
         self.max_pages = max(int(config.options.get("max_pages", 10)), 1)
+        # 511 labels every event with its own county in `areas[].name`. Filtering on
+        # the agency's own label beats any box we could draw, and it is the only thing
+        # that works here: the `bbox` request parameter this endpoint is sent is
+        # accepted and ignored, so a run that trusted it returned Pescadero and Santa
+        # Cruz roadwork as Napa and Solano coverage. Empty means keep everything.
+        self.service_area_names = {
+            str(name).strip().casefold()
+            for name in (config.options.get("service_area_names") or [])
+            if str(name).strip()
+        }
 
     def _base_params(self) -> dict[str, Any]:
         params: dict[str, Any] = {
@@ -459,9 +527,10 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
                 if isinstance(pagination, dict) and pagination.get("next_url"):
                     raise RuntimeError("511 Traffic Events pagination exceeded configured max_pages")
 
+        in_area = [event for event in events if self._in_service_area(event)]
         records = [
             record
-            for event in events
+            for event in in_area
             if (record := self._record(event)) is not None
         ]
         schema_payload = dict(last_payload) if last_payload is not None else {"events": []}
@@ -471,10 +540,27 @@ class BayArea511TrafficAdapter(_JsonTransportAdapter):
             schema_fingerprint=(
                 _schema_fingerprint(schema_payload, "events") if last_payload is not None else None
             ),
-            parser_yield=len(records) / events_seen if events_seen else 1.0,
+            # Parse success, not filter rate. Dividing by every event in the Bay Area
+            # would report a healthy run at 0.05 and would fall for a quiet week in
+            # Napa exactly as it would for a real schema break.
+            parser_yield=len(records) / len(in_area) if in_area else 1.0,
             metadata={
                 "events_seen": events_seen,
+                "service_area_events": len(in_area),
+                "service_area_names": sorted(self.service_area_names) or "all",
                 "status_filter": self.config.options.get("status", "ACTIVE"),
                 "pages_fetched": pages_fetched,
             },
         )
+
+    def _in_service_area(self, event: dict[str, Any]) -> bool:
+        """Keep an event 511 itself files under one of the configured counties."""
+
+        if not self.service_area_names:
+            return True
+        for area in event.get("areas") or []:
+            if not isinstance(area, dict):
+                continue
+            if str(area.get("name") or "").strip().casefold() in self.service_area_names:
+                return True
+        return False
