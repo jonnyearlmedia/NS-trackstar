@@ -5,6 +5,7 @@ from typing import Literal
 
 FreshnessClass = Literal[
     "meeting_feed",
+    "procurement_feed",
     "active_project_tracker",
     "state_project_watch",
     "regulatory_watch",
@@ -263,6 +264,14 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "active_project_tracker", "within_day", 120, 480,
         "Permit and planning case records where a same-day status change is real news; "
         "discovery is prefix-partitioned so a faster cadence would not find more.",
+    ),
+    "vallejo.planetbids": SourceFreshnessPolicy(
+        "procurement_feed", "within_day", 240, 720,
+        "Bid opportunities, where the thing that matters is a solicitation appearing "
+        "or a due date arriving, both of which the agency schedules days ahead rather "
+        "than minutes. A full run walks every page and fetches a detail and a document "
+        "list per bid, and the API throttles with an empty 202 when pushed, so a "
+        "faster cadence would cost the agency capacity and surface nothing sooner.",
     ),
     "vallejo.value-current-development": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
