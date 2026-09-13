@@ -34,10 +34,18 @@ type QualityPayload = {
     conflicting_assertion_count?: number;
     manual_sample_count?: number;
   };
+  duplicate_name_groups?: unknown[];
   high_confidence_unresolved_candidates?: unknown[];
   conflicting_current_assertions?: unknown[];
   manual_qa_sample?: unknown[];
 };
+
+const RELEASE_CRITICAL_FRESHNESS_CLASSES = new Set([
+  "meeting_feed",
+  "active_project_tracker",
+  "state_project_watch",
+  "regulatory_watch",
+]);
 
 async function json<T>(path: string): Promise<{ ok: boolean; status: number; body: T | null }> {
   try {
@@ -64,8 +72,17 @@ export async function GET() {
   const unhealthy = cadenceItems.filter((item) => item.health_state !== "healthy");
   const missed = cadenceItems.filter((item) => item.missed_expected_check);
   const unstable = cadenceItems.filter((item) => item.stability_state === "unstable");
+  const blockingUnstable = unstable.filter((item) => RELEASE_CRITICAL_FRESHNESS_CLASSES.has(item.freshness_class));
+  const referenceWarnings = unstable.filter((item) => !RELEASE_CRITICAL_FRESHNESS_CLASSES.has(item.freshness_class));
 
-  const ok = health.ok && cadence.ok && lifecycle.ok && cadenceItems.length > 0 && missed.length === 0 && unstable.length === 0;
+  const ok = health.ok
+    && cadence.ok
+    && lifecycle.ok
+    && cadenceItems.length === 23
+    && unhealthy.length === 0
+    && missed.length === 0
+    && blockingUnstable.length === 0
+    && policyProblems.length === 0;
 
   return NextResponse.json({
     ok,
@@ -75,7 +92,8 @@ export async function GET() {
       source_count: cadenceItems.length,
       unhealthy_source_keys: unhealthy.map((item) => item.source_key),
       missed_source_keys: missed.map((item) => item.source_key),
-      unstable_source_keys: unstable.map((item) => item.source_key),
+      blocking_unstable_source_keys: blockingUnstable.map((item) => item.source_key),
+      reference_warning_source_keys: referenceWarnings.map((item) => item.source_key),
       policy_problem_source_keys: policyProblems.map((item) => item.source_key),
       items: cadenceItems.map((item) => ({
         source_key: item.source_key,
@@ -106,6 +124,7 @@ export async function GET() {
     quality: {
       status: quality.status,
       metadata: quality.body?.metadata ?? null,
+      duplicate_name_groups: (quality.body?.duplicate_name_groups ?? []).slice(0, 20),
       high_confidence_unresolved_candidates: (quality.body?.high_confidence_unresolved_candidates ?? []).slice(0, 20),
       conflicting_current_assertions: (quality.body?.conflicting_current_assertions ?? []).slice(0, 20),
       manual_qa_sample: (quality.body?.manual_qa_sample ?? []).slice(0, 20),
