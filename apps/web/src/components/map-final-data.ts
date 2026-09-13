@@ -2,7 +2,7 @@ import type { Feature, Point } from "geojson";
 import type { Map } from "maplibre-gl";
 import { classifyFeature, featureProject, isLocationUncertain, type CategoryTruth, type LifecycleTruth, type LocationTruth, type MapProject, type ProjectCollection, type ViewportBounds } from "./map-final-model";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = "/api/backend";
 
 export async function loadViewportTruth(map: Map, window: string, signal: AbortSignal) {
   const bounds = map.getBounds();
