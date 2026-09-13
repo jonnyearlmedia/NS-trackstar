@@ -8,6 +8,13 @@ import { CategoryIcon, ChevronIcon, ShareIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
+function clippedDescription(value: unknown) {
+  if (typeof value !== "string") return null;
+  const clean = value.trim();
+  if (!clean) return null;
+  return clean.length > 320 ? `${clean.slice(0, 317).trimEnd()}…` : clean;
+}
+
 export function ProjectSheet({ selected, detail, events, state, expanded, onExpanded, onClose, onShare, shareCopied }: {
   selected: MapProject;
   detail: ProjectDetail | null;
@@ -20,7 +27,8 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
   shareCopied: boolean;
 }) {
   const latest = events.find((event) => event.event_type !== "project_discovered") ?? null;
-  const summary = projectSummary(detail, selected);
+  const officialDescription = detail?.assertions.find((assertion) => assertion.field === "description")?.value;
+  const summary = detail?.summary?.trim() || clippedDescription(officialDescription) || projectSummary(detail, selected);
   const approximate = locationUncertain(detail, selected);
   const facts = useMemo(() => {
     if (!detail) return [];
@@ -37,7 +45,7 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
   return <article className={`${styles.projectCard} ${expanded ? styles.projectCardExpanded : ""}`} aria-label={selected.name}>
     <div className={styles.projectCardHandle}><span /></div>
     <div className={styles.projectTopLine}>
-      <button className={styles.breadcrumb} onClick={backOneLayer} type="button">‹ {expanded ? "Project" : categoryLabel(selected.consumerCategory)}</button>
+      <button className={styles.breadcrumb} onClick={backOneLayer} type="button">‹ {expanded ? "Project" : "Map"}</button>
       <div className={styles.projectActions}><button aria-label="Share project" onClick={onShare} type="button"><ShareIcon /></button><button aria-label={expanded ? "Collapse project details" : "Close project"} onClick={backOneLayer} type="button">×</button></div>
     </div>
     <div className={styles.projectScroll}>
@@ -53,7 +61,7 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
       {state === "loading" ? <p className={styles.projectLead}>Loading the official project details…</p> : null}
       {state === "error" ? <p className={styles.projectLead}>Trackstar could not load this project’s details right now.</p> : null}
       {state === "idle" ? <section className="projectOverview"><p className={extra.sectionLabel}>Overview</p><p className={styles.projectLead}>{summary}</p></section> : null}
-      {latest ? <div className={styles.latestBlock}><small>LATEST UPDATE</small><strong>{eventHeadline(latest)}</strong><span>{eventDate(latest.occurred_at ?? latest.observed_at)}</span></div> : null}
+      {latest ? <div className={styles.latestBlock}><small>RECENT OFFICIAL ACTIVITY</small><strong>{eventHeadline(latest)}</strong><span>{eventDate(latest.occurred_at ?? latest.observed_at)}</span></div> : null}
       {!detail?.geometry && state === "idle" ? <p className={styles.locationNotice}><strong>Location not mapped yet.</strong> Trackstar has official records for this project but not enough reliable location information to place it precisely.</p> : approximate ? <p className={styles.locationNotice}>The map shows the best defensible project area from public records, not an exact footprint.</p> : null}
       <ProjectFreshnessStatus projectId={selected.id} expanded={expanded} />
       {shareCopied ? <p className={styles.copyNotice}>Link copied</p> : null}
