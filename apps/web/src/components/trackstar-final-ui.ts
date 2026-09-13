@@ -1,5 +1,6 @@
 import type { Geometry } from "geojson";
 import type { ConsumerCategory, LifecycleFilter, LifecycleStage, MapProject, MapViewportState, ViewportBounds } from "./map-final-model";
+import { isInsideServiceArea } from "./service-area";
 
 export type AppView = "explore" | "updates";
 export type ExploreMode = "orientation" | "free";
@@ -147,8 +148,7 @@ export function areaLabel(viewport: MapViewportState | null) {
   return best && best.distance < 0.22 ? best.name : "This area";
 }
 export function isViewportOutside(viewport: MapViewportState | null) {
-  if (!viewport) return false;
-  return viewport.center.lng < -122.72 || viewport.center.lng > -121.54 || viewport.center.lat < 37.95 || viewport.center.lat > 38.88;
+  return viewport ? !isInsideServiceArea(viewport.center) : false;
 }
 export function routeProjectId() {
   if (typeof window === "undefined") return null;
