@@ -1,0 +1,35 @@
+/* State-specific fixes that must beat the generic release shell. */
+
+/* Briefing intentionally keeps the editorial moment even though it reuses the
+   project-card container. */
+.briefingCard.briefingCard {
+  padding-top: 0 !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 239, 250, .86), transparent 38%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%) !important;
+}
+
+/* Category meaning survives settings and overlap/chooser states too. */
+.filterChoiceIcon[data-category="development"],
+.overlapCategoryIcon[data-category="development"] { color: #28745c !important; background: #eaf5f0 !important; }
+.filterChoiceIcon[data-category="roads"],
+.overlapCategoryIcon[data-category="roads"] { color: #bc6714 !important; background: #fff3e5 !important; }
+.filterChoiceIcon[data-category="utilities"],
+.overlapCategoryIcon[data-category="utilities"] { color: #197a8f !important; background: #e8f6f8 !important; }
+.filterChoiceIcon[data-category="places"],
+.overlapCategoryIcon[data-category="places"] { color: #5364c5 !important; background: #eef0ff !important; }
+
+/* Modal backdrop stays restrained rather than returning to the old black-glass
+   visual language. */
+[class*="scrim"] {
+  background: rgba(31, 48, 57, .24) !important;
+  backdrop-filter: blur(8px) saturate(.9) !important;
+}
+
+@media (max-width: 719px) {
+  .briefingCard.briefingCard {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
