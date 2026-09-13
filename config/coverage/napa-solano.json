@@ -160,7 +160,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: cityofnapa."
+          }
         },
         "specialized_regulatory": {
           "evidence": [
@@ -270,7 +273,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: cityofamericancanyon."
+          }
         },
         "specialized_regulatory": {
           "evidence": [
@@ -694,7 +700,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: pending transition, announced on the county's own procurement page."
+          }
         },
         "specialized_regulatory": {
           "evidence": [
@@ -917,7 +926,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: beniciaca."
+          }
         },
         "specialized_regulatory": {
           "evidence": [
@@ -1122,7 +1134,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: suisun."
+          }
         },
         "specialized_regulatory": {
           "evidence": [
@@ -1517,7 +1532,10 @@
           "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
         },
         "procurement": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: solanocounty."
+          }
         },
         "specialized_regulatory": {
           "evidence": [

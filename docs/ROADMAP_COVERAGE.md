@@ -54,8 +54,8 @@ Solano County (uninc)   OK     OK     OK    OK    OK    OK   OK    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **63 strong, 44 partial, 6 blocked,
-27 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **63 strong, 44 partial, 12 blocked,
+21 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -103,15 +103,27 @@ Verified reachable and unbuilt, so no excuse exists:
   When a single-page app appears to have no API, read the config it ships before
   concluding it cannot be read.
 
-  American Canyon and Suisun City remain blocked on OpenGov Procurement, and that
-  one was retested from an ordinary residential network on the same day ABC was
-  reclassified: it does not move. `cf-mitigated: challenge` comes back for a
-  self-identifying client and a browser user agent alike, so this challenge is a
-  property of the site rather than of our egress, and it is settled rather than
-  something to retry from yet another network. Calistoga and Yountville publish bids
-  as prose on their own pages, reachable but carrying no per-bid structure. Ten
-  remain unexamined, and the Vallejo result says to check each one for a vendor
-  portal before assuming a city publishes nothing structured.
+  The remaining thirteen were then swept, and the answer is not thirteen problems.
+  **Six of the fourteen are on OpenGov Procurement**: Napa (`cityofnapa`), Solano
+  County (`solanocounty`), American Canyon (`cityofamericancanyon`), Suisun City
+  (`suisun`) and Benicia (`beniciaca`) are live tenants, and Napa County's own
+  procurement page announces its transition to OpenGov as in progress. So this
+  category turns on one vendor's bot policy rather than on fourteen separate
+  investigations, which is worth knowing before anyone spends another week on it.
+
+  That block was retested from an ordinary residential network on the same day ABC
+  was reclassified, and it does not move: `cf-mitigated: challenge` for a
+  self-identifying client and a browser user agent alike. It is a property of the
+  site. It is also, deliberately, not defeated. The shape looked encouragingly like
+  PlanetBids - every non-`/portal` path returns the same application shell, which is
+  the fall-through that hid PlanetBids' real API host - so the shell's own bundles
+  were read for an API base. There is none in them: the app builds its routes at
+  runtime from chunks it loads by computed name, and the only path that would name
+  them is the challenged one.
+
+  Calistoga and Yountville publish bids on their own pages, which render client-side
+  and carry no per-bid structure in the delivered HTML. St. Helena, Fairfield,
+  Vacaville, Dixon and Rio Vista remain unexamined.
 
 Blocked, with the specific reason:
 
