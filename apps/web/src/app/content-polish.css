@@ -49,7 +49,7 @@
   min-width: 0;
 }
 .contentResultCopy small {
-  color: #72858e !important;
+  color: #657780 !important;
   font-size: 10px !important;
   font-weight: 760 !important;
   letter-spacing: .035em;
@@ -262,7 +262,7 @@
 }
 .projectOverview [class*="sectionLabel"] {
   margin: 0 0 6px !important;
-  color: #70818a !important;
+  color: #657780 !important;
   font-size: 10px !important;
   font-weight: 780 !important;
   letter-spacing: .08em !important;

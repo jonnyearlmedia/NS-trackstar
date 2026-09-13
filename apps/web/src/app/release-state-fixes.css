@@ -110,7 +110,8 @@ button:disabled {
     transform: none !important;
   }
 
-  .browseCategoryStrip button { min-height: 42px; }
+  /* 44px is the spec's minimum interactive height for ordinary mobile controls. */
+  .browseCategoryStrip button { min-height: 44px; }
 }
 
 @media (max-width: 390px) {

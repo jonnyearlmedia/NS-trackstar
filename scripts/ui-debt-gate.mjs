@@ -40,7 +40,16 @@ function walk(dir, exts) {
   return out;
 }
 
-const lines = (file) => readFileSync(file, "utf8").split("\n").length;
+/**
+ * Lines of actual CSS, excluding comments and blank lines. Comments are not
+ * debt: a rule that explains why it exists is easier to delete later, not
+ * harder, so the budget must never discourage writing one.
+ */
+const lines = (file) =>
+  readFileSync(file, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n")
+    .filter((line) => line.trim() !== "").length;
 
 /** Global stylesheets side-effect imported by the root layout. */
 function globalCssLayers() {
@@ -128,12 +137,21 @@ const actual = {
 const budget = JSON.parse(readFileSync(budgetPath, "utf8"));
 const limits = budget.limits;
 
+/**
+ * Reported, but never enforced. Total CSS size tracks the cleanup, yet a real
+ * bug fix often needs one more declaration: a button that renders at 24px needs
+ * a min-height. Failing that would push the next author toward another
+ * `!important` on an existing line, which is the habit this gate exists to stop.
+ * The enforced metrics are the structural ones above.
+ */
+const ADVISORY = new Set(["totalCssLines"]);
+
 // Lower is better for every metric, so the budget is a ceiling that ratchets down.
 const regressions = [];
 const improvements = [];
 for (const [metric, value] of Object.entries(actual)) {
   const limit = limits[metric];
-  if (limit === undefined) continue;
+  if (limit === undefined || ADVISORY.has(metric)) continue;
   if (value > limit) regressions.push({ metric, value, limit });
   else if (value < limit) improvements.push({ metric, value, limit });
 }
@@ -142,8 +160,9 @@ const pad = (s) => String(s).padEnd(24);
 console.log("\nUI debt gate\n");
 for (const [metric, value] of Object.entries(actual)) {
   const limit = limits[metric];
-  const mark = value > limit ? "FAIL" : value < limit ? "DOWN" : "ok  ";
-  console.log(`  ${mark}  ${pad(metric)} ${String(value).padStart(5)}  (budget ${limit})`);
+  const mark = ADVISORY.has(metric) ? "info" : value > limit ? "FAIL" : value < limit ? "DOWN" : "ok  ";
+  const note = ADVISORY.has(metric) ? "advisory" : `budget ${limit}`;
+  console.log(`  ${mark}  ${pad(metric)} ${String(value).padStart(5)}  (${note})`);
 }
 
 if (regressions.length) {

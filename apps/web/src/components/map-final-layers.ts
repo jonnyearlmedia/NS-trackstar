@@ -21,14 +21,30 @@ export const SOURCES = {
 
 export const PROJECT_LAYERS = ["final-fill", "final-fill-u", "final-line", "final-line-u", "final-point-pins", "final-point-hit"];
 
+type MarkerKind = "development" | "roads" | "utilities" | "places";
+
+/**
+ * The canonical category palette from docs/VISUAL_SYSTEM_V1.md. Every surface
+ * that colours a category reads from here, because the same category must look
+ * identical on the marker, the browse control and the project card. The
+ * regional dots previously carried their own lighter variants of roads,
+ * utilities and places, so a project visibly changed colour as you zoomed in.
+ */
+const markerColors: Record<MarkerKind, string> = {
+  development: "#2f7f65",
+  roads: "#d97616",
+  utilities: "#18839b",
+  places: "#5567cf",
+};
+
 const categoryColor = [
   "match",
   ["get", "consumer_category"],
-  "development", "#2f7f65",
-  "roads", "#e58a2b",
-  "utilities", "#238ca4",
-  "places", "#5d70d8",
-  "#2f7f65",
+  "development", markerColors.development,
+  "roads", markerColors.roads,
+  "utilities", markerColors.utilities,
+  "places", markerColors.places,
+  markerColors.development,
 ] as ExpressionSpecification;
 
 const categoryMarker = [
@@ -41,14 +57,17 @@ const categoryMarker = [
   "trackstar-marker-development",
 ] as ExpressionSpecification;
 
-type MarkerKind = "development" | "roads" | "utilities" | "places";
 
-const markerColors: Record<MarkerKind, string> = {
-  development: "#2f7f65",
-  roads: "#d97616",
-  utilities: "#18839b",
-  places: "#5567cf",
-};
+// Geometry of the pointer silhouette drawn by pinPath, in the marker image's
+// own pixels. pinPath draws the rounded bubble between y=3 and y=33 and the
+// tail tip at y=43, and clusterImage translates the whole path down by 2.
+const MARKER_IMAGE_HEIGHT = 50;
+const CLUSTER_BUBBLE_TOP = 3 + 2;
+const CLUSTER_BUBBLE_BOTTOM = 33 + 2;
+/** Distance from the icon's bottom edge up to the centre of the bubble. */
+const CLUSTER_BUBBLE_CENTRE_FROM_BASE =
+  MARKER_IMAGE_HEIGHT - (CLUSTER_BUBBLE_TOP + CLUSTER_BUBBLE_BOTTOM) / 2;
+const CLUSTER_TEXT_SIZE = 11.5;
 
 function pinPath(ctx: CanvasRenderingContext2D) {
   ctx.beginPath();
@@ -245,6 +264,14 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
 
   // Clusters use the same pointer silhouette as projects so they feel like one
   // map language instead of MapLibre default bubbles dropped into Trackstar.
+  //
+  // The count has to sit in the middle of the bubble, not on its lower edge.
+  // With "icon-anchor": "bottom" the icon's baseline is the map point, so the
+  // bubble centre is CLUSTER_BUBBLE_CENTRE_FROM_BASE pixels above it, and
+  // "text-offset" is measured in ems of "text-size". The offset must also track
+  // "icon-size": a fixed em value drifts further off-centre as clusters grow.
+  const clusterTextEm = (iconSize: number) =>
+    -((CLUSTER_BUBBLE_CENTRE_FROM_BASE * iconSize) / CLUSTER_TEXT_SIZE);
   map.addLayer({
     id: "final-clusters",
     type: "symbol",
@@ -256,9 +283,14 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
       "text-field": ["get", "point_count_abbreviated"],
-      "text-size": 11.5,
+      "text-size": CLUSTER_TEXT_SIZE,
       "text-font": ["Noto Sans Regular"],
-      "text-offset": [0, -1.52],
+      "text-offset": ["step", ["get", "point_count"],
+        ["literal", [0, clusterTextEm(0.92)]],
+        10, ["literal", [0, clusterTextEm(1)]],
+        50, ["literal", [0, clusterTextEm(1.08)]],
+        200, ["literal", [0, clusterTextEm(1.16)]],
+      ],
       "text-anchor": "center",
       "text-allow-overlap": true,
     },

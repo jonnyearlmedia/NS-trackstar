@@ -61,8 +61,11 @@
   background: var(--ts-surface) !important;
   box-shadow: 0 20px 58px rgba(27, 54, 68, .18) !important;
 }
+/* Last layer to declare this wins, so this is the value that actually applies.
+   48dvh is 298px on an iPhone while the peek's content runs to 535px, which
+   sliced the body copy mid-glyph and cut off "Details & official sources". */
 [class*="projectCard"]:not([class*="projectCardExpanded"]) {
-  max-height: min(48dvh, 470px) !important;
+  max-height: min(64dvh, 520px) !important;
 }
 [class*="projectCardExpanded"] {
   max-height: min(82dvh, 780px) !important;
