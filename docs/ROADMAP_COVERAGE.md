@@ -154,13 +154,22 @@ Blocked, with the specific reason:
   the whole time: the POST was missing the `Referer` and `Origin` headers that any
   same-origin form post carries. When a source says zero rows, read the page it
   actually returned before writing down why.
-- **Dixon permits (Tyler Civic Access)** — no longer waiting on a capture; the
-  capture was done and answered the question. Dixon has anonymous public record
-  search switched off. The portal's own route guard answers `isEnable: false` for
-  `/public-records`, `/search` and `/records`, and the legacy EnerGov search route
-  is retired for this tenant, which is why six guessed payloads all returned 500.
-  There was never a payload that would have worked. Re-checking costs one request
-  to the route guard if the city turns it back on.
+- **Dixon permits were never blocked, and the entry that said so was mine.** The
+  route guard really does answer `isEnable: false` for the new Civic Access UI, and
+  that much still stands. The mistake was concluding from it that the tenant
+  publishes nothing, which turned the legacy API's HTTP 500 into confirmation
+  instead of a clue. That endpoint needs four headers a browser sends and a
+  hand-built request does not — `tenantId`, `tenantName`, `Tyler-TenantUrl`,
+  `Tyler-Tenant-Culture` — and without all four it answers 500 to every payload,
+  which is indistinguishable from a dead route. With them, Dixon reports 92,405
+  records including 17,192 permits. Suisun City runs the same product and reports
+  12,637. Both cities had no permit source at all.
+
+  Twice in one day a conclusion of "this agency publishes nothing" came from
+  checking one of its surfaces: Vacaville's capital programme was the first. The
+  rule that follows is not "check harder", it is narrower and more useful — a
+  finding about one surface is a finding about that surface, and the sentence
+  written down has to say which one.
 - **American Canyon and Benicia OpenGov** — storefronts answer 200, record
   retrieval never verified anonymously.
 - **Business openings** is no longer on this list. It was never an adapter
