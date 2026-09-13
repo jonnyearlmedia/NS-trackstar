@@ -7,6 +7,7 @@ const ALLOWED_PREFIXES = [
   "projects/",
   "search/projects/classified",
   "area/changes/public",
+  "area/briefing",
 ];
 
 export async function GET(
