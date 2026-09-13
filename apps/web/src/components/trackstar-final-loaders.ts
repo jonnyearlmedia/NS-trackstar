@@ -1,7 +1,7 @@
 import type { MapViewportState, TimeWindow } from "./map-final-model";
 import type { AreaChangesResponse, ProjectClassification, ProjectDetail, ProjectEvent, SearchResult } from "./trackstar-final-ui";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE = "/api/backend";
 
 export async function loadProjectBundle(id: string, signal: AbortSignal) {
   const [detailResponse, eventsResponse, classificationResponse] = await Promise.all([
