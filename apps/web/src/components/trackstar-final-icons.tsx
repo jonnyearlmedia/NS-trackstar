@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import type { ConsumerCategory } from "./map-final-model";
 
-function IconFrame({ children }: { children: React.ReactNode }) {
+function IconFrame({ children }: { children: ReactNode }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24">{children}</svg>;
 }
 
@@ -30,6 +31,12 @@ export function NextIcon() {
 }
 export function ArrowRightIcon() {
   return <IconFrame><path d="M5 12h14m-5-5 5 5-5 5" /></IconFrame>;
+}
+export function MapIcon() {
+  return <IconFrame><path d="m3.5 6.5 5-2.5 7 2.5 5-2.5v13.5l-5 2.5-7-2.5-5 2.5V6.5Z" /><path d="M8.5 4v13.5M15.5 6.5V20" /></IconFrame>;
+}
+export function UpdatesIcon() {
+  return <IconFrame><path d="M6 7h12M6 12h8M6 17h10" /><circle cx="18" cy="12" r="1" /></IconFrame>;
 }
 
 export function CategoryIcon({ category }: { category: ConsumerCategory }) {
