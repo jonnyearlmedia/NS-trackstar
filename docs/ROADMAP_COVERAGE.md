@@ -45,7 +45,7 @@ Benicia                 OK     XX     OK    OK    OK    OK   XX    --
 Fairfield               ~~     --     XX    OK    OK    OK   XX    --
 Suisun City             OK     --     OK    --    OK    OK   XX    --
 Vacaville               --     --     OK    --    OK    OK   XX    --
-Dixon                   --     XX     OK    --    OK    OK   XX    --
+Dixon                   --     XX     OK    OK    OK    OK   XX    --
 Rio Vista               --     --     OK    --    OK    OK   XX    --
 Solano County (uninc)   --     XX     OK    OK    OK    OK   XX    --
 ```
@@ -54,8 +54,8 @@ Solano County (uninc)   --     XX     OK    OK    OK    OK   XX    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **43 strong, 44 partial, 19 blocked,
-34 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **44 strong, 44 partial, 19 blocked,
+33 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -83,13 +83,21 @@ Verified reachable and unbuilt, so no excuse exists:
   tenant hostname sat in an iframe `src`, so a link sweep that only reads `href`
   reports "no meeting platform" about a city that has had one for years.
 
-- **Eight jurisdictions have no CIP source.** Fairfield and unincorporated Napa
+- **Seven jurisdictions have no CIP source.** Fairfield and unincorporated Napa
   County were closed by reading each agency's own ArcGIS organisation rather than
   its website: Fairfield publishes 87 capital projects with budget, phase, funding
   and a written status outlook, and the county publishes 24 road and facility
   construction projects. Both were reachable while both agencies' websites were
   not. Check the agency's GIS org before calling a CIP unreachable.
-- **Fourteen have no procurement source.** Untouched entirely.
+- **Fourteen have no procurement source.** No longer untouched, but no longer a
+  simple gap either. Three platforms were identified and two of them are blocked in
+  ways worth recording rather than retrying: American Canyon and Suisun City both
+  run OpenGov Procurement, whose portal answers `cf-mitigated: challenge` from
+  Cloudflare, and Vallejo runs PlanetBids portal 42510, whose single-page app serves
+  its own index page in place of every asset and API path from this network, so its
+  real request contract cannot be read here. Calistoga and Yountville publish bids
+  as prose on their own pages, which is reachable but carries no per-bid structure.
+  Ten remain unexamined.
 
 Blocked, with the specific reason:
 

@@ -51,6 +51,8 @@ def parse_index(
     base_url: str,
     content_selector: str,
     item_selector: str,
+    heading_tags: tuple[str, ...] = _HEADINGS,
+    same_host_only: bool = True,
 ) -> list[dict[str, str]]:
     """Return each linked project with the section heading it appears under.
 
@@ -67,8 +69,8 @@ def parse_index(
     wanted = set(root.select(item_selector))
     entries: dict[str, dict[str, str]] = {}
     group = ""
-    for node in root.find_all(_HEADINGS + ("a",)):
-        if node.name in _HEADINGS:
+    for node in root.find_all(tuple(heading_tags) + ("a",)):
+        if node.name in heading_tags:
             # A heading that wraps a project link is that project's title, not the
             # name of a group. Reading it as a group files every project under the
             # previous project's name.
@@ -84,7 +86,7 @@ def parse_index(
         if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
             continue
         url = urljoin(base_url, href)
-        if urlsplit(url).netloc != urlsplit(base_url).netloc:
+        if same_host_only and urlsplit(url).netloc != urlsplit(base_url).netloc:
             continue
         title = _clean(node.get_text(" ", strip=True))
         if not title:
@@ -179,6 +181,15 @@ class LinkedProjectPagesAdapter(CollectorAdapter):
         self.section_tags = tuple(
             str(tag) for tag in (config.options.get("detail_section_tags") or ["h2", "h3", "h4"])
         )
+        # A city that writes its group labels as bold runs rather than headings is
+        # still grouping its projects, so which tags count as a heading is config.
+        self.heading_tags = tuple(
+            str(tag) for tag in (config.options.get("index_heading_tags") or list(_HEADINGS))
+        )
+        # Off-site links are dropped by default, because most of them are navigation.
+        # A city that points one of its own project entries at a state programme page
+        # is different, and that list is worth keeping whole.
+        self.same_host_only = bool(config.options.get("same_host_only", True))
         self.id_query_param = config.options.get("id_query_param")
         self.group_stages = {
             str(key).casefold(): str(value)
@@ -232,6 +243,8 @@ class LinkedProjectPagesAdapter(CollectorAdapter):
                 base_url=self.index_url,
                 content_selector=self.content_selector,
                 item_selector=self.item_selector,
+                heading_tags=self.heading_tags,
+                same_host_only=self.same_host_only,
             )
             for entry in entries[: self.max_projects]:
                 record = dict(entry)
@@ -300,6 +313,8 @@ class LinkedProjectPagesAdapter(CollectorAdapter):
                 base_url=self.index_url,
                 content_selector=self.content_selector,
                 item_selector=self.item_selector,
+                heading_tags=self.heading_tags,
+                same_host_only=self.same_host_only,
             )
         except (httpx.HTTPError, SourceBlockedError):
             return False
@@ -316,7 +331,10 @@ class LinkedProjectPagesAdapter(CollectorAdapter):
         labels = sorted(
             {key for entry in collected for key in (entry["detail"].get("sections") or {})}
         )
-        fingerprint = hashlib.sha256("|".join(groups + labels).encode()).hexdigest() if labels else None
+        # The group names are part of the shape even when no page carries sections:
+        # a city that renames "Active Projects" has changed what the list means.
+        shape = groups + labels
+        fingerprint = hashlib.sha256("|".join(shape).encode()).hexdigest() if shape else None
         described = sum(1 for record in records if record.normalized_payload.get("description"))
         return CollectorResult(
             records=records,

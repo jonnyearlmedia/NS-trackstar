@@ -171,3 +171,74 @@ async def test_a_blocked_site_is_reported_as_blocked_not_as_an_empty_run():
     with pytest.raises(SourceBlockedError):
         await build(status=403).collect()
     assert await build(status=403).canary() is False
+
+
+# A list written as bold group labels over plain <ul> items, with one entry the
+# city deliberately points at a state programme page.
+BOLD_INDEX = """<html><body><div class="main">
+  <p><strong>Active Projects</strong></p>
+  <ul>
+    <li><a href="/media/wwtf.pdf">Waste Water Treatment Facility Expansion</a></li>
+    <li><a href="https://dot.ca.gov/programs/hsip">HSIP Cycle 11 Pedestrian Improvements</a></li>
+  </ul>
+  <p><strong>Recently Completed</strong></p>
+  <ul><li><a href="/media/pardi.pdf">Pardi Plaza</a></li></ul>
+</div></body></html>"""
+
+
+def test_bold_group_labels_and_an_offsite_entry_are_both_kept():
+    entries = parse_index(
+        BOLD_INDEX,
+        base_url="https://city.example.gov/capitalprojects",
+        content_selector="div.main",
+        item_selector="ul li a",
+        heading_tags=("strong", "b"),
+        same_host_only=False,
+    )
+
+    assert [e["title"] for e in entries] == [
+        "Waste Water Treatment Facility Expansion",
+        "HSIP Cycle 11 Pedestrian Improvements",
+        "Pardi Plaza",
+    ]
+    assert [e["group"] for e in entries] == [
+        "Active Projects",
+        "Active Projects",
+        "Recently Completed",
+    ]
+
+
+def test_off_site_links_are_dropped_when_the_source_says_so():
+    entries = parse_index(
+        BOLD_INDEX,
+        base_url="https://city.example.gov/capitalprojects",
+        content_selector="div.main",
+        item_selector="ul li a",
+        heading_tags=("strong",),
+        same_host_only=True,
+    )
+
+    assert [e["title"] for e in entries] == [
+        "Waste Water Treatment Facility Expansion",
+        "Pardi Plaza",
+    ]
+
+
+def test_renaming_a_group_reads_as_a_shape_change_even_with_no_detail_sections():
+    """A list of PDF links has no sections; its group names are the whole shape."""
+
+    def fingerprint_of(label: str) -> str:
+        import asyncio
+
+        adapter = build(
+            index_body=BOLD_INDEX.replace("Active Projects", label),
+            item_selector="ul li a",
+            index_heading_tags=["strong"],
+            same_host_only=False,
+            fetch_details=False,
+        )
+        return asyncio.run(adapter.collect()).schema_fingerprint
+
+    before = fingerprint_of("Active Projects")
+    after = fingerprint_of("Projects Under Way")
+    assert before and after and before != after

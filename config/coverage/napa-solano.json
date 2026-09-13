@@ -1183,7 +1183,13 @@
           "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "dixon.capital-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city lists each project by name and links to its own PDF rather than publishing a description, so Trackstar carries what Dixon is building and where the city's document is, not a written scope."
         },
         "gis_spatial": {
           "evidence": [

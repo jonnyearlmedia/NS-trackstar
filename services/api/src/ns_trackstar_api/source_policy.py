@@ -93,6 +93,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "project_specific_record", "rare", 1440, 10080,
         "Project-specific official record; useful as evidence but not a fast-changing feed.",
     ),
+    "dixon.capital-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's engineering list of active and recently completed capital "
+        "projects; staff edit it on business days as a project moves.",
+    ),
     "dixon.granicus": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed where a newly posted agenda is the earliest public "
