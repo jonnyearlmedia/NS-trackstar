@@ -18,20 +18,25 @@ type CadenceItem = {
   latest_run?: { outcome?: string | null; records_changed?: number };
 };
 
-type CadencePayload = {
-  items?: CadenceItem[];
-  metadata?: Record<string, unknown>;
-};
-
+type CadencePayload = { items?: CadenceItem[]; metadata?: Record<string, unknown> };
 type LifecyclePayload = {
   stage_counts?: Record<string, number>;
   unknown_raw_statuses?: Array<{ dimension: string; value: string; project_count: number }>;
-  metadata?: Record<string, unknown>;
 };
-
 type ChurnPayload = {
   latest_run?: { records_returned?: number; records_changed?: number } | null;
   field_changes?: Array<{ field: string; changed_records: number }>;
+};
+type QualityPayload = {
+  metadata?: {
+    duplicate_name_group_count?: number;
+    high_confidence_unresolved_count?: number;
+    conflicting_assertion_count?: number;
+    manual_sample_count?: number;
+  };
+  high_confidence_unresolved_candidates?: unknown[];
+  conflicting_current_assertions?: unknown[];
+  manual_qa_sample?: unknown[];
 };
 
 async function json<T>(path: string): Promise<{ ok: boolean; status: number; body: T | null }> {
@@ -44,11 +49,12 @@ async function json<T>(path: string): Promise<{ ok: boolean; status: number; bod
 }
 
 export async function GET() {
-  const [health, cadence, lifecycle, civicClerk] = await Promise.all([
+  const [health, cadence, lifecycle, civicClerk, quality] = await Promise.all([
     fetch(`${API_BASE}/health`, { cache: "no-store" }).then((response) => ({ ok: response.ok, status: response.status })).catch(() => ({ ok: false, status: 0 })),
     json<CadencePayload>("/admin/sources/cadence?days=7"),
     json<LifecyclePayload>("/admin/lifecycle/audit?sample_limit=5"),
     json<ChurnPayload>("/admin/sources/vallejo.civicclerk/churn-fields"),
+    json<QualityPayload>("/admin/quality/audit"),
   ]);
 
   const cadenceItems = cadence.body?.items ?? [];
@@ -96,6 +102,13 @@ export async function GET() {
       churn_status: civicClerk.status,
       latest_run: civicClerk.body?.latest_run ?? null,
       field_changes: (civicClerk.body?.field_changes ?? []).slice(0, 20),
+    },
+    quality: {
+      status: quality.status,
+      metadata: quality.body?.metadata ?? null,
+      high_confidence_unresolved_candidates: (quality.body?.high_confidence_unresolved_candidates ?? []).slice(0, 20),
+      conflicting_current_assertions: (quality.body?.conflicting_current_assertions ?? []).slice(0, 20),
+      manual_qa_sample: (quality.body?.manual_qa_sample ?? []).slice(0, 20),
     },
     checked_at: new Date().toISOString(),
   }, { status: ok ? 200 : 502 });
