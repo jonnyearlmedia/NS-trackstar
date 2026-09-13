@@ -20,5 +20,10 @@ The active app must satisfy these locked behaviors before merge/launch approval:
 - Play Briefing remains secondary, local, explicit, and restores the pre-briefing viewport on exit.
 - Navigation remains Explore / Updates with Search available from the map.
 - Desktop preserves the same map-first information architecture rather than becoming a dashboard.
+- Mobile browser scaling is locked so Trackstar behaves like an app shell rather than a pinch-zoomable webpage.
+- Focused mobile search controls remain at iOS-safe input sizing so Safari does not auto-zoom the interface.
+- Phone UI density preserves map space instead of scaling desktop-sized controls across the screen.
+- Napa + Solano coverage uses the detailed county-union outline with a feathered edge rather than the earlier coarse polygon shadow.
+- A regional viewport is labeled Napa + Solano; a single city label appears only after the viewport is genuinely local.
 
 Anything outside this list is post-launch unless it blocks these behaviors.
