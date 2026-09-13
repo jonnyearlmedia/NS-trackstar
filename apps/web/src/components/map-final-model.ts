@@ -75,12 +75,27 @@ export function changedRecently(value: unknown) {
   const timestamp = new Date(value).getTime();
   return Number.isFinite(timestamp) && Date.now() - timestamp <= 7 * 24 * 60 * 60 * 1000;
 }
+
+function geometryForFeature(feature: Feature): Geometry | null {
+  const raw = feature.properties?.original_geometry;
+  if (typeof raw === "string" && raw) {
+    try {
+      const parsed = JSON.parse(raw) as Geometry;
+      if (parsed && typeof parsed === "object" && typeof parsed.type === "string") return parsed;
+    } catch {
+      // A malformed marker payload must never block selecting the project.
+    }
+  }
+  return feature.geometry ?? null;
+}
+
 export function featureProject(feature: Feature): MapProject | null {
-  if (!feature.geometry || !feature.properties?.id || !feature.properties?.name) return null;
+  const geometry = geometryForFeature(feature);
+  if (!geometry || !feature.properties?.id || !feature.properties?.name) return null;
   return {
     id: String(feature.properties.id), name: String(feature.properties.name), projectType: String(feature.properties.project_type ?? "project"), consumerCategory: classifyFeature(feature),
     deliveryStage: feature.properties.delivery_stage ? String(feature.properties.delivery_stage) : null, lifecycleStage: (feature.properties.lifecycle_stage as LifecycleStage | undefined) ?? "unknown",
-    lifecycleEvidence: { dimension: feature.properties.lifecycle_dimension ? String(feature.properties.lifecycle_dimension) : null, value: feature.properties.lifecycle_value ? String(feature.properties.lifecycle_value) : null }, geometry: feature.geometry,
+    lifecycleEvidence: { dimension: feature.properties.lifecycle_dimension ? String(feature.properties.lifecycle_dimension) : null, value: feature.properties.lifecycle_value ? String(feature.properties.lifecycle_value) : null }, geometry,
     priority: Number(feature.properties.display_priority ?? 0), sourceCount: Number(feature.properties.source_count ?? 0), lastActivityAt: feature.properties.last_activity_at ? String(feature.properties.last_activity_at) : null,
     locationAccuracy: feature.properties.location_accuracy ? String(feature.properties.location_accuracy) : null, locationConfidence: feature.properties.geometry_confidence === null || feature.properties.geometry_confidence === undefined ? null : Number(feature.properties.geometry_confidence), locationUncertain: Boolean(feature.properties.location_uncertain),
   };
