@@ -24,6 +24,17 @@ class SourceFreshnessPolicy:
 
 
 SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
+    "american-canyon.granicus-archives": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Council and the boards; a newly posted agenda "
+        "is the earliest public signal that a project is about to be decided.",
+    ),
+    "american-canyon.granicus-events": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "The second panel of the city's own meetings page. It reaches further back for "
+        "Planning Commission and the commissions than the archive panel, whose 101-item "
+        "feed cap is taken up by Council.",
+    ),
     "american-canyon.construction-development-updates": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "Active municipal construction/development tracker; same-day stage/project edits are useful.",
@@ -91,6 +102,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "active_project_tracker", "within_day", 120, 240,
         "Municipal water capital-project tracker; useful changes are operationally same-day, not real-time.",
     ),
+    "napa-county.legistar": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "County Board of Supervisors and Zoning Administrator feed; this is where "
+        "unincorporated Napa County land-use decisions are noticed, so a newly posted "
+        "agenda is the earliest public signal.",
+    ),
     "napa-county.current-projects-explorer": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "County current-project explorer directly supports Trackstar's site/project identification job.",
@@ -143,6 +160,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "solano-county.parcels": SourceFreshnessPolicy(
         "parcel_reference", "rare", 1440, 10080,
         "Parcel geometry/reference data changes slowly and should not be polled like an activity feed.",
+    ),
+    "suisun-city.granicus": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Council, Planning Commission and the standing "
+        "committees; a newly posted agenda is the earliest public signal that a project "
+        "is about to be decided.",
     ),
     "suisun-city.development-calendar": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,

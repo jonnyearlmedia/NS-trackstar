@@ -189,7 +189,16 @@
           }
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "american-canyon.granicus-archives",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "american-canyon.granicus-events",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "cip_construction": {
           "evidence": [
@@ -543,7 +552,12 @@
           }
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "napa-county.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "cip_construction": {
           "evidence": []
@@ -936,7 +950,12 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "suisun-city.granicus",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "cip_construction": {
           "evidence": []

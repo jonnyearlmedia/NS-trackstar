@@ -1,0 +1,27 @@
+{
+  "key": "suisun-city.granicus",
+  "name": "City of Suisun City Granicus Meetings and Agendas",
+  "jurisdiction": "City of Suisun City",
+  "adapter": "granicus_rss",
+  "base_url": "https://suisuncityca.granicus.com",
+  "poll_minutes": 120,
+  "options": {
+    "base_url": "https://suisuncityca.granicus.com",
+    "view_id": "1",
+    "mode": "agendas",
+    "min_expected_items": 10,
+    "timeout_seconds": 30,
+    "project_mapping": {
+      "project_type": "government_meeting",
+      "authority_type": "government_record",
+      "name_fields": ["meeting_title"],
+      "description_field": "summary",
+      "assertions": {
+        "description": "summary",
+        "meeting_body": "meeting_body",
+        "meeting_date": "meeting_date",
+        "project_page": "agenda_url"
+      }
+    }
+  }
+}
