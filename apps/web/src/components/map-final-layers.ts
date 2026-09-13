@@ -76,7 +76,6 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
     paint: { "text-color": "#174a70" },
   });
 
-  // A soft white ring separates project markers from busy basemap detail.
   map.addLayer({
     id: "final-point-ring",
     type: "circle",
@@ -116,15 +115,15 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
     },
   });
 
-  // Invisible interaction halo. The marker stays visually restrained while the
-  // tappable/queryable area is much more forgiving on touch screens.
+  // Invisible interaction halo. Visible markers stay restrained while the touch
+  // target remains at least roughly 44px across on every practical zoom level.
   map.addLayer({
     id: "final-point-hit",
     type: "circle",
     source: SOURCES.points,
     filter: unclustered,
     paint: {
-      "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 14, 12, 17, 15, 20],
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 22, 12, 24, 15, 26],
       "circle-color": "#000000",
       "circle-opacity": 0.001,
     },
