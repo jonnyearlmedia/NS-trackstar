@@ -43,6 +43,26 @@ task list to the board page after each batch of status changes:
 Keep finished work in the mirror rather than dropping it, so the board shows
 what moved and not just what is left.
 
+## Every production source declares how often to check it
+
+A config in `config/sources/` is not finished until it has an entry in
+`services/api/src/ns_trackstar_api/source_policy.py` and the count in
+`services/api/tests/test_source_policy_contract.py` matches the number of files.
+The test asserts both, and it fails with `assert 53 == 49`, which reads like a
+stale counter and is usually not one: it is the count reaching the assertion
+before the missing-policy assertion below it can run. Bumping the number turns CI
+green while leaving collectors polling at a cadence nobody chose. Check which of
+the two it actually is before changing the number:
+
+```sh
+.venv/bin/python -m pytest services/api/tests services/ingest/tests -q
+```
+
+Run that before every push. It is one second and it is the whole contract.
+
+Promoting a config out of `config/smoke/` is the moment this bites, because that
+is when a source becomes production without anyone writing it fresh.
+
 ## Verify visually before calling UI work done
 
 This project shipped a completely broken first open under green CI, because the
