@@ -101,6 +101,13 @@ all of it on every run, so Vallejo's ME, EL and AP records would never have been
 discovered on any run at all. Each partition now gets an equal share and the
 order rotates daily.
 
+The post-fix run is the proof, and it looks like a regression until you read it:
+Vallejo returned **364** records rather than 500, with `candidate_budget_reached`
+false. Fewer records, more coverage. The old 500 were all drawn from the first
+few prefixes; the new 364 span all eleven partitions and include the ME, EL and
+AP records that no run would ever have reached. Anyone tracking record counts as
+a health metric should expect this drop and not treat it as a fault.
+
 Two eTRAKiT limitations remain and are not fixed. A record whose number falls
 outside the configured prefixes is not discovered. And because eTRAKiT returns
 results in ascending record-number order, each run samples the oldest records of
