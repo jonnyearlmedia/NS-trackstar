@@ -12,7 +12,7 @@ def test_every_production_source_has_a_freshness_policy_and_safe_cadence() -> No
         payload = json.loads(path.read_text())
         configs.append((path, payload))
 
-    assert len(configs) == 55
+    assert len(configs) == 58
     config_keys = {str(payload["key"]) for _, payload in configs}
     assert config_keys == set(SOURCE_FRESHNESS_POLICIES)
 

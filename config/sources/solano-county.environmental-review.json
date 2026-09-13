@@ -1,0 +1,25 @@
+{
+  "key": "solano-county.environmental-review",
+  "name": "Solano County Public Draft Environmental Reports",
+  "jurisdiction": "Solano County",
+  "adapter": "heading_project_list",
+  "base_url": "https://www.solanocounty.gov/government/resource-management/environmental-impact-reports-negative-declarations",
+  "poll_minutes": 240,
+  "options": {
+    "page_url": "https://www.solanocounty.gov/government/resource-management/environmental-impact-reports-negative-declarations",
+    "project_heading_tags": [
+      "h3"
+    ],
+    "section_heading_tags": [
+      "h2"
+    ],
+    "min_expected_projects": 4,
+    "canary_title_contains": "HD Ranch",
+    "section_heading_patterns": [
+      "available for review",
+      "previous public draft",
+      "public draft environmental reports",
+      "other related documents"
+    ]
+  }
+}

@@ -89,6 +89,18 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "state_project_watch", "within_day", 360, 720,
         "State transportation project updates are valuable same-day but are not minute-by-minute events.",
     ),
+    "dixon.environmental-review": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "Dixon's de-facto planning pipeline: the city posts each project's CEQA "
+        "documents, hearing dates and comment deadlines here, and a comment window "
+        "opening is the earliest public signal a resident can act on.",
+    ),
+    "solano-county.environmental-review": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The county's own statement of which cases are open for public comment, with "
+        "the deadline and the assigned planner. Accela says the case exists; this says "
+        "whether a resident can still say something about it.",
+    ),
     "fairfield.capital-improvement-projects": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "The city's own capital project tracker, carrying phase, budget and a written "
@@ -262,6 +274,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed carrying Town Council and the Zoning and Design Review "
         "Board, which is where Yountville land-use decisions are noticed.",
+    ),
+    "vacaville.capital-improvement-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's own capital programme, the same EasyCIP product Fairfield runs, "
+        "which engineers edit as phases move. Vacaville's website is unreachable to "
+        "automated clients, so this GIS layer is one of the few doors into that city.",
     ),
     "vallejo.civicclerk": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,

@@ -1177,10 +1177,13 @@
           "limitation": "The portal's calendar publishes the current year only. Its archive sits behind a separate paged endpoint that is not ingested, so Trackstar carries what Vacaville is deciding now, not what it decided in 2024."
         },
         "cip_construction": {
-          "evidence": [],
-          "blocker": {
-            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
-          }
+          "evidence": [
+            {
+              "source": "vacaville.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Found in the city's ArcGIS Online organisation, not on its own GIS server and not on its website, both of which were checked first and carry no project layer. Development and permits remain closed for this city; the capital programme does not."
         },
         "gis_spatial": {
           "evidence": [
@@ -1254,7 +1257,13 @@
       "kind": "city",
       "categories": {
         "current_development": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "dixon.environmental-review",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Dixon publishes no planning-case database. This is the city's CEQA review page, which is where a Dixon project becomes public: project name, clearinghouse number, location, written proposal and hearing documents. Entries run from 1994 to the present under a single 'under review' heading, so the section label is recorded as a hint and each project's real status is read from its own text."
         },
         "permits": {
           "evidence": [],
@@ -1448,9 +1457,14 @@
               "source": "solano-county.accela",
               "scope": "recurring_tracker",
               "role": "planning_cases"
+            },
+            {
+              "source": "solano-county.environmental-review",
+              "scope": "recurring_tracker",
+              "role": "ceqa_review_stage"
             }
           ],
-          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
+          "limitation": "Accela carries the case; this carries what Accela's result grid does not - which cases are open for public comment, the deadline, and the planner responsible by name and email. Small, eight entries, and it is the county's own curated statement of what is actively in review."
         },
         "permits": {
           "evidence": [

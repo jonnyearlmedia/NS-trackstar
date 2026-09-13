@@ -15,6 +15,7 @@ from ns_trackstar.adapters.escribe import EScribeAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.granicus_rss import GranicusRssAdapter
+from ns_trackstar.adapters.heading_project_list import HeadingProjectListAdapter
 from ns_trackstar.adapters.html_table import HtmlTableAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.linked_project_pages import LinkedProjectPagesAdapter
@@ -42,6 +43,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "etrakit": ETrakitAdapter,
     "federal_register": FederalRegisterAdapter,
     "granicus_rss": GranicusRssAdapter,
+    "heading_project_list": HeadingProjectListAdapter,
     "html_table": HtmlTableAdapter,
     "legistar": LegistarAdapter,
     "linked_project_pages": LinkedProjectPagesAdapter,
