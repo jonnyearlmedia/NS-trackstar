@@ -15,9 +15,26 @@ github.com:22       timed out
 ```
 
 Only port 443 gets out, and Playwright's browser has no outbound network at all,
-so any page navigation dies with `ERR_CONNECTION_RESET`. That blocks three city
-websites, both Accela permit tenants, and the Dixon permit capture. Nothing about
-those sources is broken; the box cannot reach them.
+so any page navigation dies with `ERR_CONNECTION_RESET`. Nothing about the blocked
+sources is broken; the box cannot reach them.
+
+One correction worth carrying forward, because it cost real coverage. "The city
+site is unreachable" was being treated as "the city cannot be covered". It is
+not. A city's meeting platform is a different host from its website, and
+Vacaville, Yountville and Calistoga all turned out to be reachable on their
+platform hosts while their own sites still are not. All three are covered now.
+Check the platform host before recording a city as blocked.
+
+What genuinely still needs a browser or a different network:
+
+- Both Accela permit tenants (Napa County, Solano County) and Dixon's Tyler
+  EnerGov portal: a session bootstrap this box cannot run.
+- Fairfield's NovusAGENDA meeting portal: reachable, but its results grid loads
+  by an async ASP.NET postback. The route, every form control name and both
+  dropdown enums are in `SOURCE_STATUS.md`; what is missing is one capture of the
+  request the portal makes for itself.
+- The development, permit and CIP pages of Vacaville, Yountville, Calistoga,
+  Fairfield and Rio Vista, which live on the city sites this box cannot open.
 
 ## Start a local session
 
@@ -38,7 +55,7 @@ Then say: "read docs/ROADMAP_COVERAGE.md and keep going".
 # Python side
 python3.12 -m venv .venv
 .venv/bin/pip install -e "services/ingest[dev]" -e "services/api[dev]"
-.venv/bin/python -m pytest services/ingest services/api -q     # expect 404 passing
+.venv/bin/python -m pytest services/ingest services/api -q     # expect 451 passing
 
 # Browser, for the Accela and Tyler work that this container could not do
 .venv/bin/pip install playwright && .venv/bin/playwright install chromium
@@ -64,7 +81,12 @@ BAYAREA_511_API_KEY=... .venv/bin/ns-trackstar-ingest collect \
 # If it returns records, move both 511 configs to config/sources/ and add a
 # freshness policy. That is the promotion rule, not a formality.
 
-# 3. Anything the container could not see
+# 3. The Fairfield meeting capture. Open the portal in a real browser with the
+#    network tab recording, run its search, and copy the request it makes.
+#    https://fairfield.novusagenda.com/agendapublic/meetingsresponsive.aspx
+#    That is the last of the fourteen jurisdictions without a meeting feed.
+
+# 4. Anything else the container could not see
 .venv/bin/ns-trackstar-ingest collect config/sources/<new>.json
 ```
 
