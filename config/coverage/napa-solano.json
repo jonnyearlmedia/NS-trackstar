@@ -1202,7 +1202,7 @@
         "permits": {
           "evidence": [],
           "blocker": {
-            "reason": "Dixon's Tyler EnerGov portal at dixonca-energovweb.tylerhost.net is reachable and its search route is real, but six hand built payloads returned a bare 500. The remaining step is a Playwright capture of the app's own request, which the verification environment cannot do because its browser process has no outbound network. Field names and both module enums are recorded in docs/SOURCE_STATUS.md."
+            "reason": "Dixon has moved to Tyler's new Civic Access experience, and that tenant has anonymous public record search switched off. Its own route guard answers isEnable false for /public-records, /search and /records; /projects is enabled but requires authentication, and the navigation menu the portal serves offers only Home, Applications and Invoices. The legacy EnerGov search route still answers 500, which is why six hand-built payloads failed: it is retired for this tenant rather than mis-addressed. Verified under a real browser on an ordinary network September 13, 2026. This is an agency configuration choice, not a missing request contract, so no further request capture would change it."
           }
         },
         "government_meetings": {

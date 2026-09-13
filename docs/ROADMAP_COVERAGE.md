@@ -113,9 +113,13 @@ Blocked, with the specific reason:
   the one the city actually uses.
 - **Napa County and Solano County Accela** — both tenants answer 200; the public
   search needs a browser session bootstrap the container cannot run.
-- **Dixon permits (Tyler EnerGov)** — host, route, field names and both module
-  enums recorded in `SOURCE_STATUS.md`. Six guessed payloads returned 500; needs a
-  Playwright capture of the app's own request.
+- **Dixon permits (Tyler Civic Access)** — no longer waiting on a capture; the
+  capture was done and answered the question. Dixon has anonymous public record
+  search switched off. The portal's own route guard answers `isEnable: false` for
+  `/public-records`, `/search` and `/records`, and the legacy EnerGov search route
+  is retired for this tenant, which is why six guessed payloads all returned 500.
+  There was never a payload that would have worked. Re-checking costs one request
+  to the route guard if the city turns it back on.
 - **American Canyon and Benicia OpenGov** — storefronts answer 200, record
   retrieval never verified anonymously.
 - **Business openings** is no longer on this list. It was never an adapter
