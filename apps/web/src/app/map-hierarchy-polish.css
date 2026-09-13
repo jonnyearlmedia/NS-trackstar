@@ -33,36 +33,78 @@
 }
 [class*="freeExploreBar"] [class*="pillScroller"] button {
   min-height: 40px !important;
-  padding: 0 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 0 12px !important;
   border-color: rgba(35, 58, 68, .09) !important;
   color: #536a75 !important;
   background: #f7fafb !important;
   font-size: 11.5px !important;
   font-weight: 690 !important;
 }
+[class*="freeExploreBar"] [class*="pillScroller"] button svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex: 0 0 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[class*="freeExploreBar"] [class*="pillScroller"] button[data-category="development"] svg { color: #28745c; }
+[class*="freeExploreBar"] [class*="pillScroller"] button[data-category="roads"] svg { color: #bc6714; }
+[class*="freeExploreBar"] [class*="pillScroller"] button[data-category="utilities"] svg { color: #197a8f; }
+[class*="freeExploreBar"] [class*="pillScroller"] button[data-category="places"] svg { color: #5364c5; }
 [class*="freeExploreBar"] [class*="pillScroller"] [class*="pillSelected"] {
   color: #fff !important;
   border-color: #0b67c7 !important;
   background: #0b67c7 !important;
 }
+[class*="freeExploreBar"] [class*="pillScroller"] [class*="pillSelected"] svg { color: #fff !important; }
 [class*="freeExploreBar"] [class*="filterPill"] {
   width: 40px !important;
   padding: 0 !important;
   justify-content: center !important;
 }
+
+/* Category identity should be visible before a project is opened. */
+[class*="categoryGrid"] button[data-category="development"] i { color: #28745c !important; background: #eaf5f0 !important; }
+[class*="categoryGrid"] button[data-category="roads"] i { color: #bc6714 !important; background: #fff3e5 !important; }
+[class*="categoryGrid"] button[data-category="utilities"] i { color: #197a8f !important; background: #e8f6f8 !important; }
+[class*="categoryGrid"] button[data-category="places"] i { color: #5364c5 !important; background: #eef0ff !important; }
+[class*="categoryGrid"] [class*="categorySelected"] i { color: #fff !important; background: rgba(255,255,255,.16) !important; }
+
 [class*="compactFooter"] {
+  display: flex !important;
+  justify-content: stretch !important;
   margin-top: 7px !important;
   gap: 7px !important;
 }
 [class*="compactFooter"] button {
   min-height: 43px !important;
+  min-width: 0;
+  flex: 1 1 auto;
   border-radius: 12px !important;
   font-size: 12.5px !important;
 }
-/* “Browse this area” duplicated the card itself. Keep Browse projects as the
-   default action; Brief this area appears only when that mode is actually valid. */
-[class*="compactFooter"] button:last-child:not(.briefAreaButton) {
-  display: none !important;
+.browseProjectsButton {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 0 13px !important;
+}
+.browseProjectsButton svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Keep the larger orientation version calmer too. */
@@ -74,7 +116,7 @@
 
 @media (min-width: 720px) {
   [class*="freeExploreBar"] {
-    width: min(430px, calc(100vw - 36px)) !important;
+    width: min(420px, calc(100vw - 36px)) !important;
     padding: 9px 11px 11px !important;
     border-radius: 18px !important;
   }
