@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import styles from "./project-freshness.module.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = "/api/backend";
 
 type FreshnessState = "current" | "stale" | "unknown";
 
@@ -47,20 +47,11 @@ function sourceStatus(source: SourceFreshness) {
   return age ? `Checked ${age}` : "Current";
 }
 
-export function ProjectFreshnessStatus({
-  projectId,
-  expanded,
-}: {
-  projectId: string | null;
-  expanded: boolean;
-}) {
+export function ProjectFreshnessStatus({ projectId, expanded }: { projectId: string | null; expanded: boolean }) {
   const [freshness, setFreshness] = useState<ProjectFreshness | null>(null);
 
   useEffect(() => {
-    if (!projectId) {
-      setFreshness(null);
-      return;
-    }
+    if (!projectId) { setFreshness(null); return; }
     const controller = new AbortController();
     setFreshness(null);
     fetch(`${API_BASE}/projects/${projectId}/freshness`, { signal: controller.signal })
@@ -71,7 +62,6 @@ export function ProjectFreshnessStatus({
       .then(setFreshness)
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        // Freshness is a trust enhancement, not a reason to make the project unusable.
         setFreshness(null);
       });
     return () => controller.abort();
@@ -80,9 +70,7 @@ export function ProjectFreshnessStatus({
   const sortedSources = useMemo(() => {
     if (!freshness) return [];
     const priority: Record<FreshnessState, number> = { stale: 0, unknown: 1, current: 2 };
-    return [...freshness.sources].sort(
-      (a, b) => priority[a.freshness_state] - priority[b.freshness_state] || a.source_name.localeCompare(b.source_name),
-    );
+    return [...freshness.sources].sort((a, b) => priority[a.freshness_state] - priority[b.freshness_state] || a.source_name.localeCompare(b.source_name));
   }, [freshness]);
 
   if (!freshness || freshness.metadata.source_count === 0) return null;
@@ -91,26 +79,12 @@ export function ProjectFreshnessStatus({
   return (
     <>
       {freshness.freshness_state === "stale" ? (
-        <p className={styles.freshnessWarning}>
-          <strong>Some official records may be stale.</strong>
-          {age ? ` Oldest successful check was ${age}.` : " A recent successful check is not available."}
-        </p>
+        <p className={styles.freshnessWarning}><strong>Some official records may be stale.</strong>{age ? ` Oldest successful check was ${age}.` : " A recent successful check is not available."}</p>
       ) : freshness.freshness_state === "current" && age ? (
         <p className={styles.freshnessLine}>Official source checks current · oldest {age}</p>
       ) : null}
-
       {expanded ? (
-        <section className={styles.freshnessDetail}>
-          <h3>Source freshness</h3>
-          <div>
-            {sortedSources.map((source) => (
-              <article key={source.source_key}>
-                <strong>{source.source_name}</strong>
-                <span data-state={source.freshness_state}>{sourceStatus(source)}</span>
-              </article>
-            ))}
-          </div>
-        </section>
+        <section className={styles.freshnessDetail}><h3>Source freshness</h3><div>{sortedSources.map((source) => <article key={source.source_key}><strong>{source.source_name}</strong><span data-state={source.freshness_state}>{sourceStatus(source)}</span></article>)}</div></section>
       ) : null}
     </>
   );
