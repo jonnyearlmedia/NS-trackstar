@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { categoryLabel, lifecycleLabel, type SearchResult } from "./trackstar-final-ui";
-import { SearchIcon } from "./trackstar-final-icons";
+import { ArrowRightIcon, CategoryIcon, SearchIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 
 export function SearchOverlay({ query, results, state, onQuery, onClose, onSelect }: {
@@ -21,7 +21,7 @@ export function SearchOverlay({ query, results, state, onQuery, onClose, onSelec
       {state === "loading" ? <p className={styles.stateMessage}>Searching…</p> : null}
       {state === "error" ? <p className={styles.stateMessage}>Search is temporarily unavailable.</p> : null}
       {state === "done" && results.length === 0 ? <div className={styles.searchHint}><strong>No Trackstar match found for “{query.trim()}.”</strong><span>Try another name or address. This does not mean no project exists.</span></div> : null}
-      <div className={styles.searchResults}>{results.map((result) => <button key={result.id} onClick={() => onSelect(result)} type="button"><span><small>{categoryLabel(result.consumer_category)} · {lifecycleLabel(result.lifecycle_stage)}</small><strong>{result.name}</strong>{result.summary ? <em>{result.summary}</em> : null}</span><b>›</b></button>)}</div>
+      <div className={styles.searchResults}>{results.map((result) => <button className="contentResultRow" key={result.id} onClick={() => onSelect(result)} type="button"><span className="contentResultIcon"><CategoryIcon category={result.consumer_category} /></span><span className="contentResultCopy"><small>{categoryLabel(result.consumer_category)} · {lifecycleLabel(result.lifecycle_stage)}</small><strong>{result.name}</strong>{result.summary ? <em>{result.summary}</em> : null}</span><span className="contentResultArrow"><ArrowRightIcon /></span></button>)}</div>
     </div>
   </aside>;
 }
