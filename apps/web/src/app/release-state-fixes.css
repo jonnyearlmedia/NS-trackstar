@@ -19,6 +19,45 @@
   -webkit-line-clamp: 5;
 }
 
+/* A dense-area Browse action still shows the actual list. Category shortcuts
+   are optional narrowing aids, not a gate that replaces the results. */
+.browseCategoryStrip {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid rgba(31,55,66,.08);
+  scrollbar-width: none;
+}
+.browseCategoryStrip::-webkit-scrollbar { display: none; }
+.browseCategoryStrip button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid rgba(31,55,66,.08);
+  border-radius: 11px;
+  color: #566d78;
+  background: #f6f9fa;
+  font-size: 11px;
+  font-weight: 680;
+}
+.browseCategoryStrip button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.browseCategoryStrip button[data-category="development"] svg { color: #28745c; }
+.browseCategoryStrip button[data-category="roads"] svg { color: #bc6714; }
+.browseCategoryStrip button[data-category="utilities"] svg { color: #197a8f; }
+.browseCategoryStrip button[data-category="places"] svg { color: #5364c5; }
+
 /* Category meaning survives settings and overlap/chooser states too. */
 .filterChoiceIcon[data-category="development"],
 .overlapCategoryIcon[data-category="development"] { color: #28745c !important; background: #eaf5f0 !important; }
@@ -58,6 +97,8 @@ button:disabled {
   .maplibregl-ctrl-bottom-left {
     transform: none !important;
   }
+
+  .browseCategoryStrip button { min-height: 42px; }
 }
 
 @media (max-width: 390px) {
