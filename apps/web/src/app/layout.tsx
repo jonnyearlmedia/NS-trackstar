@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./ux-polish.css";
+import "./final-device.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#06100c",
   colorScheme: "dark",
