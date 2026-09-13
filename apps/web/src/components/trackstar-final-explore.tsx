@@ -100,18 +100,15 @@ export function BrowsePanel({ viewport, category, lifecycle, onClose, onSelect, 
   onClear: () => void;
 }) {
   const projects = [...(viewport?.projects ?? [])].sort((a, b) => a.consumerCategory.localeCompare(b.consumerCategory) || a.name.localeCompare(b.name));
-  const tooBroad = category === "all" && lifecycle === "current" && projects.length > 150;
+  const denseArea = category === "all" && projects.length > 150;
   return (
     <section className={styles.updatesPanel} aria-label="Browse projects">
       <div className={styles.updatesHeader}>
         <div><p>BROWSE PROJECTS</p><h2>{category === "all" ? areaLabel(viewport) : categoryLabel(category as Exclude<ConsumerCategory,"all">)}</h2><span>{projects.length.toLocaleString()} mapped projects in the current view{lifecycle !== "current" ? ` · ${lifecycleLabel(lifecycle)}` : ""}</span></div>
         <div className={styles.projectActions}><button aria-label="Close project list" onClick={onClose} type="button">×</button></div>
       </div>
-      {tooBroad ? (
-        <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button data-category={item.key} key={item.key} onClick={() => onCategory(item.key)} type="button"><i><CategoryIcon category={item.key} /></i><span>{item.label}</span></button>)}</div></>
-      ) : (
-        <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button className="contentResultRow" onClick={() => onSelect(project)} type="button"><span className="contentResultIcon" data-category={project.consumerCategory}><CategoryIcon category={project.consumerCategory} /></span><span className="contentResultCopy"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><em>{project.locationUncertain ? "Approximate location" : "Open project"}</em></span><span className="contentResultArrow"><ArrowRightIcon /></span></button></li>)}</ol>
-      )}
+      {denseArea ? <div className="browseCategoryStrip" aria-label="Narrow project list by category">{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button data-category={item.key} key={item.key} onClick={() => onCategory(item.key)} type="button"><CategoryIcon category={item.key} /><span>{item.label}</span></button>)}</div> : null}
+      <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button className="contentResultRow" onClick={() => onSelect(project)} type="button"><span className="contentResultIcon" data-category={project.consumerCategory}><CategoryIcon category={project.consumerCategory} /></span><span className="contentResultCopy"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><em>{project.locationUncertain ? "Approximate location" : "Open project"}</em></span><span className="contentResultArrow"><ArrowRightIcon /></span></button></li>)}</ol>
       {viewport && projects.length === 0 ? <div className={styles.emptyUpdates}><strong>No mapped projects match this view.</strong><span>Clear filters or zoom out.</span><button onClick={onClear} type="button">Clear filters</button></div> : null}
     </section>
   );
