@@ -2,7 +2,7 @@
 
 import type { ConsumerCategory, LifecycleFilter, MapProject, MapViewportState, TimeWindow } from "./map-final-model";
 import { CATEGORIES, areaLabel, categoryLabel, lifecycleLabel } from "./trackstar-final-ui";
-import { FilterIcon, LocationIcon } from "./trackstar-final-icons";
+import { CategoryIcon, FilterIcon, LocationIcon, PlayIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
@@ -52,7 +52,7 @@ export function ExplorePanel(props: Props) {
         <div className={styles.categoryGrid}>
           {CATEGORIES.filter((item) => item.key !== "all").map((item) => (
             <button className={props.category === item.key ? styles.categorySelected : ""} key={item.key} onClick={() => props.onCategory(item.key)} type="button">
-              <i>{item.icon}</i><span>{item.label}</span><small className={extra.categoryCount}>{props.viewport?.categoryCounts[item.key]?.toLocaleString() ?? "—"}</small>
+              <i><CategoryIcon category={item.key} /></i><span>{item.label}</span><small className={extra.categoryCount}>{props.viewport?.categoryCounts[item.key]?.toLocaleString() ?? "—"}</small>
             </button>
           ))}
         </div>
@@ -77,7 +77,7 @@ export function ExplorePanel(props: Props) {
       </div>
       <div className={extra.compactFooter}>
         <button onClick={props.onBrowse} type="button">Browse projects</button>
-        {props.canBrief ? <button onClick={props.onBrief} type="button">▶ Brief this area</button> : <button onClick={props.onExpand} type="button">Browse this area</button>}
+        {props.canBrief ? <button className="briefAreaButton" onClick={props.onBrief} type="button"><PlayIcon /> Brief this area</button> : <button onClick={props.onExpand} type="button">Browse this area</button>}
       </div>
       {(props.lifecycle !== "current" || props.timeWindow !== "all") ? (
         <div className={extra.activeChips} aria-label="Active filters">
@@ -107,7 +107,7 @@ export function BrowsePanel({ viewport, category, lifecycle, onClose, onSelect, 
         <div className={styles.projectActions}><button aria-label="Close project list" onClick={onClose} type="button">×</button></div>
       </div>
       {tooBroad ? (
-        <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button key={item.key} onClick={() => onCategory(item.key)} type="button"><i>{item.icon}</i><span>{item.label}</span></button>)}</div></>
+        <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button key={item.key} onClick={() => onCategory(item.key)} type="button"><i><CategoryIcon category={item.key} /></i><span>{item.label}</span></button>)}</div></>
       ) : (
         <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button onClick={() => onSelect(project)} type="button"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><span>{project.locationUncertain ? "Approximate location" : "View project"}</span></button></li>)}</ol>
       )}
