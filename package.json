@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "pnpm --filter @ns-trackstar/web dev",
     "build": "pnpm --filter @ns-trackstar/web build",
-    "typecheck": "pnpm --filter @ns-trackstar/web typecheck"
+    "typecheck": "pnpm --filter @ns-trackstar/web typecheck",
+    "ui:gate": "node scripts/ui-debt-gate.mjs"
   },
   "dependencies": {
     "next": "latest"

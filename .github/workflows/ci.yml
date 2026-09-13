@@ -16,6 +16,9 @@ jobs:
           node-version: 22
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm typecheck
+      # Fails if a change stacks another global stylesheet or adds !important.
+      # See docs/UI_REBUILD_PROCESS.md for why this ratchet exists.
+      - run: pnpm ui:gate
       - run: pnpm build
       - name: Install release QA browsers
         run: pnpm --filter @ns-trackstar/web exec playwright install --with-deps chromium firefox webkit
