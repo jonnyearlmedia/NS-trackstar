@@ -57,6 +57,18 @@ jobs:
             psql -h localhost -U nstrackstar -d nstrackstar -v ON_ERROR_STOP=1 -f "$migration"
           done
       - run: psql -h localhost -U nstrackstar -d nstrackstar -c "SELECT PostGIS_Version();"
+      - name: Verify backup and recovery round trip
+        run: |
+          pg_dump -h localhost -U nstrackstar -d nstrackstar --format=custom --no-owner --no-acl --file=/tmp/nstrackstar.dump
+          test -s /tmp/nstrackstar.dump
+          dropdb -h localhost -U nstrackstar --if-exists nstrackstar_restore
+          createdb -h localhost -U nstrackstar nstrackstar_restore
+          pg_restore -h localhost -U nstrackstar -d nstrackstar_restore --no-owner --no-acl --exit-on-error /tmp/nstrackstar.dump
+          original_tables="$(psql -h localhost -U nstrackstar -d nstrackstar -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+          restored_tables="$(psql -h localhost -U nstrackstar -d nstrackstar_restore -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+          test "$original_tables" -gt 0
+          test "$original_tables" = "$restored_tables"
+          psql -h localhost -U nstrackstar -d nstrackstar_restore -c "SELECT PostGIS_Version();"
 
   deployment:
     runs-on: ubuntu-latest
@@ -67,6 +79,8 @@ jobs:
       CADDY_ACME_EMAIL: ci@example.com
     steps:
       - uses: actions/checkout@v4
+      - name: Validate recovery and deployment scripts
+        run: bash -n scripts/backup-production-db.sh scripts/restore-production-db.sh scripts/deploy-oracle.sh
       - name: Validate production Compose file
         run: docker compose -f docker-compose.production.yml config --quiet
       - name: Build production backend image
