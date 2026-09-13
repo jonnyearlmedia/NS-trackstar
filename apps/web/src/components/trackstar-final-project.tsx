@@ -31,12 +31,14 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
     }).slice(0, 6);
   }, [detail]);
   const next = detail?.assertions.find((assertion) => ["planned_completion", "completion_date", "planned_start", "construction_start"].includes(assertion.field));
+  const statuses = Object.entries(detail?.statuses ?? {}).slice(0, 6);
+  const backOneLayer = () => expanded ? onExpanded(false) : onClose();
 
   return <article className={`${styles.projectCard} ${expanded ? styles.projectCardExpanded : ""}`} aria-label={selected.name}>
     <div className={styles.projectCardHandle}><span /></div>
     <div className={styles.projectTopLine}>
-      <button className={styles.breadcrumb} onClick={onClose} type="button">‹ {categoryLabel(selected.consumerCategory)}</button>
-      <div className={styles.projectActions}><button aria-label="Share project" onClick={onShare} type="button"><ShareIcon /></button><button aria-label="Close project" onClick={onClose} type="button">×</button></div>
+      <button className={styles.breadcrumb} onClick={backOneLayer} type="button">‹ {expanded ? "Project" : categoryLabel(selected.consumerCategory)}</button>
+      <div className={styles.projectActions}><button aria-label="Share project" onClick={onShare} type="button"><ShareIcon /></button><button aria-label={expanded ? "Collapse project details" : "Close project"} onClick={backOneLayer} type="button">×</button></div>
     </div>
     <div className={styles.projectScroll}>
       <div className={styles.projectTitleBlock}><small>{categoryLabel(selected.consumerCategory)} · {lifecycleLabel(selected.lifecycleStage)}</small><h2>{detail?.name ?? selected.name}</h2>{approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
@@ -52,6 +54,7 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
         {facts.length ? <section><h3>Key facts</h3><div className={extra.detailFacts}>{facts.map((fact) => <div className={extra.detailFact} key={fact.field}><small>{fact.field.replaceAll("_", " ")}</small><strong>{readableValue(fact.value)}</strong></div>)}</div></section> : null}
         {next ? <section><h3>What's next?</h3><div className={extra.detailFact}><small>{next.field.replaceAll("_", " ")}</small><strong>{readableValue(next.value)}</strong></div></section> : null}
         {events.length ? <section><h3>Recent activity</h3>{events.slice(0, 8).map((event) => <div className={extra.activityItem} key={event.id}><time>{eventDate(event.occurred_at ?? event.observed_at)}</time><strong>{eventHeadline(event)}</strong></div>)}</section> : null}
+        {statuses.length ? <section><h3>Status & history</h3><div className={extra.detailFacts}>{statuses.map(([dimension, value]) => <div className={extra.detailFact} key={dimension}><small>{dimension.replaceAll("_", " ")}</small><strong>{readableValue(value)}</strong></div>)}</div></section> : null}
         {detail?.sources.length ? <section><h3>Official sources</h3><div className={styles.sourceList}>{detail.sources.map((source, index) => <article key={`${source.source_key}-${index}`}><span><strong>{source.source_name}</strong><small>{readableValue(source.relationship_type)}</small></span>{source.url ? <a href={source.url} rel="noreferrer" target="_blank">Open ↗</a> : null}</article>)}</div></section> : null}
       </div> : null}
     </div>
