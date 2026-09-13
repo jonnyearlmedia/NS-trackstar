@@ -498,7 +498,7 @@ export function MapCanvasV3({
 
           const floor = categoryRef.current === "all" && lifecycleRef.current === "all" ? minimumPriorityForZoom(map.getZoom()) : 0;
           const displayFeatures = filteredFeatures.filter((feature) => Number(feature.properties?.display_priority ?? 0) >= floor);
-          const pointFeatures = displayFeatures.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
+          const pointFeatures = filteredFeatures.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
           const shapeFeatures = displayFeatures.filter((feature) => feature.geometry?.type !== "Point");
 
           (map.getSource(PROJECT_SOURCE) as import("maplibre-gl").GeoJSONSource)?.setData({ type: "FeatureCollection", features: shapeFeatures });
@@ -669,17 +669,17 @@ export function MapCanvasV3({
           map.easeTo({ center: feature.geometry.coordinates as [number, number], zoom, duration: 550, essential: true });
         });
 
-        void refresh();
-      });
+        map.on("dragstart", () => onInteractionRef.current?.());
+        map.on("zoomstart", (event) => {
+          if ((event as unknown as { originalEvent?: unknown }).originalEvent) onInteractionRef.current?.();
+        });
+        map.on("moveend", () => {
+          if (selectedRef.current || briefingRef.current) return;
+          if (moveTimer !== undefined) window.clearTimeout(moveTimer);
+          moveTimer = window.setTimeout(() => refreshRef.current?.(), 180);
+        });
 
-      map.on("dragstart", () => onInteractionRef.current?.());
-      map.on("zoomstart", (event) => {
-        if ((event as unknown as { originalEvent?: unknown }).originalEvent) onInteractionRef.current?.();
-      });
-      map.on("moveend", () => {
-        if (selectedRef.current || briefingRef.current) return;
-        if (moveTimer !== undefined) window.clearTimeout(moveTimer);
-        moveTimer = window.setTimeout(() => refreshRef.current?.(), 180);
+        void refresh();
       });
     }
 
