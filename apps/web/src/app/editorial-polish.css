@@ -1,0 +1,327 @@
+/* Trackstar editorial polish
+   Layered after visual-refresh.css so the map stays utilitarian while briefing,
+   lists and modal moments carry more personality. */
+
+/* SVG system */
+[class*="categoryGrid"] button i svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.briefAreaButton {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #0b67c7 !important;
+  border-color: rgba(11, 103, 199, .18) !important;
+  background: #eef6ff !important;
+}
+.briefAreaButton svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Briefing gets the editorial moment. */
+.briefingCard {
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 239, 250, .86), transparent 38%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%) !important;
+}
+.briefingProgress {
+  height: 4px;
+  margin: 0 -13px 14px;
+  overflow: hidden;
+  background: rgba(11, 103, 199, .10);
+}
+.briefingProgress span {
+  display: block;
+  height: 100%;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, #0b67c7, #5ea7dd);
+  transition: width .35s ease;
+}
+.briefingTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  margin-bottom: 8px;
+}
+.briefingIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.briefingIdentity > span:last-child {
+  display: grid;
+  gap: 1px;
+}
+.briefingIdentity small {
+  color: #6e818a;
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: .12em;
+}
+.briefingIdentity strong {
+  color: #203640;
+  font-size: 13px;
+  font-weight: 710;
+}
+.briefingIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid rgba(11, 103, 199, .13);
+  border-radius: 14px;
+  color: #0b67c7;
+  background: rgba(232, 244, 253, .86);
+}
+.briefingIcon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.briefingClose {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid rgba(25, 48, 59, .09);
+  border-radius: 50%;
+  color: #40545e;
+  background: rgba(246, 249, 250, .9);
+  font-size: 22px;
+}
+.briefingKicker {
+  margin-top: 4px;
+  color: #627680;
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+.briefingKicker span {
+  margin: 0 3px;
+  color: #9aabb2;
+}
+.briefingHeadline {
+  max-width: 14ch;
+  margin: 7px 0 0;
+  color: #142831;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(34px, 8vw, 48px);
+  font-weight: 650;
+  line-height: .96;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.briefingStory {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 16px 17px 16px 20px;
+  overflow: hidden;
+  border: 1px solid rgba(11, 103, 199, .11);
+  border-radius: 17px;
+  background: rgba(238, 246, 255, .86);
+}
+.briefingStory::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: #0b67c7;
+}
+.briefingStory small {
+  color: #0b67c7;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: .11em;
+}
+.briefingStory strong {
+  color: #1f3945;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 620;
+  line-height: 1.18;
+}
+.briefingStory span {
+  color: #6a7e88;
+  font-size: 12px;
+}
+.briefingDeck {
+  margin: 16px 0 0;
+  color: #4b6069;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.briefingControls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+.briefingControls button,
+.briefingOpen {
+  min-height: 48px;
+  border: 1px solid rgba(25, 48, 59, .10);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 720;
+}
+.briefingControls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #354b55;
+  background: #f5f9fa;
+}
+.briefingControls button:last-child {
+  color: #fff;
+  border-color: #0b67c7;
+  background: #0b67c7;
+}
+.briefingControls button:disabled {
+  color: #8b9ba2;
+  border-color: rgba(25,48,59,.08);
+  background: #edf2f4;
+}
+.briefingControls svg,
+.briefingOpen svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.briefingOpen {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 9px;
+  padding: 0 15px;
+  color: #28414d;
+  background: #fff;
+}
+
+/* Search should read as a native full-screen utility, not a dark modal. */
+[class*="searchOverlay"] {
+  background: rgba(247, 251, 252, .985) !important;
+  backdrop-filter: blur(24px) saturate(1.08) !important;
+}
+[class*="searchOverlay"] > header {
+  border-bottom-color: rgba(25, 48, 59, .08) !important;
+  background: rgba(255,255,255,.82);
+}
+[class*="searchOverlay"] form {
+  height: 48px !important;
+  border-color: rgba(25,48,59,.10) !important;
+  background: #f1f6f8 !important;
+}
+[class*="searchOverlay"] input {
+  color: #17232a !important;
+  font-size: 16px !important;
+}
+[class*="searchOverlay"] input::placeholder { color: #7a8c94 !important; }
+[class*="searchBody"] { padding-top: 12px !important; }
+[class*="searchHint"] {
+  border-color: rgba(25,48,59,.08) !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+}
+[class*="searchHint"] strong { color: #223840 !important; font-size: 15px !important; }
+
+/* Lists get breathing room and a clear clickable affordance. */
+[class*="updateList"] li,
+[class*="searchResults"] button {
+  border-color: rgba(25,48,59,.08) !important;
+}
+[class*="updateList"] button,
+[class*="searchResults"] button {
+  border-radius: 12px;
+  transition: background .16s ease, transform .16s ease;
+}
+@media (hover: hover) {
+  [class*="updateList"] button:hover,
+  [class*="searchResults"] button:hover,
+  [class*="overlapList"] button:hover {
+    background: #f2f7f9 !important;
+  }
+}
+
+/* Filter sheet: less Android radio-list, more clear settings sheet. */
+[class*="modalSheet"] section h3 {
+  margin-bottom: 9px !important;
+  color: #657982 !important;
+  font-size: 11px !important;
+  font-weight: 780 !important;
+  letter-spacing: .08em !important;
+}
+[class*="filterChoices"] { gap: 7px !important; }
+[class*="filterChoices"] button {
+  min-height: 50px !important;
+  padding: 0 14px !important;
+  border-color: rgba(25,48,59,.08) !important;
+  background: #f7fafb !important;
+}
+[class*="filterChoices"] [class*="filterChoiceSelected"] {
+  color: #0a5eae !important;
+  border-color: rgba(11,103,199,.22) !important;
+  background: #edf6ff !important;
+}
+[class*="filterChoices"] [class*="filterChoiceSelected"] i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  background: #0b67c7;
+  font-size: 13px;
+  font-style: normal;
+}
+
+/* More obvious focus states without neon. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgba(11,103,199,.32) !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 600px) {
+  .briefingCard { padding-left: 14px !important; padding-right: 14px !important; }
+  .briefingProgress { margin-left: -14px; margin-right: -14px; }
+  .briefingHeadline { font-size: clamp(33px, 10vw, 44px); }
+}
