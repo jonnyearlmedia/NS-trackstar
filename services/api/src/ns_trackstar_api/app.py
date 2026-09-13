@@ -646,7 +646,33 @@ async def project_detail(project_id: UUID) -> dict:
              JOIN source s ON s.id = sr.source_id
              WHERE psr.project_id = p.id),
             '[]'::jsonb
-          ) AS sources
+          ) AS sources,
+          -- Only images we can actually show: a resolved binary, and a rights basis
+          -- that permits showing it. An unresolved row is a research task, not a
+          -- picture, and it must never reach a consumer response.
+          COALESCE(
+            (SELECT jsonb_agg(jsonb_build_object(
+              'asset_url', pi.display_asset_url,
+              'source_url', pi.source_url,
+              'image_type', pi.image_type,
+              'caption', pi.caption,
+              'publisher', pi.publisher,
+              'attribution', COALESCE(pi.attribution, pi.publisher),
+              'is_official', pi.is_official,
+              'is_hero', pi.is_hero,
+              'sort_order', pi.sort_order,
+              'rights_status', pi.rights_status,
+              'captured_at', pi.captured_at
+            ) ORDER BY pi.is_hero DESC, pi.sort_order, pi.id)
+             FROM (
+               SELECT *, COALESCE(cached_asset_url, asset_url) AS display_asset_url
+               FROM project_image
+               WHERE project_id = p.id
+                 AND asset_resolution_status = 'resolved'
+                 AND rights_status IN ('reference_only', 'cleared')
+             ) pi),
+            '[]'::jsonb
+          ) AS images
         FROM project p
         WHERE p.id = %s
         """,
@@ -693,6 +719,7 @@ async def project_detail(project_id: UUID) -> dict:
         "statuses": statuses,
         "assertions": assertions,
         "sources": row["sources"],
+        "images": row.get("images") or [],
         "explainer": explainer.to_dict(),
         "evidence_sections": compose_evidence_sections(assertions),
     }

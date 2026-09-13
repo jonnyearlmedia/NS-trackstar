@@ -16,6 +16,7 @@ than guessing.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import UTC, date, datetime
@@ -292,6 +293,12 @@ ROLLUP_DESCRIPTION_SOURCES = (
 )
 
 _UNIT_FIELDS = ("residential_units", "units", "project_units")
+# Some agencies publish scale as one string rather than as separate fields. Vallejo's
+# development tracker writes "179,688 square feet 178 single-family" in a single cell,
+# which is two facts wearing one label. Read naively it makes the Costco project
+# 179,688 homes; ignored, it leaves "why you'd care" blank on the most-searched
+# project in the city. So combined fields are split into their real quantities.
+_COMBINED_SCALE_FIELDS = ("unit_count_or_square_footage", "units_or_square_feet", "size")
 _ACRE_FIELDS = ("site_acres", "location_acres")
 _COST_FIELDS = ("estimated_cost", "total_cost", "funding")
 
@@ -388,6 +395,64 @@ def _numeric(value: Any) -> float | None:
             except ValueError:
                 return None
     return None
+
+
+
+# Words an agency uses for each kind of quantity, longest first so "square feet" wins
+# over "feet". Only these three are read: a number whose unit is not recognised is left
+# alone rather than guessed at, because a wrong unit on a scale fact is worse than none.
+_SCALE_UNITS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "building_area_sqft",
+        ("square feet", "square foot", "sq. ft", "sq ft", "sqft", "s.f.", "sf"),
+    ),
+    (
+        "residential_units",
+        (
+            "single-family",
+            "single family",
+            "multifamily",
+            "multi-family",
+            "dwelling units",
+            "dwelling",
+            "residential units",
+            "apartments",
+            "townhomes",
+            "condos",
+            "homes",
+            "units",
+            "sfd",
+            "sfr",
+        ),
+    ),
+    ("site_acres", ("acres", "acre")),
+)
+
+
+def _split_combined_scale(value: Any) -> dict[str, float]:
+    """Pull each quantity out of a single cell that carries more than one.
+
+    "179,688 square feet 178 single-family" is two facts. Each number is attributed to
+    the unit word that follows it, and a number whose unit is not recognised is dropped
+    rather than assigned to whichever field happens to be first.
+    """
+
+    text = _text(value)
+    if not text:
+        return {}
+    found: dict[str, float] = {}
+    for match in re.finditer(r"([\d,]+(?:\.\d+)?)\s*([A-Za-z.\- ]{0,24})", text):
+        number = _numeric(match.group(1))
+        if number is None or number <= 0:
+            continue
+        trailing = match.group(2).strip().lower()
+        if not trailing:
+            continue
+        for field, words in _SCALE_UNITS:
+            if any(trailing.startswith(word) for word in words) and field not in found:
+                found[field] = number
+                break
+    return found
 
 
 def _money(value: Any) -> str | None:
@@ -701,18 +766,24 @@ def _compose_why_care(*, evidence: _Evidence, consumer_category: str | None) -> 
         if value and not any(fact.field == field_name for fact in facts):
             facts.append(Fact(label, value, field_name, evidence.url(field_name)))
 
-    units = _numeric(evidence.get(*_UNIT_FIELDS))
+    combined_field = evidence.field_for(*_COMBINED_SCALE_FIELDS)
+    combined = _split_combined_scale(evidence.get(*_COMBINED_SCALE_FIELDS))
+
+    units = _numeric(evidence.get(*_UNIT_FIELDS)) or combined.get("residential_units")
     if units and units >= 1:
-        unit_field = evidence.field_for(*_UNIT_FIELDS) or "residential_units"
+        unit_field = evidence.field_for(*_UNIT_FIELDS) or combined_field or "residential_units"
         add("New homes", f"{_number(units)} {'home' if units == 1 else 'homes'}", unit_field)
 
-    area = _numeric(evidence.get("building_area_sqft"))
+    area = _numeric(evidence.get("building_area_sqft")) or combined.get("building_area_sqft")
     if area and area >= 1:
-        add("Building space", f"{_number(area)} sq ft", "building_area_sqft")
+        area_field = (
+            "building_area_sqft" if "building_area_sqft" in evidence else combined_field
+        ) or "building_area_sqft"
+        add("Building space", f"{_number(area)} sq ft", area_field)
 
-    acres = _numeric(evidence.get(*_ACRE_FIELDS))
+    acres = _numeric(evidence.get(*_ACRE_FIELDS)) or combined.get("site_acres")
     if acres and acres > 0:
-        acre_field = evidence.field_for(*_ACRE_FIELDS) or "site_acres"
+        acre_field = evidence.field_for(*_ACRE_FIELDS) or combined_field or "site_acres"
         add("Site size", f"{_number(acres)} {'acre' if acres == 1 else 'acres'}", acre_field)
 
     length = _numeric(evidence.get("length_miles"))

@@ -28,6 +28,22 @@ export type EvidenceSection = {
   title: string;
   items: Array<{ field: string; label: string; value: string; source_url: string | null; bureaucratic: boolean }>;
 };
+// Photographs are hotlinked from agency servers, so every field here can be
+// absent or wrong at read time. The consumer surface treats the whole record as
+// optional and drops anything it cannot render honestly, attribution included.
+export type ProjectImageType = "HERO" | "CURRENT" | "SITE" | "DESIGN" | "CONTEXT";
+export type ProjectImage = {
+  asset_url: string;
+  source_url?: string | null;
+  image_type?: ProjectImageType | string | null;
+  caption?: string | null;
+  publisher?: string | null;
+  attribution?: string | null;
+  is_official?: boolean | null;
+  is_hero?: boolean | null;
+  sort_order?: number | null;
+  rights_status?: string | null;
+};
 export type ProjectDetail = {
   id: string;
   name: string;
@@ -41,7 +57,35 @@ export type ProjectDetail = {
   sources: Array<{ source_key: string; source_name: string; relationship_type: string; url: string | null }>;
   explainer?: ProjectExplainer | null;
   evidence_sections?: EvidenceSection[] | null;
+  images?: ProjectImage[] | null;
 };
+
+// Attribution is a licensing obligation, not a caption. An image Trackstar
+// cannot credit is an image Trackstar does not show, so a record with no usable
+// credit line is dropped here rather than rendered bare.
+export function imageCredit(image: ProjectImage) {
+  const credit = (image.attribution ?? image.publisher ?? "").trim();
+  return credit || null;
+}
+export function usableImages(detail: ProjectDetail | null): ProjectImage[] {
+  const images = detail?.images ?? [];
+  const seen = new Set<string>();
+  return images
+    .filter((image) => {
+      const url = typeof image?.asset_url === "string" ? image.asset_url.trim() : "";
+      if (!url || !/^https?:\/\//i.test(url) || seen.has(url)) return false;
+      if (!imageCredit(image)) return false;
+      seen.add(url);
+      return true;
+    })
+    .sort((left, right) => {
+      const heroRank = Number(Boolean(right.is_hero)) - Number(Boolean(left.is_hero));
+      if (heroRank) return heroRank;
+      const typeRank = Number(right.image_type === "HERO") - Number(left.image_type === "HERO");
+      if (typeRank) return typeRank;
+      return (left.sort_order ?? Number.MAX_SAFE_INTEGER) - (right.sort_order ?? Number.MAX_SAFE_INTEGER);
+    });
+}
 export type ProjectClassification = {
   project_id: string;
   consumer_category: Exclude<ConsumerCategory, "all">;

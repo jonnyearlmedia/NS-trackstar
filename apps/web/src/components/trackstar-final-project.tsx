@@ -1,6 +1,7 @@
 "use client";
 
 import { ProjectFreshnessStatus } from "./project-freshness";
+import { ProjectHeroImage, ProjectImageStrip, useProjectImages } from "./project-images";
 import type { MapProject } from "./map-final-model";
 import { categoryLabel, eventDate, eventHeadline, lifecycleLabel, locationUncertain, projectSummary, readableValue, type EvidenceSection, type ProjectDetail, type ProjectEvent } from "./trackstar-final-ui";
 import { CategoryIcon, ChevronIcon, ShareIcon } from "./trackstar-final-icons";
@@ -46,6 +47,8 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
   onShare: () => void;
   shareCopied: boolean;
 }) {
+  const { hero, strip, markFailed } = useProjectImages(detail);
+  const projectName = detail?.name ?? selected.name;
   const explainer = detail?.explainer ?? null;
   const latest = events.find((event) => event.event_type !== "project_discovered") ?? null;
   const summary = projectSummary(detail, selected);
@@ -70,9 +73,10 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
         <span><small>{categoryLabel(selected.consumerCategory)}</small><strong>{lifecycleLabel(selected.lifecycleStage)}</strong></span>
       </div>
       <div className={styles.projectTitleBlock}>
-        <h2>{detail?.name ?? selected.name}</h2>
+        <h2>{projectName}</h2>
         {approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}
       </div>
+      <ProjectHeroImage image={hero} onFailed={markFailed} projectName={projectName} />
       <div className="projectRule" />
       {state === "loading" ? <p className={styles.projectLead}>Loading the official project details…</p> : null}
       {state === "error" ? <p className={styles.projectLead}>Trackstar could not load this project’s details right now.</p> : null}
@@ -80,6 +84,7 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
       {state === "idle" ? <div className={styles.latestBlock}><small>WHAT&apos;S HAPPENING</small><strong>{happening}</strong>{happeningDate ? <span>{happeningDate}</span> : null}</div> : null}
       {state === "idle" && whyCare.length ? <section className="projectOverview"><p className={extra.sectionLabel}>Why you&apos;d care</p><div className={extra.detailFacts}>{whyCare.map((fact) => <div className={extra.detailFact} key={fact.field}><small>{fact.label}</small><strong>{fact.value}</strong></div>)}</div></section> : null}
       {state === "idle" && explainer?.whats_next ? <section className="projectOverview"><p className={extra.sectionLabel}>What happens next?</p><p className={styles.projectLead}>{explainer.whats_next}</p></section> : null}
+      {state === "idle" ? <ProjectImageStrip images={strip} onFailed={markFailed} projectName={projectName} /> : null}
       {!detail?.geometry && state === "idle" ? <p className={styles.locationNotice}><strong>Location not mapped yet.</strong> Trackstar has official records for this project but not enough reliable location information to place it precisely.</p> : approximate ? <p className={styles.locationNotice}>The map shows the best defensible project area from public records, not an exact footprint.</p> : null}
       <ProjectFreshnessStatus projectId={selected.id} expanded={expanded} />
       {shareCopied ? <p className={styles.copyNotice}>Link copied</p> : null}

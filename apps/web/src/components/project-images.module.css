@@ -1,0 +1,169 @@
+/* Project photographs on the consumer sheet.
+   Colocated with the component on purpose: the eleven global layers in
+   app/layout.tsx are what made this UI unpredictable, so nothing here reaches
+   outside this file and no rule here has to shout down another to win. */
+
+.hero {
+  margin: 11px 0 0;
+}
+
+/* One link per photograph. Tapping the picture and tapping the credit both go
+   to the publisher's page, and it is a single tab stop rather than two. */
+.heroLink,
+.stripLink {
+  display: block;
+  overflow: hidden;
+  border: 1px solid rgba(25, 48, 59, .1);
+  border-radius: 14px;
+  background: #f7fafb;
+  color: inherit;
+  text-decoration: none;
+}
+
+.heroLink:focus-visible,
+.stripLink:focus-visible {
+  outline: 2px solid #0b67c7;
+  outline-offset: 2px;
+}
+
+/* Explicit height, set here rather than left to the intrinsic size, so the card
+   does not reflow as bytes arrive over a slow connection. The hero is
+   deliberately short: the written answer to "what is this?" has to stay above
+   the fold on a phone, and the picture only supports it. */
+.heroImage {
+  display: block;
+  width: 100%;
+  height: 104px;
+  object-fit: cover;
+  background: #eaf0f2;
+}
+
+.heroCaption {
+  display: block;
+  padding: 8px 11px 9px;
+}
+
+.credit {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.caption {
+  color: #304751;
+  font-size: 12px;
+  font-weight: 640;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* The credit line is a licensing obligation. It is always rendered, never
+   collapsed behind a tooltip or an expander, and it is part of the link. */
+.source {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: #0b67c7;
+  font-size: 11px;
+  font-weight: 680;
+  line-height: 1.35;
+}
+
+.publisher {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.official {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #39705a;
+  background: #e7f2ec;
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .02em;
+}
+
+.arrow {
+  flex: 0 0 auto;
+}
+
+.stripBlock {
+  margin-top: 16px;
+}
+
+.stripLabel {
+  margin: 0 0 7px;
+  color: #687c85;
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.strip {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin: 0;
+  padding: 0 0 2px;
+  list-style: none;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+.stripItem {
+  flex: 0 0 auto;
+  width: 158px;
+  scroll-snap-align: start;
+}
+
+.stripLink {
+  height: 100%;
+}
+
+.stripImage {
+  display: block;
+  width: 100%;
+  height: 92px;
+  object-fit: cover;
+  background: #eaf0f2;
+}
+
+.stripLink .credit {
+  padding: 7px 9px 9px;
+}
+
+.stripLink .caption {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Both the smooth scroll and the snap are motion the user can opt out of.
+   Keyboard and pointer scrolling still work; they just land instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .strip {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .heroImage {
+    height: 128px;
+  }
+}
