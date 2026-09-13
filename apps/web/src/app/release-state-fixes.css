@@ -10,6 +10,15 @@
     linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%) !important;
 }
 
+/* The normal project peek is a summary, not a scroll-heavy article. Expanded
+   details restore the full overview naturally. */
+[class*="projectCard"]:not([class*="projectCardExpanded"]):not(.briefingCard) .projectOverview [class*="projectLead"] {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
 /* Category meaning survives settings and overlap/chooser states too. */
 .filterChoiceIcon[data-category="development"],
 .overlapCategoryIcon[data-category="development"] { color: #28745c !important; background: #eaf5f0 !important; }
@@ -25,6 +34,17 @@
 [class*="scrim"] {
   background: rgba(31, 48, 57, .24) !important;
   backdrop-filter: blur(8px) saturate(.9) !important;
+}
+
+/* Give controls a physical pressed response without turning everything into
+   floating Material buttons. */
+button:not(:disabled):active {
+  transform: translateY(0) scale(.985) !important;
+  transition-duration: .06s !important;
+}
+button:disabled {
+  cursor: default;
+  opacity: .55;
 }
 
 @media (max-width: 719px) {
