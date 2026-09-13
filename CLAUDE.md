@@ -28,6 +28,21 @@ Rules that make the list worth watching:
 The task list is per session. Anything that must outlive this session belongs in
 the repo or the Notion roadmap, not only in a task.
 
+### Mirror it to the board Jonny watches
+
+A viewer running on Jonny's machine reads his local `~/.claude/todos/`, which a
+remote session's task list never reaches. So when working remotely, mirror the
+task list to the board page after each batch of status changes:
+
+> Artifact `write_db`, `db_op: "set"`, collection `board`, doc `tasks`, url
+> `https://claude.ai/code/artifact/99861cfa-607f-4b25-b357-a1056b20cee3`
+>
+> Body: `{"note": "...", "tasks": [{"id", "status", "owner", "subject", "detail"}]}`
+> where `status` is `pending`, `in_progress`, `blocked` or `completed`.
+
+Keep finished work in the mirror rather than dropping it, so the board shows
+what moved and not just what is left.
+
 ## Verify visually before calling UI work done
 
 This project shipped a completely broken first open under green CI, because the
