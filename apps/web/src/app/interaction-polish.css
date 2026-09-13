@@ -1,0 +1,131 @@
+/* Final interaction-detail layer. */
+
+[class*="bottomNav"] button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+[class*="bottomNav"] button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[class*="bottomNav"] button span {
+  font: inherit;
+}
+
+.filterChoiceLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.filterChoiceIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid rgba(25,48,59,.08);
+  border-radius: 10px;
+  color: #43616e;
+  background: #edf4f6;
+}
+.filterChoiceIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[class*="filterChoiceSelected"] .filterChoiceIcon {
+  color: #0b67c7;
+  border-color: rgba(11,103,199,.15);
+  background: rgba(255,255,255,.7);
+}
+
+.projectIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 3px 0 10px;
+}
+.projectIdentityIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid rgba(11,103,199,.12);
+  border-radius: 13px;
+  color: #0b67c7;
+  background: #edf6ff;
+}
+.projectIdentityIcon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.projectIdentity > span:last-child {
+  display: grid;
+  gap: 1px;
+}
+.projectIdentity small {
+  color: #617680;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.projectIdentity strong {
+  color: #263e49;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+[class*="overlapList"] button {
+  grid-template-columns: 38px minmax(0,1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 12px !important;
+}
+[class*="overlapList"] button > span:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.overlapCategoryIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  color: #47636f;
+  background: #edf4f6;
+}
+.overlapCategoryIcon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 600px) {
+  [class*="bottomNav"] button {
+    min-width: 108px !important;
+  }
+}
