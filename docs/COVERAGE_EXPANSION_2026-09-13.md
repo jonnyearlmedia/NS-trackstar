@@ -129,22 +129,47 @@ from that shape; a status route proves production actually holds it.
 
 **Six jurisdictions have no local source at all.** Yountville, St. Helena,
 Calistoga, Vacaville, Dixon and Rio Vista are covered only by statewide rollups
-and county spatial layers. Vacaville was a P0 target and did not land: the
-verification environment's egress policy refused `www.ci.vacaville.ca.gov`,
-`www.yountville.gov` and `www.ci.calistoga.ca.us` at CONNECT, and
-`www.riovistacity.com` returned 403. That is an environment limit, not a finding
-about those sites. Vacaville's eScribe meeting portal *is* reachable and is the
-next route in; an eScribe adapter would also serve Fairfield and Dixon.
+and county spatial layers.
+
+The word "blocked" was doing too much work in the first draft of this document.
+`scripts/probe-sources.py` now separates the two things it was conflating, and the
+split matters:
+
+- **Refused by the verification sandbox, not by the site.** Vacaville and
+  Yountville failed with `Tunnel connection failed: 502 Bad Gateway` and Calistoga
+  with a connection reset. Those are this environment's egress, and they say
+  nothing at all about those cities. Run the probe from the OVHcloud VM to get a
+  real answer.
+- **Reachable right now, simply not built yet.** St. Helena and Dixon both answer
+  200 from the same sandbox that could not reach Vacaville. Two of the six are
+  ordinary undone work with no obstacle in front of them.
+- **Reachable, and the obstacle is engineering rather than access.** Both Accela
+  tenants answer 200, as do both OpenGov storefronts. These need a session
+  bootstrap, which Playwright already in the stack can do.
+- **Genuinely constrained.** Fairfield and Rio Vista return a challenged 403.
+  Retest from a different network before concluding anything.
+
+Vacaville's eScribe portal answers 200 even here, which makes an eScribe adapter
+the cheapest real coverage left on the board.
 
 **Business openings are blocked everywhere.** The ABC reports are public and the
 parser is proven against real captured rows, but Cloudflare answers automated
 clients with an interactive challenge. Trackstar reports that as blocked. It does
 not spoof a client or solve the challenge.
 
-**Live traffic is unpromoted.** The 511 traffic-event and WZDx collectors are
-implemented and unit tested, but `api.511.org` answers 401 without a token and
-the token is not in the repository, so neither could be verified against live
-data. A collector that has not been proven to return records is not production.
+Two follow ups were checked rather than assumed. California's open data portal
+does publish under the ABC organization, but only COVID era citation and catering
+datasets, so there is no sanctioned bulk route to current licence data. And the
+challenge is inconsistent between HTTP clients, which means it is a heuristic
+rather than a stated no robots policy. Shopping for a client that slips past it
+would still be evasion, so the honest next test is whether a normal datacenter IP
+is challenged at all: run the probe from the OVHcloud VM. If it is, a public
+records request is the remaining legitimate route.
+
+**Live traffic is unpromoted, and this one is nearly free.** The 511 collectors
+are implemented and unit tested. `api.511.org` answers 401, which means the door
+is there and wants a key, not that there is a wall. The key already exists in the
+operator's Keychain. One run with it present promotes both collectors.
 
 **Procurement is untouched in all fourteen jurisdictions.**
 
