@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
+from ns_trackstar.adapters.base import CollectorAdapter
 from ns_trackstar.config import load_source_config
 from ns_trackstar.health import RunSignal, classify_health
 from ns_trackstar.models import SourceHealthState

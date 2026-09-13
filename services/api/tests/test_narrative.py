@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from ns_trackstar_api.narrative import (
     compose_evidence_sections,
@@ -74,14 +74,14 @@ def test_latest_meaningful_event_answers_whats_happening():
             {
                 "event_type": "project_discovered",
                 "title": "Tracking Fairview at Northgate",
-                "occurred_at": datetime(2026, 1, 4),
+                "occurred_at": datetime(2026, 1, 4, tzinfo=UTC),
             },
             {
                 "event_type": "planning_changed",
                 "title": "Planning changed to Under review",
                 "summary": "The updated housing plan was filed, expanding the project "
                 "from 178 to 245 homes.",
-                "occurred_at": datetime(2026, 5, 12),
+                "occurred_at": datetime(2026, 5, 12, tzinfo=UTC),
             },
         ],
     )
@@ -139,10 +139,10 @@ def test_whats_next_prefers_a_scheduled_future_event():
             {
                 "event_type": "meeting_scheduled",
                 "title": "Planning Commission hearing",
-                "occurred_at": datetime(2026, 10, 8),
+                "occurred_at": datetime(2026, 10, 8, tzinfo=UTC),
             }
         ],
-        now=datetime(2026, 9, 13),
+        now=datetime(2026, 9, 13, tzinfo=UTC),
     )
     assert explainer.whats_next == "Planning Commission hearing on October 8, 2026."
     assert explainer.whats_next_basis == "scheduled_event"
@@ -153,7 +153,7 @@ def test_whats_next_falls_back_to_dated_evidence_then_stage():
         name="Mare Island Causeway Bridge",
         project_type="transportation_project",
         assertions=[assertion("planned_construction_start", "2027-04-01")],
-        now=datetime(2026, 9, 13),
+        now=datetime(2026, 9, 13, tzinfo=UTC),
     )
     assert dated.whats_next == "Construction expected to start: April 1, 2027."
     assert dated.whats_next_basis == "planned_construction_start"
@@ -162,7 +162,7 @@ def test_whats_next_falls_back_to_dated_evidence_then_stage():
         name="Vallejo Waterfront Specific Plan",
         project_type="municipal_development",
         lifecycle_stage="approved",
-        now=datetime(2026, 9, 13),
+        now=datetime(2026, 9, 13, tzinfo=UTC),
     )
     assert staged.whats_next == "Permitting and pre-construction work."
     assert staged.whats_next_basis == "lifecycle_stage"

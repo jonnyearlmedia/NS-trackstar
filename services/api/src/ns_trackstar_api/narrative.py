@@ -16,8 +16,9 @@ than guessing.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
-from datetime import date, datetime
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
+from datetime import UTC, date, datetime
 from typing import Any, Literal
 
 ConsumerCategory = Literal["development", "roads", "utilities", "places"]
@@ -433,30 +434,32 @@ def _reads_like_prose(text: str) -> bool:
     return letters >= len(clean) * 0.55
 
 
+def _as_date(value: Any) -> date | None:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    raw = _text(value)
+    if not raw:
+        return None
+    try:
+        return datetime.fromisoformat(raw).date()
+    except ValueError:
+        return None
+
+
 def _format_date(value: Any) -> str | None:
-    if isinstance(value, (datetime, date)):
-        moment = value
-    else:
-        raw = _text(value)
-        if not raw:
-            return None
-        candidate = raw.replace("Z", "+00:00")
-        try:
-            moment = datetime.fromisoformat(candidate)
-        except ValueError:
-            return raw
-    return moment.strftime("%B %-d, %Y") if hasattr(moment, "strftime") else str(moment)
+    moment = _as_date(value)
+    if moment is None:
+        return _text(value) or None
+    return moment.strftime("%B %-d, %Y")
 
 
 def _month_year(value: Any) -> str | None:
-    formatted = _format_date(value)
-    if formatted is None:
-        return None
-    try:
-        parsed = datetime.strptime(formatted, "%B %d, %Y")
-    except ValueError:
-        return formatted
-    return parsed.strftime("%B %Y")
+    moment = _as_date(value)
+    if moment is None:
+        return _format_date(value)
+    return moment.strftime("%B %Y")
 
 
 class _Evidence:
@@ -747,7 +750,7 @@ def _compose_whats_next(
     events: list[dict[str, Any]],
     now: datetime | None,
 ) -> tuple[str | None, str | None]:
-    reference = now or datetime.now()
+    reference = _parse_moment(now) or datetime.now(UTC)
     for event in events:
         moment = event.get("occurred_at")
         parsed = _parse_moment(moment)
@@ -780,15 +783,21 @@ def _compose_whats_next(
 
 
 def _parse_moment(value: Any) -> datetime | None:
+    """Normalize any published timestamp to UTC so comparisons are well defined."""
+
     if isinstance(value, datetime):
-        return value.replace(tzinfo=None)
-    text = _text(value)
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).replace(tzinfo=None)
-    except ValueError:
-        return None
+        moment = value
+    else:
+        text = _text(value)
+        if not text:
+            return None
+        try:
+            moment = datetime.fromisoformat(text)
+        except ValueError:
+            return None
+    # A source that publishes a bare local timestamp is read as UTC rather than as the
+    # collector host's zone, so the same record sorts the same way wherever it runs.
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
 
 
 def compose_explainer(

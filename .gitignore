@@ -28,11 +28,14 @@ backups/
 .idea/
 
 # Build/test
-coverage/
-# ...but config/coverage/ is the jurisdiction coverage manifest, not a test-coverage
-# report. Without this the manifest is silently untracked and every coverage test
-# passes locally while failing on a clean checkout.
-!config/coverage/
+# These are anchored on purpose. A bare `coverage/` also matched
+# `config/coverage/` (the jurisdiction coverage manifest) and
+# `apps/web/src/app/admin/coverage/` (the scorecard page), so both were silently
+# untracked while every local check passed against files a clean checkout would
+# not have had. Name the directories that actually hold tool output.
+/coverage/
+apps/web/coverage/
+services/*/coverage/
 dist/
 build/
 

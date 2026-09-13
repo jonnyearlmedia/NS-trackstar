@@ -3,11 +3,13 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from ns_trackstar.business import (
+    ABC_REPORT_EVIDENCE,
     BusinessEvidence,
     BusinessEvidenceType,
     BusinessOpeningState,
     TenantIdentityState,
     assess_business_opening,
+    business_evidence_from_abc_record,
 )
 
 
@@ -176,13 +178,6 @@ def test_every_business_state_from_the_product_contract_is_represented() -> None
         "closed",
     }
 
-
-from ns_trackstar.business import (  # noqa: E402
-    ABC_REPORT_EVIDENCE,
-    BusinessEvidenceType,
-    BusinessOpeningState,
-    business_evidence_from_abc_record,
-)
 
 
 def abc_row(**overrides) -> dict:

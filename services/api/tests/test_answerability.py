@@ -10,7 +10,7 @@ separate check against the deployed API.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -79,10 +79,10 @@ def explainer_for(project: dict):
                 "event_type": "planning_changed",
                 "title": "Planning changed to under review",
                 "summary": "The application moved into official review.",
-                "occurred_at": datetime(2026, 8, 4),
+                "occurred_at": datetime(2026, 8, 4, tzinfo=UTC),
             }
         ],
-        now=datetime(2026, 9, 13),
+        now=datetime(2026, 9, 13, tzinfo=UTC),
     )
 
 
