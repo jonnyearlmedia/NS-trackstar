@@ -8,7 +8,7 @@ import { isInsideServiceArea } from "./service-area";
 import { BriefingCard } from "./trackstar-final-briefing";
 import { BottomNav, CoverageNotice, TopChrome } from "./trackstar-final-chrome";
 import { BrowsePanel, ExplorePanel, ExploreUtilities } from "./trackstar-final-explore";
-import { loadAreaChanges, loadProjectBundle, searchProjects } from "./trackstar-final-loaders";
+import { loadAreaBriefingIds, loadAreaChanges, loadProjectBundle, searchProjects } from "./trackstar-final-loaders";
 import { FilterSheet, NearMeSheet, OverlapChooser } from "./trackstar-final-modals";
 import { ProjectSheet } from "./trackstar-final-project";
 import { SearchOverlay } from "./trackstar-final-search";
@@ -254,11 +254,26 @@ export function TrackstarFinal({ initialProjectId }: { initialProjectId?: string
     setTimeWindow("all");
   }
 
-  function startBriefing() {
+  async function startBriefing() {
     if (!viewport) return;
-    const items = curateBriefing(viewport.projects, changes);
+    const briefingViewport = viewport;
+    const fallback = curateBriefing(briefingViewport.projects, changes);
+    let items = fallback;
+    try {
+      const controller = new AbortController();
+      const rankedIds = await loadAreaBriefingIds(briefingViewport, timeWindow, controller.signal);
+      const localById = new Map(briefingViewport.projects.map((project) => [project.id, project]));
+      const ranked = rankedIds.flatMap((id) => {
+        const project = localById.get(id);
+        return project ? [project] : [];
+      });
+      const rankedSet = new Set(ranked.map((project) => project.id));
+      items = [...ranked, ...fallback.filter((project) => !rankedSet.has(project.id))].slice(0, 5);
+    } catch {
+      items = fallback;
+    }
     if (items.length < 2) return;
-    setBriefingOrigin(viewport.bounds);
+    setBriefingOrigin(briefingViewport.bounds);
     setBriefingItems(items);
     setBriefingIndex(0);
     setBriefingPaused(false);
@@ -319,7 +334,7 @@ export function TrackstarFinal({ initialProjectId }: { initialProjectId?: string
     <CoverageNotice outside={outsideCoverage} onReturn={returnToCoverage} />
 
     {view === "explore" && !selected && !browseOpen && !briefingActive ? <ExploreUtilities activeFilterCount={activeFilterCount} onFilters={() => setFilterOpen(true)} onNearMe={() => { setLocationState("idle"); setLocationOpen(true); }} /> : null}
-    {view === "explore" && !selected && !briefingActive ? <ExplorePanel orientation={exploreMode === "orientation"} viewport={viewport} category={category} lifecycle={lifecycle} timeWindow={timeWindow} browseOpen={browseOpen} canBrief={canBrief} onCollapse={rememberFreeExplore} onExpand={() => setExploreMode("orientation")} onCategory={(value) => { setCategory(value); rememberFreeExplore(); }} onLifecycleClear={() => setLifecycle("current")} onTimeClear={() => setTimeWindow("all")} onBrowse={() => { rememberFreeExplore(); setBrowseOpen(true); }} onFilters={() => setFilterOpen(true)} onNearMe={() => setLocationOpen(true)} onBrief={startBriefing} /> : null}
+    {view === "explore" && !selected && !briefingActive ? <ExplorePanel orientation={exploreMode === "orientation"} viewport={viewport} category={category} lifecycle={lifecycle} timeWindow={timeWindow} browseOpen={browseOpen} canBrief={canBrief} onCollapse={rememberFreeExplore} onExpand={() => setExploreMode("orientation")} onCategory={(value) => { setCategory(value); rememberFreeExplore(); }} onLifecycleClear={() => setLifecycle("current")} onTimeClear={() => setTimeWindow("all")} onBrowse={() => { rememberFreeExplore(); setBrowseOpen(true); }} onFilters={() => setFilterOpen(true)} onNearMe={() => setLocationOpen(true)} onBrief={() => void startBriefing()} /> : null}
     {view === "explore" && !selected && browseOpen && !briefingActive ? <BrowsePanel viewport={viewport} category={category} lifecycle={lifecycle} onClose={() => setBrowseOpen(false)} onSelect={selectProject} onCategory={(value) => { setCategory(value); setBrowseOpen(false); }} onClear={clearFilters} /> : null}
     {view === "updates" && !selected && !briefingActive ? <UpdatesPanel viewport={viewport} changes={changes} loading={changesState === "loading"} error={changesState === "error"} truncated={changesTruncated} onSelect={selectProject} onExplore={() => setView("explore")} /> : null}
     {!selected && !briefingActive ? <BottomNav view={view} onView={(next) => { setBrowseOpen(false); setView(next); }} /> : null}
