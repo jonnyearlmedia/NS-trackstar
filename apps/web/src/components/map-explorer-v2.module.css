@@ -388,10 +388,15 @@
   font-size: 8px;
 }
 
+/* Every category must stay visible without horizontal scrolling. At phone width
+   the five pills plus Filters overflowed by 144px, which put Places entirely
+   off-screen, and the scrollbar is hidden, so nothing signalled it was there.
+   Wrapping costs one row of height and keeps the order stable, which the
+   nontechnical-resident acceptance case depends on. */
 .pillScroller {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
-  overflow-x: auto;
   padding: 2px 0 1px;
   scrollbar-width: none;
 }
@@ -461,8 +466,15 @@
 
 .projectCard {
   bottom: calc(var(--safe-bottom) + 56px);
-  max-height: min(38dvh, 340px);
-  overflow: hidden;
+  max-height: min(64dvh, 520px);
+  /* The card is height-capped so the map stays visible behind it, but clipping
+     the overflow silently amputated the rest of the card: at iPhone height the
+     content ran 218px past the cap, which cut the body copy mid-glyph and put
+     "Details & official sources", the single deeper action, out of reach
+     entirely. Scroll the overflow instead of destroying it, and keep the
+     gesture from chaining into the map underneath. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 5px 13px 13px;
   border-radius: 24px;
   transition: max-height 0.2s ease;
@@ -823,16 +835,19 @@
   line-height: 1.4;
 }
 
+/* This is the only way out of the empty Updates state, so it has to meet the
+   44px control minimum rather than the 24px it previously rendered at. */
 .emptyUpdates button {
   justify-self: start;
-  margin-top: 4px;
-  padding: 8px 10px;
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 16px;
   border: 0;
   border-radius: 999px;
   color: var(--accent-text);
   background: var(--accent);
-  font-size: 8px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .scrim {

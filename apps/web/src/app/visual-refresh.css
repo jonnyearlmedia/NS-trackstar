@@ -126,7 +126,7 @@ html, body {
 .updatesSheet header p,
 .filterSheet header p,
 [class*="sectionLabel"] {
-  color: #70818a !important;
+  color: #657780 !important;
   font-size: 11px !important;
   font-weight: 760 !important;
   letter-spacing: .09em !important;
@@ -184,7 +184,7 @@ html, body {
   background: rgba(255,255,255,.15) !important;
 }
 [class*="categoryCount"] {
-  color: #73858e !important;
+  color: #657780 !important;
   font-size: 11px !important;
 }
 [class*="categorySelected"] [class*="categoryCount"] { color: rgba(255,255,255,.82) !important; }
@@ -228,7 +228,8 @@ html, body {
 [class*="areaPill"] small { color: #71828b !important; font-size: 12px !important; }
 [class*="pillScroller"] { gap: 7px !important; }
 [class*="pillScroller"] button {
-  min-height: 42px !important;
+  /* 44px is the spec's minimum interactive height for ordinary controls. */
+  min-height: 44px !important;
   padding: 0 13px !important;
   border-color: rgba(25,48,59,.10) !important;
   color: #50636d !important;
@@ -327,7 +328,7 @@ html, body {
 [class*="detailFact"] { padding: 12px !important; border-radius: 14px !important; background: #f7fafb !important; }
 [class*="detailFact"] small,
 [class*="statusGrid"] small,
-[class*="statusStrip"] small { color: #70818a !important; font-size: 10px !important; }
+[class*="statusStrip"] small { color: #657780 !important; font-size: 10px !important; }
 [class*="detailFact"] strong,
 [class*="statusGrid"] strong,
 [class*="statusStrip"] strong { color: #243942 !important; font-size: 13px !important; }
@@ -455,7 +456,10 @@ summary:focus-visible {
   [class*="bottomNav"] { bottom: calc(var(--safe-bottom) + 4px) !important; }
   [class*="bottomNav"] button { min-width: 104px !important; height: 46px !important; font-size: 13px !important; }
 
-  [class*="projectCard"] { max-height: min(45dvh, 430px) !important; padding: 5px 14px 14px !important; }
+  /* The peek was capped at 45dvh (298px on an iPhone) while its content ran to
+     535px, so the body copy was sliced mid-glyph and the Details action sat
+     below the cut. Fit the real content and keep meaningful map context above. */
+  [class*="projectCard"] { max-height: min(64dvh, 520px) !important; padding: 5px 14px 14px !important; }
   [class*="projectCardExpanded"] { max-height: min(82dvh, 760px) !important; }
   [class*="projectTitleBlock"] h2 { font-size: clamp(30px, 9vw, 40px) !important; }
   [class*="projectLead"] { font-size: 15px !important; }

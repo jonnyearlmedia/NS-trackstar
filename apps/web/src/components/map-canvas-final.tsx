@@ -129,8 +129,19 @@ export function MapCanvasFinal(props: Props) {
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-right");
       map.addControl(new maplibre.AttributionControl({ compact: true }), "bottom-left");
 
+      let awaitingStyle = false;
       async function refresh() {
-        if (!map.isStyleLoaded()) return;
+        if (!map.isStyleLoaded()) {
+          // The style can still be settling when `load` fires. Returning here
+          // without rescheduling used to strand first open on "Loading project
+          // coverage…" forever, because nothing else requests data until the
+          // user happens to pan the map.
+          if (!awaitingStyle) {
+            awaitingStyle = true;
+            map.once("idle", () => { awaitingStyle = false; void refresh(); });
+          }
+          return;
+        }
         abort?.abort(); abort = new AbortController();
         try {
           const loaded = await loadViewportTruth(map, timeRef.current, abort.signal);
@@ -176,5 +187,7 @@ export function MapCanvasFinal(props: Props) {
     return () => { disposed = true; abort?.abort(); if (moveTimer !== undefined) window.clearTimeout(moveTimer); refreshRef.current = null; mapRef.current?.remove(); mapRef.current = null; };
   }, []);
 
-  return <><div className="mapCanvas" ref={containerRef} />{mapState !== "ready" ? <div className={mapState === "error" ? "mapStatus error" : "mapStatus"} role="status">{mapState === "error" ? <><strong>Map could not load</strong><button onClick={() => window.location.reload()} type="button">Retry</button></> : "Loading Trackstar…"}</div> : null}</>;
+  // data-map-state is the QA readiness signal. Asserting that the canvas element
+  // exists is not enough: the canvas is present even when the map never loads.
+  return <><div className="mapCanvas" data-map-state={mapState} ref={containerRef} />{mapState !== "ready" ? <div className={mapState === "error" ? "mapStatus error" : "mapStatus"} role="status">{mapState === "error" ? <><strong>Map could not load</strong><button onClick={() => window.location.reload()} type="button">Retry</button></> : "Loading Trackstar…"}</div> : null}</>;
 }
