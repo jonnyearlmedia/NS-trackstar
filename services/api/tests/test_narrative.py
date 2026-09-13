@@ -224,3 +224,73 @@ def test_newest_assertion_wins_per_field():
 def test_field_label_falls_back_readably():
     assert field_label("residential_units") == "Homes"
     assert field_label("brand_new_field") == "Brand new field"
+
+
+def sourced(field: str, value, source_key: str) -> dict:
+    return {"field": field, "value": value, "source_url": None, "source_key": source_key}
+
+
+def test_a_rollup_filing_abstract_never_leads_when_local_prose_exists():
+    explainer = compose_explainer(
+        name="Napa Pipe",
+        project_type="municipal_development",
+        consumer_category="development",
+        assertions=[
+            sourced(
+                "description",
+                "Amendment to the previously certified EIR addressing bridge and "
+                "levee improvements associated with the approved development plan.",
+                "california.ceqanet.napa-solano",
+            ),
+            sourced(
+                "description",
+                "A large mixed use community on the former Napa Pipe factory site, "
+                "with homes, shops and public open space along the Napa River.",
+                "napa-city.napa-pipe-amendments",
+            ),
+        ],
+    )
+    assert explainer.what_is_this.startswith("A large mixed use community")
+    assert "Amendment to the previously certified EIR" not in explainer.what_is_this
+    assert "description" in explainer.basis
+
+
+def test_a_rollup_abstract_follows_the_identity_sentence_rather_than_replacing_it():
+    explainer = compose_explainer(
+        name="Napa Pipe",
+        project_type="municipal_development",
+        consumer_category="development",
+        assertions=[
+            sourced(
+                "description",
+                "Amendment to the previously certified EIR addressing bridge and "
+                "levee improvements associated with the approved development plan.",
+                "california.ceqanet.napa-solano",
+            ),
+            sourced("residential_units", 945, "napa-county.napa-pipe-development-plan"),
+            sourced("address", "1025 Kaiser Road", "napa-county.napa-pipe-development-plan"),
+        ],
+    )
+    # The reader learns what the project is before what the latest filing says.
+    assert explainer.what_is_this.startswith(
+        "A development project with 945 homes at 1025 Kaiser Road."
+    )
+    assert "Amendment to the previously certified EIR" in explainer.what_is_this
+    assert "rollup_description" in explainer.basis
+
+
+def test_a_rollup_abstract_is_still_used_when_it_is_all_there_is():
+    explainer = compose_explainer(
+        name="SCH 2021010044",
+        project_type="environmental_review",
+        assertions=[
+            sourced(
+                "description",
+                "Construction of a regional logistics facility including warehouse "
+                "buildings, truck courts and associated roadway improvements.",
+                "california.ceqanet.napa-solano",
+            )
+        ],
+    )
+    assert explainer.what_is_this.startswith("Construction of a regional logistics facility")
+    assert "rollup_description" in explainer.basis

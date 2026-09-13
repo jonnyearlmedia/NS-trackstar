@@ -19,6 +19,8 @@ from ns_trackstar.db import (
 from ns_trackstar.enrichment import (
     enrich_napa_projects_from_parcels,
     enrich_one_lake_relationships,
+    enrich_project_jurisdictions,
+    enrich_projects_from_address_points,
     enrich_solano_projects_from_parcels,
     enrich_sr37_sears_point_corridor,
 )
@@ -99,6 +101,8 @@ async def collect(config_path: str, *, write: bool) -> int:
     enriched_solano_projects = 0
     enriched_corridors = 0
     enriched_relationships = 0
+    stamped_jurisdictions = 0
+    placed_from_addresses = 0
     async with connect(database_url) as conn:
         source_id, run_id = await _start_run(conn, adapter_name=adapter_name, config=config)
 
@@ -155,6 +159,15 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "fairfield.vanden-canon-overcrossing",
                 }:
                     enriched_relationships = await enrich_one_lake_relationships(conn)
+
+                if config.key in {
+                    "napa-county.city-boundaries",
+                    "solano-county.city-boundaries",
+                }:
+                    stamped_jurisdictions = await enrich_project_jurisdictions(conn)
+
+                if config.key == "napa-county.addresses":
+                    placed_from_addresses = await enrich_projects_from_address_points(conn)
         except Exception as exc:
             async with conn.transaction():
                 await fail_source_run(
@@ -187,6 +200,8 @@ async def collect(config_path: str, *, write: bool) -> int:
                     "solano_projects_enriched_from_parcels": enriched_solano_projects,
                     "corridors_enriched": enriched_corridors,
                     "project_relationships_enriched": enriched_relationships,
+                    "project_jurisdictions_stamped": stamped_jurisdictions,
+                    "projects_placed_from_address_points": placed_from_addresses,
                 },
             },
             indent=2,
@@ -208,6 +223,12 @@ async def enrich_all() -> int:
             "solano_projects_enriched_from_parcels": await enrich_solano_projects_from_parcels(conn),
             "corridors_enriched": await enrich_sr37_sears_point_corridor(conn),
             "project_relationships_enriched": await enrich_one_lake_relationships(conn),
+            # Address placement runs before the jurisdiction stamp so a project placed
+            # in this pass is stamped in the same pass rather than the next one.
+            "projects_placed_from_address_points": (
+                await enrich_projects_from_address_points(conn)
+            ),
+            "project_jurisdictions_stamped": await enrich_project_jurisdictions(conn),
         }
 
     print(json.dumps({"enrichment": "complete", **summary}, indent=2))

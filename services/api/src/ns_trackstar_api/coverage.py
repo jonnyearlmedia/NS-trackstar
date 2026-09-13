@@ -89,6 +89,7 @@ class CategoryCoverage:
     production_sources: tuple[str, ...]
     unpromoted_sources: tuple[str, ...]
     scopes: tuple[str, ...]
+    roles: tuple[str, ...]
     limitation: str | None
     blocker: dict[str, Any] | None
 
@@ -103,17 +104,28 @@ class CategoryCoverage:
             "production_sources": list(self.production_sources),
             "unpromoted_sources": list(self.unpromoted_sources),
             "scopes": list(self.scopes),
+            "roles": list(self.roles),
             "limitation": self.limitation,
             "blocker": self.blocker,
         }
+
+
+# Spatial truth is the one category where reference layers *are* the deliverable.
+# A jurisdiction is only strong there once Trackstar can place a record on a parcel,
+# resolve it to an address, and say which jurisdiction it falls in.
+SPATIAL_ROLES_FOR_STRONG = frozenset({"parcels", "address_level", "boundaries"})
 
 
 def derive_state(
     *,
     scopes: tuple[str, ...],
     has_blocker: bool,
+    category: str | None = None,
+    roles: tuple[str, ...] = (),
 ) -> CoverageState:
     if "recurring_tracker" in scopes:
+        return "strong"
+    if category == "gis_spatial" and SPATIAL_ROLES_FOR_STRONG.issubset(set(roles)):
         return "strong"
     if scopes:
         return "partial"
@@ -134,15 +146,19 @@ def _category_coverage(
     production_sources: list[str] = []
     unpromoted: list[str] = []
     scopes: list[str] = []
+    roles: list[str] = []
     for item in evidence:
         source_key = str(item.get("source") or "")
         scope = str(item.get("scope") or "")
+        role = str(item.get("role") or "")
         if not source_key:
             continue
         if source_key in production:
             production_sources.append(source_key)
             if scope and scope not in scopes:
                 scopes.append(scope)
+            if role and role not in roles:
+                roles.append(role)
         else:
             # Declared but not promoted. It is never allowed to raise the state.
             unpromoted.append(source_key)
@@ -161,10 +177,16 @@ def _category_coverage(
         county=str(jurisdiction["county"]),
         category=category_key,
         category_title=category_title,
-        state=derive_state(scopes=tuple(scopes), has_blocker=blocker is not None),
+        state=derive_state(
+            scopes=tuple(scopes),
+            has_blocker=blocker is not None,
+            category=category_key,
+            roles=tuple(roles),
+        ),
         production_sources=tuple(sorted(set(production_sources))),
         unpromoted_sources=tuple(sorted(set(unpromoted))),
         scopes=tuple(scopes),
+        roles=tuple(roles),
         limitation=entry.get("limitation"),
         blocker=blocker,
     )

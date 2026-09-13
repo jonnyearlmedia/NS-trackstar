@@ -1,0 +1,19 @@
+{
+  "key": "napa-county.city-boundaries",
+  "name": "Napa County Incorporated City Boundaries",
+  "jurisdiction": "Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Cities/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Cities/FeatureServer/0",
+    "id_field": "city",
+    "out_fields": ["objectid", "city", "globalid"],
+    "where": "1=1",
+    "page_size": 100,
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 5,
+    "max_expected_records": 5,
+    "canary_fields": ["city", "globalid"]
+  }
+}

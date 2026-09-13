@@ -10,6 +10,7 @@ FreshnessClass = Literal[
     "regulatory_watch",
     "project_specific_record",
     "parcel_reference",
+    "spatial_reference",
 ]
 
 
@@ -90,6 +91,30 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "nigc.scotts-valley-gaming-ordinance": SourceFreshnessPolicy(
         "regulatory_watch", "daily", 720, 1440,
         "Federal gaming regulatory record; significant but low-frequency changes.",
+    ),
+    "napa-county.addresses": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Address points are the base layer used to place a record, not an activity feed.",
+    ),
+    "napa-county.city-boundaries": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Incorporated city limits change through annexation, which is a rare and discrete event.",
+    ),
+    "napa-county.road-centerlines": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Road centrelines anchor corridor and intersection geometry; they change slowly.",
+    ),
+    "napa-county.zoning": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Zoning is context for what a site may become, and is amended rarely.",
+    ),
+    "solano-county.city-boundaries": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Incorporated city limits change through annexation, which is a rare and discrete event.",
+    ),
+    "solano-county.streets": SourceFreshnessPolicy(
+        "spatial_reference", "rare", 1440, 10080,
+        "Street centrelines with address ranges are the base layer for address-level geocoding.",
     ),
     "solano-county.legistar": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,

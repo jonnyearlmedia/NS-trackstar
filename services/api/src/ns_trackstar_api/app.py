@@ -596,10 +596,12 @@ async def project_detail(project_id: UUID) -> dict:
               'authority_type', a.authority_type,
               'confidence', a.confidence,
               'observed_at', a.observed_at,
-              'source_url', COALESCE(a.source_url, sr.canonical_url)
+              'source_url', COALESCE(a.source_url, sr.canonical_url),
+              'source_key', asserting_source.source_key
             ) ORDER BY a.observed_at DESC)
              FROM assertion a
              LEFT JOIN source_record sr ON sr.id = a.source_record_id
+             LEFT JOIN source asserting_source ON asserting_source.id = a.source_id
              WHERE a.project_id = p.id),
             '[]'::jsonb
           ) AS assertions,

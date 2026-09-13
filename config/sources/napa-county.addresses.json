@@ -1,0 +1,33 @@
+{
+  "key": "napa-county.addresses",
+  "name": "Napa County Public Address Points",
+  "jurisdiction": "Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Addresses_All/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Addresses_All/FeatureServer/0",
+    "id_field": "addressid",
+    "out_fields": [
+      "objectid",
+      "addressid",
+      "address",
+      "addressnum",
+      "roadname",
+      "streetname",
+      "pre_dir",
+      "st_type",
+      "post_dir",
+      "unitid",
+      "postalarea",
+      "addresstype",
+      "status"
+    ],
+    "where": "1=1",
+    "page_size": 2000,
+    "expected_geometry_type": "esriGeometryPoint",
+    "min_expected_records": 40000,
+    "max_expected_records": 250000,
+    "canary_fields": ["addressid", "address", "addressnum", "roadname", "postalarea"]
+  }
+}

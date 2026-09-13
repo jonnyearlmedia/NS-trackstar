@@ -277,6 +277,19 @@ _FIELD_LABELS: dict[str, str] = {
     "zoning": "Zoning",
 }
 
+# Source authority for the one sentence that leads the answer. A statewide or federal
+# rollup describes the *filing*, not the project: a CEQA amendment abstract once made
+# Napa Pipe read as a bridge project. Those descriptions are still shown, but a local
+# agency's own description outranks them, and a rollup abstract never leads alone.
+ROLLUP_DESCRIPTION_SOURCES = (
+    "california.ceqanet",
+    "federal-register",
+    "courtlistener",
+    "caltrans.building-ca",
+    "bia.",
+    "nigc.",
+)
+
 _UNIT_FIELDS = ("residential_units", "units", "project_units")
 _ACRE_FIELDS = ("site_acres", "location_acres")
 _COST_FIELDS = ("estimated_cost", "total_cost", "funding")
@@ -453,17 +466,27 @@ class _Evidence:
         self._values: dict[str, Any] = {}
         self._urls: dict[str, str | None] = {}
         self._order: list[str] = []
+        self._descriptions: list[tuple[str, str]] = []
         # Callers pass assertions newest first; keep the first value seen per field.
         for assertion in assertions:
             name = str(assertion.get("field") or "").strip()
-            if not name or name in self._values:
-                continue
             value = assertion.get("value")
-            if value is None or _text(value) == "":
+            if not name or value is None or _text(value) == "":
+                continue
+            if name == "description":
+                self._descriptions.append(
+                    (_text(value), str(assertion.get("source_key") or ""))
+                )
+            if name in self._values:
                 continue
             self._values[name] = value
             self._urls[name] = assertion.get("source_url")
             self._order.append(name)
+
+    def descriptions(self) -> list[tuple[str, str]]:
+        """Every description candidate, newest first, with its source key."""
+
+        return list(self._descriptions)
 
     def __contains__(self, name: object) -> bool:
         return name in self._values
@@ -502,6 +525,32 @@ def _identity_noun(
     if consumer_category in _CATEGORY_NOUNS:
         return _CATEGORY_NOUNS[consumer_category]
     return "project"
+
+
+def _ranked_descriptions(evidence: _Evidence) -> tuple[str | None, str | None]:
+    """Split description candidates into local-agency prose and rollup-filing prose."""
+
+    local: str | None = None
+    rollup: str | None = None
+    for value, source_key in evidence.descriptions():
+        if not _reads_like_prose(value):
+            continue
+        is_rollup = any(source_key.startswith(prefix) for prefix in ROLLUP_DESCRIPTION_SOURCES)
+        if is_rollup:
+            rollup = rollup or value
+        else:
+            local = local or value
+    return local, rollup
+
+
+def _identity_clause(evidence: _Evidence) -> str | None:
+    """Whether structured evidence alone can say what this is."""
+
+    scale = _scale_clause(evidence)
+    place = _place_clause(evidence)
+    if scale and place:
+        return f"{scale} at {place}"
+    return scale or place
 
 
 def _scale_clause(evidence: _Evidence) -> str | None:
@@ -548,13 +597,19 @@ def _compose_what_is_this(
 ) -> tuple[str, bool]:
     """Prefer the agency's own description; otherwise build a sentence from facts."""
 
-    described = _text(evidence.get("description"))
+    local, rollup = _ranked_descriptions(evidence)
     sentences: list[str] = []
     evidence_backed = False
 
-    if _reads_like_prose(described):
-        sentences.append(_sentence(_clip(described, 300)))
+    if local:
+        sentences.append(_sentence(_clip(local, 300)))
         basis.append("description")
+        evidence_backed = True
+    elif rollup and _identity_clause(evidence) is None:
+        # Nothing local to lead with and no structured identity either. The filing
+        # abstract is all Trackstar has, so use it rather than saying nothing.
+        sentences.append(_sentence(_clip(rollup, 300)))
+        basis.append("rollup_description")
         evidence_backed = True
     else:
         noun = _identity_noun(
@@ -578,6 +633,12 @@ def _compose_what_is_this(
             evidence_backed = True
         else:
             sentences.append(_sentence(f"{name} is a {noun} tracked in official public records"))
+
+        if rollup:
+            # The abstract follows the identity sentence instead of replacing it, so a
+            # reader learns what the project is before what the latest filing says.
+            sentences.append(_sentence(_clip(rollup, 220)))
+            basis.append("rollup_description")
 
     stage_sentence = _LIFECYCLE_SENTENCES.get(str(lifecycle_stage or ""))
     if stage_sentence:

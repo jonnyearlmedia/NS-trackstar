@@ -114,12 +114,37 @@ def test_parcels_and_ceqa_alone_do_not_make_development_coverage():
     by_key = {item["key"]: item for item in scorecard["jurisdictions"]}
     for key in ("vacaville", "dixon", "rio-vista", "yountville", "st-helena", "calistoga"):
         rows = {row["category"]: row for row in by_key[key]["categories"]}
-        # These jurisdictions genuinely do get statewide CEQA and county parcels...
+        # These jurisdictions genuinely do get statewide CEQA filings, and full county
+        # spatial truth: parcels, address-level geocoding and jurisdiction boundaries.
         assert rows["ceqa_environmental"]["state"] == "partial"
-        assert rows["gis_spatial"]["state"] == "partial"
-        # ...but that must never read as local development or permit coverage.
+        assert rows["gis_spatial"]["state"] == "strong"
+        # ...but neither ever reads as local development or permit coverage. Knowing
+        # exactly where a project would sit is not knowing that one exists.
         assert rows["current_development"]["state"] == "missing"
         assert rows["permits"]["state"] == "missing"
+
+
+def test_spatial_truth_is_only_strong_with_parcels_addresses_and_boundaries():
+    assert derive_state(
+        scopes=("reference",),
+        has_blocker=False,
+        category="gis_spatial",
+        roles=("parcels", "address_level", "boundaries"),
+    ) == "strong"
+    # Parcels on their own were the old state of the world, and were never enough.
+    assert derive_state(
+        scopes=("reference",),
+        has_blocker=False,
+        category="gis_spatial",
+        roles=("parcels",),
+    ) == "partial"
+    # The spatial rule never leaks into another category.
+    assert derive_state(
+        scopes=("reference",),
+        has_blocker=False,
+        category="current_development",
+        roles=("parcels", "address_level", "boundaries"),
+    ) == "partial"
 
 
 def test_blocked_jurisdictions_record_why_and_name_the_smoke_config():
