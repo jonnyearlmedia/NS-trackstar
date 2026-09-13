@@ -409,7 +409,13 @@
           ]
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "st-helena.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Envisio dashboard. Unusually rich for this service area: each project carries budget and expenditure to date, phase, category, dates and a written description, all in the city's own words. The fields are authored by the city as a labelled block rather than being Envisio schema columns, so a page that stops carrying its labels counts as a parse failure rather than going quiet. Two of eighty publish no expenditure figure; that is recorded as absent and never as zero."
         },
         "gis_spatial": {
           "evidence": [

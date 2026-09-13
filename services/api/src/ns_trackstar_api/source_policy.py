@@ -213,6 +213,13 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed where a newly posted agenda is the earliest public "
         "signal that a project is about to be decided.",
     ),
+    "st-helena.capital-improvement-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "The city's capital programme with budget and money actually spent against it, "
+        "which no other source in this service area carries. Engineers edit the phase "
+        "and the spend as work moves, and one request returns the whole dashboard, so "
+        "this is cheap to keep current.",
+    ),
     "st-helena.civicclerk": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed; a newly posted agenda is the earliest public signal "
