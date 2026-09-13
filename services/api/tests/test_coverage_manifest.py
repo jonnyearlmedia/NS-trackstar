@@ -120,8 +120,14 @@ def test_parcels_and_ceqa_alone_do_not_make_development_coverage():
         assert rows["gis_spatial"]["state"] == "strong"
         # ...but neither ever reads as local development or permit coverage. Knowing
         # exactly where a project would sit is not knowing that one exists.
-        assert rows["current_development"]["state"] == "missing"
-        assert rows["permits"]["state"] == "missing"
+        #
+        # The assertion is "not covered" rather than one exact label, because a
+        # category legitimately moves between missing and blocked as work proceeds:
+        # Dixon's permits became blocked once its Tyler portal was found and its
+        # contract turned out to need a browser capture. Both still mean not covered,
+        # and pinning the label would make that progress look like a regression.
+        assert rows["current_development"]["state"] in {"missing", "blocked"}
+        assert rows["permits"]["state"] in {"missing", "blocked"}
 
 
 def test_spatial_truth_is_only_strong_with_parcels_addresses_and_boundaries():

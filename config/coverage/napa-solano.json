@@ -1091,7 +1091,10 @@
           "evidence": []
         },
         "permits": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "Dixon's Tyler EnerGov portal at dixonca-energovweb.tylerhost.net is reachable and its search route is real, but six hand built payloads returned a bare 500. The remaining step is a Playwright capture of the app's own request, which the verification environment cannot do because its browser process has no outbound network. Field names and both module enums are recorded in docs/SOURCE_STATUS.md."
+          }
         },
         "government_meetings": {
           "evidence": [
