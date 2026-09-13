@@ -15,7 +15,18 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 import { chromium, webkit, devices } from "@playwright/test";
+
+/**
+ * Sandboxes ship one pinned Chromium build, and `npx playwright install` cannot
+ * reach the download host. When the installed build does not match the version
+ * @playwright/test expects, launch the one that is actually on disk rather than
+ * failing the whole visual pass, because "I could not look" quietly becomes
+ * "nobody looked".
+ */
+const SANDBOX_CHROMIUM = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ?? "/opt/pw-browsers/chromium";
+const launchOptions = existsSync(SANDBOX_CHROMIUM) ? { executablePath: SANDBOX_CHROMIUM } : {};
 
 const args = process.argv.slice(2);
 const argOf = (flag, fallback) => {
@@ -195,7 +206,9 @@ async function run() {
   ];
 
   for (const { tag, browserType, opts } of viewports) {
-    const browser = await browserType.launch();
+    const browser = await browserType.launch(
+      browserType === chromium ? launchOptions : {},
+    );
     const context = await browser.newContext({ ...opts, serviceWorkers: "block" });
     await bridgeExternalNetwork(context);
     for (const name of names) {

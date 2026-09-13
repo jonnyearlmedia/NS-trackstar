@@ -113,6 +113,38 @@ on a four-year-old filing.
 sheet on phone and fully covered by the panel on desktop. This is a licensing
 obligation, not a nicety.
 
+## Verified 2026-09-13, coverage-expansion pass
+
+Screenshots were taken twice: against the deployed backend, and against a local
+stub serving the new project-detail contract, because the deployed API predates
+`narrative.py` and can only exercise the fallback path.
+
+**Confirmed working.** With the composed explainer present, the project sheet
+reads the way the product is supposed to read. "What is this?" carried the
+agency's own sentence plus the stage; "What's happening" carried the meaningful
+change with its date; "Why you'd care" carried new homes, building space, site
+size, estimated cost and applicant as separate facts; "What happens next?"
+carried the dated construction start. The identity chip read "Under review"
+rather than "Status unclear".
+
+**Confirmed by the fallback shot.** Against the deployed backend, Napa Pipe has
+no stored summary, so the card shows the new honest fallback rather than
+inventing a description. That is the correct behaviour and it is also the proof
+that the composer is what closes this gap: the same project reads as a real
+description only once the composer is deployed.
+
+**New finding, not fixed.** In the basemap-failure state the "Map could not
+load" banner renders *over* the project sheet, obscuring the project title and
+one of the key-fact rows. The failure state itself is legitimate and users can
+hit it; covering the content with it is not. This is a stacking-order problem
+inside the eleven-layer cascade, so it belongs to the `ui-rebuild` phases rather
+than to a twelfth override.
+
+**Still open from the earlier pass.** "WHAT'S HAPPENING" still presents a May
+2021 event directly above "Official source checks current", with no staleness
+treatment on the event date. Collector recency and project recency still read as
+the same thing to a user.
+
 ## Still-true structural debt
 
 `app/layout.tsx` stacks eleven global stylesheets with 903 `!important`

@@ -29,6 +29,10 @@ backups/
 
 # Build/test
 coverage/
+# ...but config/coverage/ is the jurisdiction coverage manifest, not a test-coverage
+# report. Without this the manifest is silently untracked and every coverage test
+# passes locally while failing on a clean checkout.
+!config/coverage/
 dist/
 build/
 
