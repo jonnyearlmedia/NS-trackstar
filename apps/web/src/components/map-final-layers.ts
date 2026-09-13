@@ -1,5 +1,5 @@
 import type { Feature } from "geojson";
-import type { ExpressionSpecification, GeoJSONSource, Map } from "maplibre-gl";
+import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 
 import {
   coverageEdge,
@@ -44,7 +44,7 @@ const categoryColor = [
 ] as ExpressionSpecification;
 
 export function installFinalLayers(
-  map: Map,
+  map: MapLibreMap,
   user: UserLocation | null,
   onOne: (project: MapProject) => void,
   onMany: (projects: MapProject[]) => void,
@@ -199,6 +199,19 @@ export function installFinalLayers(
   });
 
   map.addLayer({
+    id: "final-selected-fill",
+    type: "fill",
+    source: SOURCES.selected,
+    filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
+    paint: { "fill-color": "#d9ff61", "fill-opacity": 0.34 },
+  });
+  map.addLayer({
+    id: "final-selected-line",
+    type: "line",
+    source: SOURCES.selected,
+    paint: { "line-color": "#f5ffc9", "line-width": 3.5, "line-opacity": 1 },
+  });
+  map.addLayer({
     id: "final-selected-point",
     type: "circle",
     source: SOURCES.selected,
@@ -228,7 +241,7 @@ export function installFinalLayers(
   }
 
   map.on("click", (event) => {
-    const unique = new Map<string, MapProject>();
+    const unique = new globalThis.Map<string, MapProject>();
     for (const feature of map.queryRenderedFeatures(event.point, { layers: PROJECT_LAYERS })) {
       const project = featureProject(feature as Feature);
       if (project) unique.set(project.id, project);
@@ -248,12 +261,12 @@ export function installFinalLayers(
   });
 }
 
-export function updateMapData(map: Map, shapes: Feature[], points: Feature[]) {
+export function updateMapData(map: MapLibreMap, shapes: Feature[], points: Feature[]) {
   (map.getSource(SOURCES.shapes) as GeoJSONSource)?.setData({ type: "FeatureCollection", features: shapes });
   (map.getSource(SOURCES.points) as GeoJSONSource)?.setData({ type: "FeatureCollection", features: points });
 }
 
-export function updateSelected(map: Map, project: MapProject | null) {
+export function updateSelected(map: MapLibreMap, project: MapProject | null) {
   const source = map.getSource(SOURCES.selected) as GeoJSONSource | undefined;
   if (!source) return;
   if (!project?.geometry) { source.setData(emptyCollection()); return; }
@@ -264,6 +277,6 @@ export function updateSelected(map: Map, project: MapProject | null) {
   });
 }
 
-export function updateUser(map: Map, user: UserLocation | null) {
+export function updateUser(map: MapLibreMap, user: UserLocation | null) {
   (map.getSource(SOURCES.user) as GeoJSONSource | undefined)?.setData(userLocationFeature(user));
 }
