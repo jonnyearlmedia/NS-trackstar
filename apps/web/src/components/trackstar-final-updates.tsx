@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { MapProject, MapViewportState } from "./map-final-model";
 import { areaLabel, categoryLabel, eventDate, eventHeadline, type ChangeEvent } from "./trackstar-final-ui";
+import { ArrowRightIcon, CategoryIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 
 export function UpdatesPanel({ viewport, changes, loading, error, truncated, onSelect, onExplore }: {
@@ -39,7 +40,7 @@ export function UpdatesPanel({ viewport, changes, loading, error, truncated, onS
     {!loading && !error && viewport && grouped.length === 0 ? <div className={styles.emptyUpdates}><strong>No meaningful updates here recently.</strong><span>There are still current projects you can explore on the map.</span><button onClick={onExplore} type="button">View current projects</button></div> : null}
     <ol className={styles.updateList}>{grouped.map(({ project, events }) => {
       const latest = events[0];
-      return <li key={project.id}><button onClick={() => onSelect(project)} type="button"><small>{eventDate(latest.occurred_at ?? latest.observed_at)} · {categoryLabel(project.consumerCategory)}</small><strong>{eventHeadline(latest)}{events.length > 1 ? ` · ${events.length} changes` : ""}</strong><span>{project.name}</span></button></li>;
+      return <li key={project.id}><button className="contentResultRow" onClick={() => onSelect(project)} type="button"><span className="contentResultIcon"><CategoryIcon category={project.consumerCategory} /></span><span className="contentResultCopy"><small>{eventDate(latest.occurred_at ?? latest.observed_at)} · {categoryLabel(project.consumerCategory)}</small><strong>{eventHeadline(latest)}{events.length > 1 ? ` · ${events.length} changes` : ""}</strong><em>{project.name}</em></span><span className="contentResultArrow"><ArrowRightIcon /></span></button></li>;
     })}</ol>
   </section>;
 }
