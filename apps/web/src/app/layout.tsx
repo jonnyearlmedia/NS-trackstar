@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./ux-polish.css";
 import "./final-device.css";
+import "./visual-refresh.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   icons: { icon: "/trackstar-icon.svg" },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Trackstar",
   },
 };
@@ -25,8 +26,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#06100c",
-  colorScheme: "dark",
+  themeColor: "#eef5f7",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
