@@ -65,16 +65,36 @@ Those Docker commands are maintainer/debug operations; normal setup and
 reconfiguration should go through the script so the user does not need to touch
 environment files.
 
-Before infrastructure maintenance, create a recoverable database backup:
+## Backup and recovery
+
+Create a checksummed custom-format Postgres backup before destructive maintenance:
 
 ```sh
-mkdir -p backups
-docker compose --env-file .env.production -f docker-compose.production.yml exec -T db \
-  pg_dump -U nstrackstar -d nstrackstar -Fc > "backups/nstrackstar-$(date +%F).dump"
+./scripts/backup-production-db.sh
 ```
 
-Do not commit `.env.production` or backups. Copy backups off the VM periodically;
-Oracle Free Tier does not make application-level backups automatically.
+The script writes a timestamped `.dump` plus `.sha256` file under ignored
+`backups/` by default. Copy both files off the VM periodically; Oracle Free Tier
+does not provide an application-level database backup for Trackstar.
+
+Verify that a backup can actually restore without touching production:
+
+```sh
+RESTORE_DATABASE=nstrackstar_restore ./scripts/restore-production-db.sh backups/nstrackstar-YYYYMMDDTHHMMSSZ.dump
+```
+
+The restore script verifies the checksum when present, refuses to overwrite the
+primary database by default, restores into the named verification database, and
+checks PostGIS after restore. Overwriting the primary database requires the
+explicit disaster-recovery guard `ALLOW_OVERWRITE_PRIMARY=1` and should only be
+done during an intentional recovery operation.
+
+The GitHub database CI job independently performs a full `pg_dump` → clean
+`pg_restore` round trip after migrations and verifies that the restored public
+base-table count matches the source database. That keeps recovery from becoming a
+runbook that has never been exercised.
+
+Do not commit `.env.production` or backup files.
 
 ## Frontend deploy
 
@@ -97,7 +117,9 @@ curl --fail "https://<API_DOMAIN>/map/projects?window=all"
 
 In a browser, confirm the deployed map loads, selecting a real geometry opens
 its project detail, search returns the project, timeline/source evidence loads,
-and the browser console has no CORS or mixed-content error.
+and the browser console has no CORS or mixed-content error. Use
+`docs/LAUNCH_CHECKLIST.md` for the finite release gate rather than expanding this
+deployment runbook into another roadmap.
 
 ## Scope of the production compose file
 
