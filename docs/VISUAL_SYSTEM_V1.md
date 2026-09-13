@@ -7,7 +7,7 @@ Status: canonical visual direction for the current consumer app. This document g
 Trackstar combines three ideas deliberately:
 
 1. **Clean & Modern** is the interaction foundation. The map and controls should feel clear, fast, familiar, and web/iOS-like rather than dashboard-heavy.
-2. **Editorial / Magazine** supplies personality only where hierarchy benefits from it, especially project titles and Briefing. It must not turn normal map exploration into a magazine layout.
+2. **Editorial / Magazine** supplies personality only where hierarchy benefits from it, especially Briefing and selected storytelling moments. It must not turn normal map exploration or ordinary project cards into a magazine layout.
 3. **Coastal / Northern California atmosphere** supplies lightness and regional character through restrained sky blue, cool white, sage, and warm neutral accents. Do not make the product literally beach-themed.
 
 The intended shorthand is: **Apple-like utility + local-news editorial sophistication + subtle Northern California atmosphere.**
@@ -20,10 +20,11 @@ Do not return to the previous visual system:
 - no radioactive lime / chartreuse primary accent;
 - no Material/Android-looking tiny segmented controls;
 - no 7–9px consumer-facing UI copy;
-- no tiny map dots that require exact tapping;
+- no map dominated by tiny anonymous dots;
 - no generic symbol characters standing in for a coherent icon system;
 - no dense dashboard treatment just because desktop has more room;
-- no pill shape applied indiscriminately to every control.
+- no pill shape applied indiscriminately to every control;
+- no giant serif project titles with compressed line-height in the normal map flow.
 
 Dark mode may be explored later as a deliberate second theme. It is not the default visual identity.
 
@@ -47,11 +48,11 @@ Map project categories remain differentiated but restrained:
 - Utilities: teal (`#238ca4`)
 - Public Places: indigo (`#5d70d8`)
 
-Category color is an aid, never the only meaning cue.
+Category color is an aid, never the only meaning cue. The same category color must follow a project through browse controls, map marker, overlap chooser, project card, and other consumer surfaces.
 
 ## Typography
 
-Use the system sans stack for normal UI and reading. Use a system serif stack selectively for editorial hierarchy, especially project and Briefing headlines.
+Use the system sans stack for normal UI, project cards, and reading. Reserve the system serif stack for Briefing and other explicitly editorial storytelling moments.
 
 Consumer-facing sizing baseline:
 
@@ -60,15 +61,16 @@ Consumer-facing sizing baseline:
 - navigation/buttons/chips: generally 12–14px;
 - metadata/eyebrows: generally 10–12px;
 - focused mobile form inputs: at least 16px to avoid iOS Safari auto-zoom;
-- project/Briefing editorial headline: roughly 30–48px depending on viewport.
+- normal project title: roughly 27–36px, sans, comfortable `~1.07` line-height;
+- Briefing editorial headline: roughly 33–48px depending on viewport.
 
-Avoid consumer-facing text below 10px. Small metadata should remain secondary without becoming illegible.
+Avoid consumer-facing text below 10px. Small metadata should remain secondary without becoming illegible. Large headlines must still have enough line-height to scan comfortably on a phone.
 
 ## Touch and click targets
 
 - ordinary mobile controls: target 44–48px minimum interactive height/width;
 - icon-only actions: 44px square where practical;
-- map project markers may look smaller, but their invisible interactive halo should remain roughly 44px or larger;
+- map project markers use an invisible interactive halo roughly 44px or larger even when the visible mark is smaller;
 - do not require exact marker taps;
 - overlapping project hit areas should use the existing chooser rather than silently picking one.
 
@@ -99,19 +101,24 @@ Canonical category icons:
 
 Navigation uses map/explore and updates/list icons. Briefing uses play, pause, next, and arrow controls. Do not substitute typographic glyphs such as `▦`, `↔`, `⌁`, or `◇` in the consumer UI.
 
+Category icons must be visibly meaningful, not decorative. They use the category color system in browse controls and are embedded directly in local-scale map pins.
+
 ## Map
 
 The map remains the product, not a backdrop for cards.
 
 - default basemap: OpenFreeMap **Positron** for a quiet light canvas;
-- project marks should visually separate from the basemap with a light ring/halo;
-- selected projects use Trackstar blue and a clear selection halo;
+- regional zoom may use clusters and restrained colored overview points to avoid noise;
+- city/neighborhood zoom transitions to **notification/location-pointer style category pins**, not anonymous circles;
+- each local-scale pin contains the category pictogram and category color;
+- closer zoom adds project names progressively while keeping the pin visible;
+- selected point projects enlarge their actual category pin and receive a clear Trackstar-blue selection halo;
 - clusters are white with blue outline and readable count;
 - uncertain geometry remains visibly differentiated;
 - coverage edge uses a restrained blue treatment;
 - project names appear progressively at useful local zooms, not everywhere.
 
-Do not visually overload the map with POIs or competing colors that diminish Trackstar project data.
+Do not visually overload the map with POIs or competing colors that diminish Trackstar project data. The user should be able to glance at a local map and understand what *kind* of activity each marker represents before opening a card.
 
 ## Explore
 
@@ -122,6 +129,7 @@ Normal Explore follows the Clean & Modern foundation:
 - obvious Near Me / Filters utilities;
 - category controls that are readable and easy to hit;
 - white/coastal floating surfaces;
+- category icons whose colors match the map markers;
 - icon-led Explore / Updates navigation;
 - large enough text and controls for a nontechnical resident.
 
@@ -129,18 +137,18 @@ Orientation Peek may be richer, but it should never become a permanent dashboard
 
 ## Project sheet
 
-Project Peek should answer the human question quickly.
+Project Peek should answer the human question quickly and should feel like a calm map/product sheet, not an editorial article.
 
 Hierarchy:
 
-1. category icon + understandable lifecycle cue;
-2. strong editorial project name;
-3. plain-language “What is this?” copy;
+1. category icon + understandable lifecycle cue, carrying the same category color as the map pin;
+2. strong **sans-serif** project name with comfortable line-height;
+3. plain-language Overview copy;
 4. current meaningful activity when available;
 5. freshness/trust cue;
 6. Details & official sources.
 
-Expanded technical information uses readable cards/rows and preserves the light visual system.
+The ordinary project title should not use the Briefing serif treatment. Use whitespace and subtle rules for hierarchy instead of stacking multiple boxed cards. Expanded technical information uses readable cards/rows and preserves the light visual system.
 
 ## Briefing
 
@@ -184,6 +192,9 @@ A visual pass is not accepted merely because the layout compiles. Check at minim
 - no accidental sub-10px consumer text;
 - no important action below the intended hit-target baseline;
 - map projects are easy to tap;
+- local zoom visibly communicates category through colored icon pins rather than tiny anonymous dots;
+- category colors/icons stay consistent from browse to map to project card;
+- project-card title/summary line-height remains comfortable on multi-line mobile titles;
 - selection and focus states are visible;
 - no old black/lime surface appears in loading, empty, error, freshness, coverage, or PWA launch states;
 - Briefing follows the visible map area rather than a repeated global project;
