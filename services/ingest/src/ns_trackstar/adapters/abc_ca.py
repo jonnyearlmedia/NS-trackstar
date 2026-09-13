@@ -247,7 +247,7 @@ class AbcCaAdapter(CollectorAdapter):
         records: list[NormalizedRecord] = []
         headers_seen: dict[str, list[str]] = {}
         statewide_rows = 0
-        parsed_rows = 0
+        service_area_rows = 0
 
         async with self._session() as client:
             for report_type in self.report_types:
@@ -286,10 +286,14 @@ class AbcCaAdapter(CollectorAdapter):
                     for cells in rows:
                         if len(cells) <= max(county_at, licence_at, premises_at):
                             continue
-                        parsed_rows += 1
                         county_code = cells[county_at].get_text(" ", strip=True).strip()
                         if county_code not in self.county_codes:
                             continue
+                        # The denominator is the rows that belong to the service area, not
+                        # every row in California. Dividing by the statewide count would
+                        # report a healthy run as a 9% yield, and would move in the same
+                        # direction for a quiet week in Napa as for a real parse break.
+                        service_area_rows += 1
 
                         licence_number = cells[licence_at].get_text(" ", strip=True).strip()
                         if not licence_number:
@@ -343,9 +347,10 @@ class AbcCaAdapter(CollectorAdapter):
         return CollectorResult(
             records=records,
             schema_fingerprint=self._schema_fingerprint(headers_seen),
-            parser_yield=len(records) / parsed_rows if parsed_rows else 1.0,
+            parser_yield=len(records) / service_area_rows if service_area_rows else 1.0,
             metadata={
                 "statewide_rows_seen": statewide_rows,
+                "service_area_rows_seen": service_area_rows,
                 "service_area_rows": len(records),
                 "report_types": sorted(headers_seen),
                 "lookback_days": self.lookback_days,

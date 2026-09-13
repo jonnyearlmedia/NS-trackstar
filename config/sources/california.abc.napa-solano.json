@@ -1,6 +1,6 @@
 {
-  "key": "california.abc.napa-solano-smoke",
-  "name": "California ABC Daily Licensing Reports Smoke Test",
+  "key": "california.abc.napa-solano",
+  "name": "California ABC Daily Licensing Reports (Napa and Solano)",
   "jurisdiction": "Napa and Solano Counties",
   "adapter": "abc_ca",
   "base_url": "https://www.abc.ca.gov",

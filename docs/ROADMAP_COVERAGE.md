@@ -34,27 +34,27 @@ Legend: `OK` production and verified · `--` not built · `XX` blocked, reason b
 
 ```
                         dev  permit  meet   cip   gis  ceqa  biz  proc
-Napa                    OK     OK     OK    OK    OK    OK   XX    --
-American Canyon         OK     XX     OK    OK    OK    OK   XX    --
-Napa County (uninc)     OK     XX     OK    OK    OK    OK   XX    --
-Yountville              --     --     OK    --    OK    OK   XX    --
-St. Helena              OK     --     OK    --    OK    OK   XX    --
-Calistoga               OK     --     OK    ~~    OK    OK   XX    --
-Vallejo                 OK     OK     OK    --    OK    OK   XX    --
-Benicia                 OK     XX     OK    OK    OK    OK   XX    --
-Fairfield               ~~     --     XX    OK    OK    OK   XX    --
-Suisun City             OK     --     OK    --    OK    OK   XX    --
-Vacaville               --     --     OK    --    OK    OK   XX    --
-Dixon                   --     XX     OK    OK    OK    OK   XX    --
-Rio Vista               --     --     OK    --    OK    OK   XX    --
-Solano County (uninc)   --     XX     OK    OK    OK    OK   XX    --
+Napa                    OK     OK     OK    OK    OK    OK   OK    --
+American Canyon         OK     XX     OK    OK    OK    OK   OK    --
+Napa County (uninc)     OK     XX     OK    OK    OK    OK   OK    --
+Yountville              --     --     OK    --    OK    OK   OK    --
+St. Helena              OK     --     OK    --    OK    OK   OK    --
+Calistoga               OK     --     OK    ~~    OK    OK   OK    --
+Vallejo                 OK     OK     OK    --    OK    OK   OK    --
+Benicia                 OK     XX     OK    OK    OK    OK   OK    --
+Fairfield               ~~     --     XX    OK    OK    OK   OK    --
+Suisun City             OK     --     OK    --    OK    OK   OK    --
+Vacaville               --     --     OK    --    OK    OK   OK    --
+Dixon                   --     XX     OK    OK    OK    OK   OK    --
+Rio Vista               --     --     OK    --    OK    OK   OK    --
+Solano County (uninc)   --     XX     OK    OK    OK    OK   OK    --
 ```
 
 `~~` Fairfield development is one project-specific record set, not an inventory.
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **44 strong, 44 partial, 19 blocked,
+Derived totals, September 13, 2026: **58 strong, 44 partial, 5 blocked,
 33 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
@@ -118,9 +118,13 @@ Blocked, with the specific reason:
   Playwright capture of the app's own request.
 - **American Canyon and Benicia OpenGov** — storefronts answer 200, record
   retrieval never verified anonymously.
-- **Business openings, all fourteen** — California ABC challenges automated
-  clients. The state open data portal was checked and only carries COVID era ABC
-  datasets, so there is no sanctioned bulk route.
+- **Business openings** is no longer on this list. It was never an adapter
+  problem. Run from an ordinary residential network rather than a datacentre,
+  `www.abc.ca.gov` answers normally and the existing collector returned 171
+  service-area records at parser yield 1.0 in a seven-day window. The lesson is
+  worth more than the source: "blocked" had been recorded about a site, when the
+  evidence only ever supported recording it about a network. Re-test a Cloudflare
+  or Akamai block from somewhere else before believing it.
 - **Fairfield and Rio Vista city sites** — challenged 403. Retest from another
   network before concluding anything.
 - **Fairfield meetings (NovusAGENDA)** — the portal is reachable at
