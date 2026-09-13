@@ -20,6 +20,7 @@ SEARCH_ASSERTION_FIELDS = (
     "project_number",
     "road",
 )
+FUZZY_THRESHOLD = 0.32
 
 
 @router.get("/search/projects/classified")
@@ -28,11 +29,11 @@ async def search_projects_classified(
     q: Annotated[str, Query(min_length=2, max_length=160)],
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> list[dict]:
-    """Search projects with the same consumer classification used by the map/detail UI.
+    """Search projects using consumer classification plus forgiving human-name matching.
 
-    Ranking intentionally mirrors the established `/search/projects` ordering. This
-    route only enriches each result with canonical consumer category/lifecycle truth so
-    search does not briefly show heuristic labels before project detail loads.
+    Exact/prefix/substring matches still dominate. pg_trgm similarity is only a fallback
+    for normal misspellings and slightly-off business/place/project names, so fuzzy search
+    cannot outrank a clear exact result.
     """
 
     query = " ".join(q.split())
@@ -44,6 +45,7 @@ async def search_projects_classified(
         "query": query,
         "pattern": pattern,
         "limit": limit,
+        "fuzzy_threshold": FUZZY_THRESHOLD,
         "assertion_fields": list(SEARCH_ASSERTION_FIELDS),
         "semantic_fields": list(SEMANTIC_FIELDS),
     }
@@ -77,22 +79,37 @@ async def search_projects_classified(
           ) AS semantic_values,
           CASE
             WHEN lower(p.canonical_name) = lower(%(query)s) THEN 100
-            WHEN p.canonical_name ILIKE %(pattern)s THEN 90
+            WHEN lower(p.canonical_name) LIKE lower(%(query)s) || '%%' THEN 96
+            WHEN p.canonical_name ILIKE %(pattern)s THEN 92
             WHEN EXISTS (
               SELECT 1 FROM project_alias pa
               WHERE pa.project_id = p.id AND lower(pa.alias::text) = lower(%(query)s)
-            ) THEN 85
+            ) THEN 88
             WHEN EXISTS (
               SELECT 1 FROM project_alias pa
               WHERE pa.project_id = p.id AND pa.alias::text ILIKE %(pattern)s
-            ) THEN 80
+            ) THEN 84
             WHEN EXISTS (
               SELECT 1 FROM assertion a
               WHERE a.project_id = p.id
                 AND a.field = ANY(%(assertion_fields)s)
                 AND jsonb_typeof(a.value) = 'string'
                 AND (a.value #>> '{}') ILIKE %(pattern)s
-            ) THEN 70
+            ) THEN 78
+            WHEN similarity(p.canonical_name, %(query)s) >= %(fuzzy_threshold)s
+              THEN 70 + ROUND(similarity(p.canonical_name, %(query)s) * 10)
+            WHEN EXISTS (
+              SELECT 1 FROM project_alias pa
+              WHERE pa.project_id = p.id
+                AND similarity(pa.alias::text, %(query)s) >= %(fuzzy_threshold)s
+            ) THEN 68
+            WHEN EXISTS (
+              SELECT 1 FROM assertion a
+              WHERE a.project_id = p.id
+                AND a.field = ANY(%(assertion_fields)s)
+                AND jsonb_typeof(a.value) = 'string'
+                AND similarity((a.value #>> '{}'), %(query)s) >= %(fuzzy_threshold)s
+            ) THEN 64
             ELSE 60
           END AS match_score,
           CASE
@@ -108,21 +125,42 @@ async def search_projects_classified(
                 AND jsonb_typeof(a.value) = 'string'
                 AND (a.value #>> '{}') ILIKE %(pattern)s
             ) THEN 'project_evidence'
+            WHEN similarity(p.canonical_name, %(query)s) >= %(fuzzy_threshold)s THEN 'fuzzy_project_name'
+            WHEN EXISTS (
+              SELECT 1 FROM project_alias pa
+              WHERE pa.project_id = p.id
+                AND similarity(pa.alias::text, %(query)s) >= %(fuzzy_threshold)s
+            ) THEN 'fuzzy_alias'
+            WHEN EXISTS (
+              SELECT 1 FROM assertion a
+              WHERE a.project_id = p.id
+                AND a.field = ANY(%(assertion_fields)s)
+                AND jsonb_typeof(a.value) = 'string'
+                AND similarity((a.value #>> '{}'), %(query)s) >= %(fuzzy_threshold)s
+            ) THEN 'fuzzy_project_evidence'
             ELSE 'source_record'
           END AS matched_on
         FROM project p
         WHERE
           p.canonical_name ILIKE %(pattern)s
+          OR similarity(p.canonical_name, %(query)s) >= %(fuzzy_threshold)s
           OR EXISTS (
             SELECT 1 FROM project_alias pa
-            WHERE pa.project_id = p.id AND pa.alias::text ILIKE %(pattern)s
+            WHERE pa.project_id = p.id
+              AND (
+                pa.alias::text ILIKE %(pattern)s
+                OR similarity(pa.alias::text, %(query)s) >= %(fuzzy_threshold)s
+              )
           )
           OR EXISTS (
             SELECT 1 FROM assertion a
             WHERE a.project_id = p.id
               AND a.field = ANY(%(assertion_fields)s)
               AND jsonb_typeof(a.value) = 'string'
-              AND (a.value #>> '{}') ILIKE %(pattern)s
+              AND (
+                (a.value #>> '{}') ILIKE %(pattern)s
+                OR similarity((a.value #>> '{}'), %(query)s) >= %(fuzzy_threshold)s
+              )
           )
           OR EXISTS (
             SELECT 1
