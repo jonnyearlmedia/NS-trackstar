@@ -44,7 +44,7 @@ Vallejo                 OK     OK     OK    --    OK    OK   OK    OK
 Benicia                 OK     XX     OK    OK    OK    OK   OK    --
 Fairfield               ~~     --     OK    OK    OK    OK   OK    --
 Suisun City             OK     --     OK    --    OK    OK   OK    --
-Vacaville               --     --     OK    --    OK    OK   OK    --
+Vacaville               XX     XX     OK    XX    OK    OK   OK    --
 Dixon                   --     XX     OK    OK    OK    OK   OK    --
 Rio Vista               --     --     OK    --    OK    OK   OK    --
 Solano County (uninc)   OK     OK     OK    OK    OK    OK   OK    --
@@ -54,8 +54,8 @@ Solano County (uninc)   OK     OK     OK    OK    OK    OK   OK    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **63 strong, 44 partial, 3 blocked,
-30 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **63 strong, 44 partial, 6 blocked,
+27 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -115,8 +115,17 @@ Verified reachable and unbuilt, so no excuse exists:
 
 Blocked, with the specific reason:
 
-- **Vacaville city site** — `www.cityofvacaville.gov` answers a challenged 403.
-  Its meetings are covered through eScribe; development, permits and CIP are not.
+- **Vacaville** — closed as far as it can be, rather than left as a to-do. Three
+  routes were checked from an ordinary residential network and all three are shut:
+  `www.cityofvacaville.gov` answers 403 from Akamai to a self-identifying client and
+  to a browser user agent alike, so that block belongs to the site rather than to
+  our egress; the city's eTRAKiT tenant has anonymous search switched off, unlike
+  Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at
+  `covgis.cityofvacaville.com`, which answers fine while the website does not,
+  publishes parcels, addresses, zoning, streets and boundaries and no project,
+  permit or capital layer at all. Its meetings remain covered through eScribe. This
+  is a city that does not publish its pipeline anonymously, which is a different and
+  more useful thing to know than "the site is blocked".
 
   Yountville and Calistoga were on this list and should not have been. They were
   recorded as unreachable on the strength of `www.yountville.gov` and
@@ -149,8 +158,12 @@ Blocked, with the specific reason:
   worth more than the source: "blocked" had been recorded about a site, when the
   evidence only ever supported recording it about a network. Re-test a Cloudflare
   or Akamai block from somewhere else before believing it.
-- **Fairfield and Rio Vista city sites** — challenged 403. Retest from another
-  network before concluding anything.
+- **Fairfield and Rio Vista city sites** — retested from an ordinary residential
+  network and still 403, Akamai for Fairfield and Cloudflare for Rio Vista, to a
+  self-identifying client and a browser user agent alike. Both blocks belong to the
+  sites. Neither city is dark because of it: Fairfield now has meetings on eScribe
+  and 87 capital projects from its own ArcGIS org, and Rio Vista has meetings on
+  Granicus. The website was never the only door.
 - **511 live traffic** — collectors written and tested, never run with a key. The
   collector container could not even receive the key until this session; that is
   fixed, so one run settles it.

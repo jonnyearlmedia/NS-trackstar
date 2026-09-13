@@ -1131,10 +1131,16 @@
       "kind": "city",
       "categories": {
         "current_development": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
+          }
         },
         "permits": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
+          }
         },
         "government_meetings": {
           "evidence": [
@@ -1146,7 +1152,10 @@
           "limitation": "The portal's calendar publishes the current year only. Its archive sits behind a separate paged endpoint that is not ingested, so Trackstar carries what Vacaville is deciding now, not what it decided in 2024."
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [],
+          "blocker": {
+            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
+          }
         },
         "gis_spatial": {
           "evidence": [
