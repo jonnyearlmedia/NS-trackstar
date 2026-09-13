@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { ProjectFreshnessStatus } from "./project-freshness";
 import type { MapProject } from "./map-final-model";
 import { categoryLabel, eventDate, eventHeadline, lifecycleLabel, locationUncertain, projectSummary, readableValue, type ProjectDetail, type ProjectEvent } from "./trackstar-final-ui";
-import { CategoryIcon, ShareIcon } from "./trackstar-final-icons";
+import { CategoryIcon, ChevronIcon, ShareIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
@@ -41,16 +41,23 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
       <div className={styles.projectActions}><button aria-label="Share project" onClick={onShare} type="button"><ShareIcon /></button><button aria-label={expanded ? "Collapse project details" : "Close project"} onClick={backOneLayer} type="button">×</button></div>
     </div>
     <div className={styles.projectScroll}>
-      <div className="projectIdentity"><span className="projectIdentityIcon"><CategoryIcon category={selected.consumerCategory} /></span><span><small>{categoryLabel(selected.consumerCategory)}</small><strong>{lifecycleLabel(selected.lifecycleStage)}</strong></span></div>
-      <div className={styles.projectTitleBlock}><h2>{detail?.name ?? selected.name}</h2>{approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
+      <div className="projectIdentity" data-category={selected.consumerCategory}>
+        <span className="projectIdentityIcon"><CategoryIcon category={selected.consumerCategory} /></span>
+        <span><small>{categoryLabel(selected.consumerCategory)}</small><strong>{lifecycleLabel(selected.lifecycleStage)}</strong></span>
+      </div>
+      <div className={styles.projectTitleBlock}>
+        <h2>{detail?.name ?? selected.name}</h2>
+        {approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}
+      </div>
+      <div className="projectRule" />
       {state === "loading" ? <p className={styles.projectLead}>Loading the official project details…</p> : null}
       {state === "error" ? <p className={styles.projectLead}>Trackstar could not load this project’s details right now.</p> : null}
-      {state === "idle" ? <><p className={extra.sectionLabel}>What is this?</p><p className={styles.projectLead}>{summary}</p></> : null}
-      {latest ? <div className={styles.latestBlock}><small>WHAT'S HAPPENING NOW</small><strong>{eventHeadline(latest)}</strong><span>{eventDate(latest.occurred_at ?? latest.observed_at)}</span></div> : null}
+      {state === "idle" ? <section className="projectOverview"><p className={extra.sectionLabel}>Overview</p><p className={styles.projectLead}>{summary}</p></section> : null}
+      {latest ? <div className={styles.latestBlock}><small>LATEST UPDATE</small><strong>{eventHeadline(latest)}</strong><span>{eventDate(latest.occurred_at ?? latest.observed_at)}</span></div> : null}
       {!detail?.geometry && state === "idle" ? <p className={styles.locationNotice}><strong>Location not mapped yet.</strong> Trackstar has official records for this project but not enough reliable location information to place it precisely.</p> : approximate ? <p className={styles.locationNotice}>The map shows the best defensible project area from public records, not an exact footprint.</p> : null}
       <ProjectFreshnessStatus projectId={selected.id} expanded={expanded} />
       {shareCopied ? <p className={styles.copyNotice}>Link copied</p> : null}
-      <button className={styles.detailsButton} onClick={() => onExpanded(!expanded)} type="button">{expanded ? "Hide details" : "Details & official sources"}<span>{expanded ? "⌃" : "⌄"}</span></button>
+      <button className={styles.detailsButton} onClick={() => onExpanded(!expanded)} type="button"><span>{expanded ? "Hide details" : "Details & official sources"}</span><ChevronIcon up={expanded} /></button>
       {expanded ? <div className={extra.detailGrid}>
         {facts.length ? <section><h3>Key facts</h3><div className={extra.detailFacts}>{facts.map((fact) => <div className={extra.detailFact} key={fact.field}><small>{fact.field.replaceAll("_", " ")}</small><strong>{readableValue(fact.value)}</strong></div>)}</div></section> : null}
         {next ? <section><h3>What's next?</h3><div className={extra.detailFact}><small>{next.field.replaceAll("_", " ")}</small><strong>{readableValue(next.value)}</strong></div></section> : null}
