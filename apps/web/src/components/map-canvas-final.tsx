@@ -41,6 +41,20 @@ function geometryBounds(project: MapProject) {
   return Number.isFinite(west) ? [[west, south], [east, north]] as [[number, number], [number, number]] : null;
 }
 
+function selectedCameraLayout(briefing = false) {
+  const desktop = typeof window !== "undefined" && window.innerWidth >= 720;
+  if (desktop) {
+    return {
+      pointOffset: [briefing ? 150 : 175, 0] as [number, number],
+      padding: { top: 92, right: 52, bottom: 56, left: briefing ? 430 : 470 },
+    };
+  }
+  return {
+    pointOffset: [0, briefing ? -96 : -112] as [number, number],
+    padding: { top: 88, right: 24, bottom: briefing ? 300 : 330, left: 24 },
+  };
+}
+
 export function MapCanvasFinal(props: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
@@ -75,12 +89,13 @@ export function MapCanvasFinal(props: Props) {
     updateSelected(map, props.selectedProject);
     const project = props.selectedProject;
     if (!project?.geometry) return;
+    const camera = selectedCameraLayout(Boolean(props.briefingActive));
     if (project.geometry.type === "Point") {
-      map.easeTo({ center: project.geometry.coordinates as [number, number], zoom: props.briefingActive ? 13.2 : 14, duration: 600, essential: true });
+      map.easeTo({ center: project.geometry.coordinates as [number, number], offset: camera.pointOffset, zoom: props.briefingActive ? 13.2 : 14, duration: 600, essential: true });
       return;
     }
     const bounds = geometryBounds(project);
-    if (bounds) map.fitBounds(bounds, { padding: { top: 100, right: 42, bottom: 260, left: 42 }, maxZoom: 14.5, duration: 600, essential: true });
+    if (bounds) map.fitBounds(bounds, { padding: camera.padding, maxZoom: 14.5, duration: 600, essential: true });
   }, [props.selectedProject, props.briefingActive]);
 
   useEffect(() => {
