@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { ProjectFreshnessStatus } from "./project-freshness";
 import type { MapProject } from "./map-final-model";
 import { categoryLabel, eventDate, eventHeadline, lifecycleLabel, locationUncertain, projectSummary, readableValue, type ProjectDetail, type ProjectEvent } from "./trackstar-final-ui";
-import { ShareIcon } from "./trackstar-final-icons";
+import { CategoryIcon, ShareIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
@@ -41,7 +41,8 @@ export function ProjectSheet({ selected, detail, events, state, expanded, onExpa
       <div className={styles.projectActions}><button aria-label="Share project" onClick={onShare} type="button"><ShareIcon /></button><button aria-label={expanded ? "Collapse project details" : "Close project"} onClick={backOneLayer} type="button">×</button></div>
     </div>
     <div className={styles.projectScroll}>
-      <div className={styles.projectTitleBlock}><small>{categoryLabel(selected.consumerCategory)} · {lifecycleLabel(selected.lifecycleStage)}</small><h2>{detail?.name ?? selected.name}</h2>{approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
+      <div className="projectIdentity"><span className="projectIdentityIcon"><CategoryIcon category={selected.consumerCategory} /></span><span><small>{categoryLabel(selected.consumerCategory)}</small><strong>{lifecycleLabel(selected.lifecycleStage)}</strong></span></div>
+      <div className={styles.projectTitleBlock}><h2>{detail?.name ?? selected.name}</h2>{approximate ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
       {state === "loading" ? <p className={styles.projectLead}>Loading the official project details…</p> : null}
       {state === "error" ? <p className={styles.projectLead}>Trackstar could not load this project’s details right now.</p> : null}
       {state === "idle" ? <><p className={extra.sectionLabel}>What is this?</p><p className={styles.projectLead}>{summary}</p></> : null}
