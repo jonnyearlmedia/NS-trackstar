@@ -44,9 +44,9 @@ Primary shell:
 Map project categories remain differentiated but restrained:
 
 - Development: green/sage (`#2f7f65`)
-- Roads & Transit: warm orange (`#e58a2b`)
-- Utilities: teal (`#238ca4`)
-- Public Places: indigo (`#5d70d8`)
+- Roads & Transit: warm orange (`#d97616`)
+- Utilities: teal (`#18839b`)
+- Public Places: indigo (`#5567cf`)
 
 Category color is an aid, never the only meaning cue. The same category color must follow a project through browse controls, map marker, overlap chooser, project card, and other consumer surfaces.
 
@@ -108,17 +108,21 @@ Category icons must be visibly meaningful, not decorative. They use the category
 The map remains the product, not a backdrop for cards.
 
 - default basemap: OpenFreeMap **Positron** for a quiet light canvas;
-- regional zoom may use clusters and restrained colored overview points to avoid noise;
-- city/neighborhood zoom transitions to **notification/location-pointer style category pins**, not anonymous circles;
-- each local-scale pin contains the category pictogram and category color;
+- every mapped canonical project participates in the consumer marker inventory, including line and polygon projects;
+- point projects use their real point; line projects use a representative coordinate along the real line; polygon projects use a representative coordinate while preserving the original geometry for selection/detail;
+- regional and city zoom use clusters aggressively enough to prevent icon soup rather than hiding projects by editorial importance;
+- city/neighborhood zoom transitions to **white location-pointer pins with category-colored icon + outline**, never a white glyph on a saturated body;
+- clusters use the same white pointer family with Trackstar-blue count/outline so clustering feels like the same system rather than a second marker language;
+- unselected line/polygon geometry stays suppressed until close zoom and then remains low-emphasis;
+- selecting a project immediately wakes and emphasizes its actual corridor/parcel/polygon geometry;
 - closer zoom adds project names progressively while keeping the pin visible;
 - selected point projects enlarge their actual category pin and receive a clear Trackstar-blue selection halo;
-- clusters are white with blue outline and readable count;
-- uncertain geometry remains visibly differentiated;
+- uncertain geometry remains visibly differentiated and is explained in the project interaction/card;
 - coverage edge uses a restrained blue treatment;
-- project names appear progressively at useful local zooms, not everywhere.
+- project names appear progressively at useful local zooms, not everywhere;
+- recently changed projects do not get a second permanent ring/badge system. Updates and activity filters are the intentional change-discovery surfaces.
 
-Do not visually overload the map with POIs or competing colors that diminish Trackstar project data. The user should be able to glance at a local map and understand what *kind* of activity each marker represents before opening a card.
+Do not visually overload the map with raw GIS linework, POIs, or competing colors that diminish Trackstar project data. The user should be able to glance at a local map and understand what *kind* of activity each marker represents before opening a card.
 
 ## Explore
 
@@ -133,7 +137,7 @@ Normal Explore follows the Clean & Modern foundation:
 - icon-led Explore / Updates navigation;
 - large enough text and controls for a nontechnical resident.
 
-Orientation Peek may be richer, but it should never become a permanent dashboard.
+The local Explore surface should summarize the actual current viewport with project count/categories and an explicit Browse action. It must not resurrect the old ranked `Around Here` top-three concept. Briefing is a secondary `Brief this area` action, not a dominant permanent CTA.
 
 ## Project sheet
 
@@ -143,12 +147,13 @@ Hierarchy:
 
 1. category icon + understandable lifecycle cue, carrying the same category color as the map pin;
 2. strong **sans-serif** project name with comfortable line-height;
-3. plain-language Overview copy;
-4. current meaningful activity when available;
-5. freshness/trust cue;
-6. Details & official sources.
+3. **What is this?** using official summary/description evidence before fallback copy;
+4. **What's happening?** using the latest meaningful official event or a conservative lifecycle statement;
+5. location certainty only when it changes interpretation;
+6. freshness/trust cue;
+7. Details & official sources.
 
-The ordinary project title should not use the Briefing serif treatment. Use whitespace and subtle rules for hierarchy instead of stacking multiple boxed cards. Expanded technical information uses readable cards/rows and preserves the light visual system.
+The ordinary project title should not use the Briefing serif treatment. Use whitespace and subtle rules for hierarchy instead of stacking multiple boxed cards. Expanded technical information uses readable cards/rows and preserves the light visual system. Source count belongs with expanded Official Sources rather than first-tap clutter.
 
 ## Briefing
 
@@ -159,11 +164,11 @@ Use:
 - editorial serif headline;
 - visible progress;
 - category identity;
-- a distinct “What changed” story block;
+- a distinct story block labeled **What changed**, **Upcoming**, or **Current context** based on the source-backed event state;
 - clear Pause / Next / Exit controls;
 - full-project action.
 
-Briefing must be scoped to the current viewport and active filters. The backend `/area/briefing` ranking should be intersected with the current visible/filtered project set. Do not substitute a global favorite/top-project list.
+Briefing must be scoped to the current viewport and active filters. The backend `/area/briefing` ranking should be intersected with the current visible/filtered project set. Do not substitute a global favorite/top-project list. Exiting Briefing restores the user's previous map bounds.
 
 ## Search, Updates, Filters, and modal states
 
@@ -171,7 +176,7 @@ These should look like intentional product surfaces rather than raw text lists:
 
 - content rows include category icon, readable hierarchy, and arrow affordance;
 - Filter choices use category iconography and a clear selected state;
-- Search is a light focused utility surface;
+- Search is a light focused utility surface and supports human names/evidence without inventing map geometry;
 - loading/error/empty/freshness/outside-coverage states stay inside the same light system;
 - no technical source jargon in ordinary consumer rows.
 
@@ -179,7 +184,7 @@ These should look like intentional product surfaces rather than raw text lists:
 
 Desktop keeps the same mental model. It is not a separate analytics dashboard.
 
-Use the extra width for a clean side panel / floating sheet while preserving a large map. Controls can move to desktop-appropriate locations but should not shrink below the readability/touch/click baseline merely because a mouse is available.
+Use the extra width for a clean side panel / floating sheet while preserving a large map. Explore / Updates / Near Me / Filters should read as one command row rather than stacked toolbars. Search must stop before the command controls rather than disappear under them. Controls should not shrink below the readability/touch/click baseline merely because a mouse is available.
 
 ## PWA / installed app
 
@@ -192,10 +197,15 @@ A visual pass is not accepted merely because the layout compiles. Check at minim
 - no accidental sub-10px consumer text;
 - no important action below the intended hit-target baseline;
 - map projects are easy to tap;
-- local zoom visibly communicates category through colored icon pins rather than tiny anonymous dots;
+- local zoom visibly communicates category through white pointer pins with colored icon/outline rather than tiny anonymous dots;
+- line/polygon projects remain discoverable through representative markers without turning city zoom into raw-geometry spaghetti;
 - category colors/icons stay consistent from browse to map to project card;
 - project-card title/summary line-height remains comfortable on multi-line mobile titles;
 - selection and focus states are visible;
 - no old black/lime surface appears in loading, empty, error, freshness, coverage, or PWA launch states;
 - Briefing follows the visible map area rather than a repeated global project;
-- mobile and desktop both retain the same map-first product identity.
+- mobile and desktop both retain the same map-first product identity;
+- Chromium, Firefox and WebKit/iPhone release QA pass;
+- smallest-phone layout has no horizontal overflow and core controls retain practical touch targets;
+- slow backend response recovers without losing the understandable shell;
+- the initial consumer surface has no serious/critical structural accessibility violations in the automated axe gate.
