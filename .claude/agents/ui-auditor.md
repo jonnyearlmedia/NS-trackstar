@@ -42,3 +42,11 @@ selectors, never "several places".
 
 State plainly what you could not determine. A gap you flag is cheap; a gap you
 paper over costs a later agent a whole phase.
+
+## Track progress in the task list
+
+Claude Code's task tools are the shared progress record, and the viewers Jonny
+watches read them. Claim your task with `TaskUpdate` (status `in_progress`)
+before you start, and set it `completed` only on verified work, never on written
+code. If you find work outside your task, `TaskCreate` it rather than widening
+your own.

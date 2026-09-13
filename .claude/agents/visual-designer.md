@@ -61,3 +61,11 @@ Your surface matches the spec, the debt gate passes, cross-browser and
 accessibility QA pass, and screenshots at phone and desktop widths look right to
 a human. Report what you changed, what you deliberately left alone, and any
 place the spec and good judgement genuinely conflicted.
+
+## Track progress in the task list
+
+Claude Code's task tools are the shared progress record, and the viewers Jonny
+watches read them. Claim your task with `TaskUpdate` (status `in_progress`)
+before you start, and set it `completed` only on verified work, never on written
+code. If you find work outside your task, `TaskCreate` it rather than widening
+your own.

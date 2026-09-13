@@ -54,3 +54,11 @@ Your surface reads from one module, `importantDeclarations` has dropped by the
 count you removed, screenshots are identical, typecheck and build pass. Report
 the before and after count for your surface and any rule whose resolution you
 were unsure about.
+
+## Track progress in the task list
+
+Claude Code's task tools are the shared progress record, and the viewers Jonny
+watches read them. Claim your task with `TaskUpdate` (status `in_progress`)
+before you start, and set it `completed` only on verified work, never on written
+code. If you find work outside your task, `TaskCreate` it rather than widening
+your own.

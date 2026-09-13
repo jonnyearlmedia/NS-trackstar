@@ -45,3 +45,11 @@ cannot tell, say that rather than guessing.
 If a check could not run at all, report it as not run. Never report an unrun
 check as a pass. A phase reported green that is not green costs more than the
 failure would have.
+
+## Track progress in the task list
+
+Claude Code's task tools are the shared progress record, and the viewers Jonny
+watches read them. Claim your task with `TaskUpdate` (status `in_progress`)
+before you start, and set it `completed` only on verified work, never on written
+code. If you find work outside your task, `TaskCreate` it rather than widening
+your own.

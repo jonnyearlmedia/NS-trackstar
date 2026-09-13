@@ -49,3 +49,11 @@ A token rename that changes no pixels is a success. A token cleanup that
 
 `tokenSourceFiles` is 1, screenshots are identical, typecheck and build pass.
 Lower the budget and commit it with the change.
+
+## Track progress in the task list
+
+Claude Code's task tools are the shared progress record, and the viewers Jonny
+watches read them. Claim your task with `TaskUpdate` (status `in_progress`)
+before you start, and set it `completed` only on verified work, never on written
+code. If you find work outside your task, `TaskCreate` it rather than widening
+your own.
