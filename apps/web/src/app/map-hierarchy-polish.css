@@ -1,0 +1,160 @@
+/* Final map-composition pass based on live visual review.
+   Keep the map dominant: one desktop control row, one compact local browse card. */
+
+/* The free-explore card should read as a map control, not a dashboard panel. */
+[class*="freeExploreBar"] {
+  border-color: rgba(33, 57, 68, .09) !important;
+  background: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 16px 42px rgba(30, 55, 68, .15) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+}
+[class*="freeExploreBar"] [class*="areaPill"] {
+  min-height: 42px !important;
+  padding: 0 4px !important;
+}
+[class*="freeExploreBar"] [class*="areaPill"] strong {
+  color: #1f3742 !important;
+  font-size: 15px !important;
+  font-weight: 760 !important;
+  letter-spacing: -.02em !important;
+}
+[class*="freeExploreBar"] [class*="areaPill"] small {
+  color: #74868f !important;
+  font-size: 11.5px !important;
+  font-weight: 560 !important;
+}
+[class*="freeExploreBar"] [class*="areaPill"] > b {
+  color: #425b67 !important;
+  font-size: 17px !important;
+}
+[class*="freeExploreBar"] [class*="pillScroller"] {
+  gap: 6px !important;
+  padding: 3px 0 !important;
+}
+[class*="freeExploreBar"] [class*="pillScroller"] button {
+  min-height: 40px !important;
+  padding: 0 13px !important;
+  border-color: rgba(35, 58, 68, .09) !important;
+  color: #536a75 !important;
+  background: #f7fafb !important;
+  font-size: 11.5px !important;
+  font-weight: 690 !important;
+}
+[class*="freeExploreBar"] [class*="pillScroller"] [class*="pillSelected"] {
+  color: #fff !important;
+  border-color: #0b67c7 !important;
+  background: #0b67c7 !important;
+}
+[class*="freeExploreBar"] [class*="filterPill"] {
+  width: 40px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+[class*="compactFooter"] {
+  margin-top: 7px !important;
+  gap: 7px !important;
+}
+[class*="compactFooter"] button {
+  min-height: 43px !important;
+  border-radius: 12px !important;
+  font-size: 12.5px !important;
+}
+/* “Browse this area” duplicated the card itself. Keep Browse projects as the
+   default action; Brief this area appears only when that mode is actually valid. */
+[class*="compactFooter"] button:last-child:not(.briefAreaButton) {
+  display: none !important;
+}
+
+/* Keep the larger orientation version calmer too. */
+[class*="orientationPanel"] {
+  border-color: rgba(33, 57, 68, .09) !important;
+  background: rgba(255, 255, 255, .97) !important;
+  box-shadow: 0 18px 50px rgba(30, 55, 68, .16) !important;
+}
+
+@media (min-width: 720px) {
+  [class*="freeExploreBar"] {
+    width: min(430px, calc(100vw - 36px)) !important;
+    padding: 9px 11px 11px !important;
+    border-radius: 18px !important;
+  }
+}
+
+/* Desktop: Explore / Updates / Near me / Filters are one horizontal command
+   row. The search bar stops before it instead of running underneath controls. */
+@media (min-width: 1000px) {
+  [class*="topBar"] {
+    top: 12px !important;
+    left: 18px !important;
+    right: 442px !important;
+  }
+  [class*="bottomNav"] {
+    top: 12px !important;
+    right: 18px !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    height: 48px;
+    gap: 2px !important;
+    padding: 3px !important;
+    border: 1px solid rgba(35, 58, 68, .09) !important;
+    border-radius: 15px !important;
+    background: rgba(255, 255, 255, .96) !important;
+    box-shadow: 0 10px 28px rgba(30, 55, 68, .13) !important;
+  }
+  [class*="bottomNav"] button {
+    min-width: 88px !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    color: #5e737d !important;
+    border-radius: 11px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+  }
+  [class*="bottomNav"] button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  [class*="bottomNav"] [class*="navSelected"] {
+    color: #fff !important;
+    background: #0b67c7 !important;
+  }
+  [class*="mapActions"] {
+    top: 12px !important;
+    right: 208px !important;
+    height: 48px;
+    gap: 2px !important;
+    padding: 3px !important;
+    border: 1px solid rgba(35, 58, 68, .09) !important;
+    border-radius: 15px !important;
+    background: rgba(255, 255, 255, .96) !important;
+    box-shadow: 0 10px 28px rgba(30, 55, 68, .13) !important;
+    backdrop-filter: blur(18px) saturate(1.08) !important;
+  }
+  [class*="mapActions"] button {
+    min-height: 40px !important;
+    padding: 0 11px !important;
+    border: 0 !important;
+    border-radius: 11px !important;
+    color: #536a75 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+  }
+  [class*="mapActions"] [class*="activeAction"] {
+    color: #0b67c7 !important;
+    background: #edf5fd !important;
+  }
+}
+
+/* On narrower desktop/tablet, keep the two groups visually related even if
+   they need to stack. */
+@media (min-width: 720px) and (max-width: 999px) {
+  [class*="bottomNav"],
+  [class*="mapActions"] {
+    border-color: rgba(35, 58, 68, .09) !important;
+    background: rgba(255, 255, 255, .96) !important;
+    box-shadow: 0 10px 28px rgba(30, 55, 68, .13) !important;
+  }
+}
