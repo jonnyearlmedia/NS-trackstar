@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { MapCanvasFinal } from "./map-canvas-final";
 import type { ConsumerCategory, LifecycleFilter, MapProject, MapViewportState, TimeWindow, UserLocation, ViewportBounds } from "./map-final-model";
+import { isInsideServiceArea } from "./service-area";
 import { BriefingCard } from "./trackstar-final-briefing";
 import { BottomNav, CoverageNotice, TopChrome } from "./trackstar-final-chrome";
 import { BrowsePanel, ExplorePanel, ExploreUtilities } from "./trackstar-final-explore";
@@ -13,7 +14,6 @@ import { ProjectSheet } from "./trackstar-final-project";
 import { SearchOverlay } from "./trackstar-final-search";
 import { UpdatesPanel } from "./trackstar-final-updates";
 import {
-  areaLabel,
   isViewportOutside,
   projectFromSearch,
   routeProjectId,
@@ -26,10 +26,8 @@ import {
   type SearchResult,
   type SelectionOrigin,
 } from "./trackstar-final-ui";
-import styles from "./map-explorer-v2.module.css";
 
-const ORIENTATION_KEY = "trackstar:orientation-seen:v2";
-const COVERAGE = { west: -122.72, south: 37.95, east: -121.54, north: 38.88 };
+const ORIENTATION_KEY = "trackstar:orientation-seen:v3";
 
 function curateBriefing(projects: MapProject[], changes: ChangeEvent[]) {
   const changed = new Set(changes.map((change) => change.project_id));
@@ -232,7 +230,7 @@ export function TrackstarFinal({ initialProjectId }: { initialProjectId?: string
     setLocationState("checking");
     navigator.geolocation.getCurrentPosition((position) => {
       const { latitude, longitude, accuracy } = position.coords;
-      if (longitude < COVERAGE.west || longitude > COVERAGE.east || latitude < COVERAGE.south || latitude > COVERAGE.north) {
+      if (!isInsideServiceArea({ lng: longitude, lat: latitude })) {
         setLocationState("outside");
         setUserLocation(null);
         return;
