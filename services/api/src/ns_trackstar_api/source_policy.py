@@ -52,6 +52,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "regulatory_watch", "daily", 720, 1440,
         "Federal decision/document set; important when it changes, but sub-hour polling adds little value.",
     ),
+    "calistoga.active-construction-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's own list of private development under construction, including "
+        "traffic impact. Staff edit it during the business day as a project moves.",
+    ),
     "calistoga.civicweb": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Published meeting feed carrying Council, Planning Commission and the city's "

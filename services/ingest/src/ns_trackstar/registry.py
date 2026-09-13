@@ -19,6 +19,7 @@ from ns_trackstar.adapters.html_table import HtmlTableAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
+from ns_trackstar.adapters.opencities_project_list import OpenCitiesProjectListAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
 from ns_trackstar.adapters.primegov import PrimeGovAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
@@ -42,6 +43,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "html_table": HtmlTableAdapter,
     "legistar": LegistarAdapter,
     "opencities_map": OpenCitiesMapAdapter,
+    "opencities_project_list": OpenCitiesProjectListAdapter,
     "official_document_set": OfficialDocumentSetAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
     "primegov": PrimeGovAdapter,

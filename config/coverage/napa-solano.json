@@ -466,7 +466,13 @@
       "kind": "city",
       "categories": {
         "current_development": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "calistoga.active-construction-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city lists private development that is already under construction. A project under review or approved but not yet started does not appear, so this is what is being built, not the full pipeline."
         },
         "permits": {
           "evidence": []
@@ -481,7 +487,13 @@
           "limitation": "The portal's list page publishes the most recent meetings per body rather than a full archive, so Trackstar carries what Calistoga is deciding now, not its history."
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "calistoga.active-construction-projects",
+              "scope": "reference"
+            }
+          ],
+          "limitation": "Only private construction, and only where it affects traffic and access. The city's own capital improvement program is published as a fiscal-year PDF schedule and is not ingested yet."
         },
         "gis_spatial": {
           "evidence": [

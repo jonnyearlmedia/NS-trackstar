@@ -112,10 +112,11 @@ def test_parcels_and_ceqa_alone_do_not_make_development_coverage():
 
     scorecard = build_scorecard()
     by_key = {item["key"]: item for item in scorecard["jurisdictions"]}
-    # St. Helena left this list on September 13, 2026 when its own planning-project
-    # pages were ingested. The rule is unchanged: it moved because a development
-    # source now returns records, not because reference data started counting.
-    for key in ("vacaville", "dixon", "rio-vista", "yountville", "calistoga"):
+    # St. Helena and Calistoga left this list on September 13, 2026 when each city's
+    # own project pages were ingested. The rule is unchanged: they moved because a
+    # development source now returns records, not because reference data started
+    # counting. The four that remain still have nothing local.
+    for key in ("vacaville", "dixon", "rio-vista", "yountville"):
         rows = {row["category"]: row for row in by_key[key]["categories"]}
         # These jurisdictions genuinely do get statewide CEQA filings, and full county
         # spatial truth: parcels, address-level geocoding and jurisdiction boundaries.

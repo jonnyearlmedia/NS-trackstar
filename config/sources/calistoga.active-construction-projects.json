@@ -1,0 +1,36 @@
+{
+  "key": "calistoga.active-construction-projects",
+  "name": "City of Calistoga Active Construction Projects",
+  "jurisdiction": "City of Calistoga",
+  "adapter": "opencities_project_list",
+  "base_url": "https://www.calistogaca.gov/Planning-Building-Department/Building-Division/Active-Construction-Projects",
+  "poll_minutes": 240,
+  "options": {
+    "site_url": "https://www.calistogaca.gov",
+    "fetch_details": true,
+    "min_expected_projects": 5,
+    "max_projects": 100,
+    "min_request_interval_seconds": 0.5,
+    "lists": [
+      {
+        "url": "/Planning-Building-Department/Building-Division/Active-Construction-Projects",
+        "label": "Active Construction Projects",
+        "lifecycle_stage": "under_construction"
+      }
+    ],
+    "project_mapping": {
+      "name_fields": ["name"],
+      "project_type": "municipal_development",
+      "description_field": "description",
+      "authority_type": "official_curated_project_tracker",
+      "assertions": {
+        "description": "description",
+        "address": "address",
+        "record_type": "project_type",
+        "lifecycle_stage": "lifecycle_stage",
+        "project_page": "project_page",
+        "traffic_disruptions": "traffic_disruptions"
+      }
+    }
+  }
+}

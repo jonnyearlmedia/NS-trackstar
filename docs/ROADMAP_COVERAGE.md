@@ -39,7 +39,7 @@ American Canyon         OK     XX     OK    OK    OK    OK   XX    --
 Napa County (uninc)     OK     XX     OK    --    OK    OK   XX    --
 Yountville              --     --     OK    --    OK    OK   XX    --
 St. Helena              OK     --     OK    --    OK    OK   XX    --
-Calistoga               --     --     OK    --    OK    OK   XX    --
+Calistoga               OK     --     OK    ~~    OK    OK   XX    --
 Vallejo                 OK     OK     OK    --    OK    OK   XX    --
 Benicia                 OK     XX     OK    --    OK    OK   XX    --
 Fairfield               ~~     --     --    --    OK    OK   XX    --
@@ -51,9 +51,11 @@ Solano County (uninc)   --     XX     OK    --    OK    OK   XX    --
 ```
 
 `~~` Fairfield development is one project-specific record set, not an inventory.
+Calistoga CIP is private construction with traffic impact, not the city's own
+capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **38 strong, 43 partial, 19 blocked,
-40 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **39 strong, 44 partial, 19 blocked,
+38 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -87,11 +89,16 @@ Verified reachable and unbuilt, so no excuse exists:
 
 Blocked, with the specific reason:
 
-- **Vacaville, Yountville, Calistoga city sites** — the remote container's egress
-  refuses CONNECT. Not a fact about those cities. Retest locally. All three now
-  have meeting coverage anyway, because each city's meeting platform is a separate
-  host that is reachable; their own sites are still needed for development,
-  permits and CIP.
+- **Vacaville city site** — `www.cityofvacaville.gov` answers a challenged 403.
+  Its meetings are covered through eScribe; development, permits and CIP are not.
+
+  Yountville and Calistoga were on this list and should not have been. They were
+  recorded as unreachable on the strength of `www.yountville.gov` and
+  `www.ci.calistoga.ca.us`, neither of which is the city's current domain.
+  `www.townofyountville.com` and `www.calistogaca.gov` both answer 200 from this
+  same container. Calistoga's development coverage was built as soon as that was
+  checked. Before recording a jurisdiction as unreachable, confirm the hostname is
+  the one the city actually uses.
 - **Napa County and Solano County Accela** — both tenants answer 200; the public
   search needs a browser session bootstrap the container cannot run.
 - **Dixon permits (Tyler EnerGov)** — host, route, field names and both module
