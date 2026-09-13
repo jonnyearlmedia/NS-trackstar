@@ -1,4 +1,4 @@
-import type { Feature, FeatureCollection, Geometry } from "geojson";
+import type { Feature, FeatureCollection, Geometry, MultiPolygon, Polygon, Position } from "geojson";
 
 export type TimeWindow = "today" | "week" | "upcoming" | "all";
 export type ConsumerCategory = "all" | "development" | "roads" | "utilities" | "places";
@@ -39,8 +39,9 @@ export type LocationTruth = { id: string; accuracy: string | null; accuracy_mete
 export type LifecycleTruth = { id: string; lifecycle_stage: LifecycleStage; matched_dimension: string | null; matched_value: string | null };
 export type CategoryTruth = { id: string; consumer_category: Exclude<ConsumerCategory, "all">; category_basis: string; category_evidence: string | null };
 
-export const NAPA_SOLANO_BOUNDS: [[number, number], [number, number]] = [[-122.72, 37.95], [-121.54, 38.88]];
-export const LAST_VIEWPORT_KEY = "trackstar:last-viewport:v2";
+export const NAPA_SOLANO_BOUNDS: [[number, number], [number, number]] = [[-122.67, 38.01], [-121.58, 38.87]];
+export const LAST_VIEWPORT_KEY = "trackstar:last-viewport:v3";
+const COUNTY_BOUNDARY_URL = "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHboundary/County_Boundaries/FeatureServer/0/query?where=NAME10%20IN%20(%27Napa%27%2C%27Solano%27)&outFields=NAME10&returnGeometry=true&outSR=4326&f=geojson";
 
 const ROAD_WORDS = [" road", "road ", "street", "avenue", "boulevard", "highway", "route", "sr-", "bridge", "interchange", "intersection", "pavement", "paving", "sidewalk", "bicycle", "bike ", "pedestrian", "traffic", "transit", "corridor"];
 const UTILITY_WORDS = ["water", "sewer", "stormwater", "storm water", "drainage", "storm drain", "flood", "pump station", "pipeline", "reservoir", "wastewater", "recycled water", "treatment plant", "well ", " well", "levee"];
@@ -99,14 +100,50 @@ export function userLocationFeature(userLocation?: UserLocation | null): Feature
   if (!userLocation) return emptyCollection();
   return { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [userLocation.longitude, userLocation.latitude] }, properties: { accuracy: userLocation.accuracy ?? null } }] };
 }
+
+function fallbackCoverageEdge(): FeatureCollection {
+  const [[west, south], [east, north]] = NAPA_SOLANO_BOUNDS;
+  return { type: "FeatureCollection", features: [{ type: "Feature", properties: { fallback: true }, geometry: { type: "Polygon", coordinates: [[[west,south],[east,south],[east,north],[west,north],[west,south]]] } }] };
+}
 export function coverageMask(): FeatureCollection {
   const [[west, south], [east, north]] = NAPA_SOLANO_BOUNDS;
-  return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]],[[west,south],[west,north],[east,north],[east,south],[west,south]]] } }] };
+  return { type: "FeatureCollection", features: [{ type: "Feature", properties: { fallback: true }, geometry: { type: "Polygon", coordinates: [[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]],[[west,south],[west,north],[east,north],[east,south],[west,south]]] } }] };
 }
-export function coverageEdge(): FeatureCollection {
-  const [[west, south], [east, north]] = NAPA_SOLANO_BOUNDS;
-  return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[west,south],[east,south],[east,north],[west,north],[west,south]]] } }] };
+export function coverageEdge(): FeatureCollection { return fallbackCoverageEdge(); }
+
+function outerRings(geometry: Polygon | MultiPolygon): Position[][] {
+  if (geometry.type === "Polygon") return geometry.coordinates.length ? [geometry.coordinates[0]] : [];
+  return geometry.coordinates.flatMap((polygon) => polygon.length ? [polygon[0]] : []);
 }
+export async function loadCountyCoverage(signal?: AbortSignal): Promise<{ mask: FeatureCollection; edge: FeatureCollection }> {
+  try {
+    const response = await fetch(COUNTY_BOUNDARY_URL, { signal });
+    if (!response.ok) throw new Error(`County boundary service returned ${response.status}`);
+    const edge = await response.json() as FeatureCollection;
+    const holes = edge.features.flatMap((feature) => {
+      const geometry = feature.geometry;
+      return geometry && (geometry.type === "Polygon" || geometry.type === "MultiPolygon") ? outerRings(geometry) : [];
+    });
+    if (holes.length < 2) throw new Error("County boundary response did not include Napa and Solano polygons");
+    const mask: FeatureCollection = {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]], ...holes],
+        },
+      }],
+    };
+    return { mask, edge };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    console.warn("Using fallback Trackstar coverage boundary", error);
+    return { mask: coverageMask(), edge: fallbackCoverageEdge() };
+  }
+}
+
 export function readSavedViewport(): { center: [number, number]; zoom: number } | null {
   if (typeof window === "undefined") return null;
   try { const raw = window.localStorage.getItem(LAST_VIEWPORT_KEY); if (!raw) return null; const value = JSON.parse(raw) as { center?: [number, number]; zoom?: number }; if (!Array.isArray(value.center) || typeof value.zoom !== "number") return null; return { center: value.center, zoom: Math.max(7.5, Math.min(16, value.zoom)) }; } catch { return null; }
