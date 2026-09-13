@@ -80,6 +80,12 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-nstrackstar}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-nstrackstar}
       SCHEDULER_TICK_SECONDS: "60"
+      # Token-gated sources read these by name. Without them the collector process
+      # cannot see a key that exists on the host, which is exactly what happened:
+      # the 511 token was supplied and the collector never received it.
+      # Both default to empty so an unconfigured deployment still starts.
+      BAYAREA_511_API_KEY: ${BAYAREA_511_API_KEY:-}
+      COURTLISTENER_API_TOKEN: ${COURTLISTENER_API_TOKEN:-}
     security_opt:
       - no-new-privileges:true
     logging: *default-logging

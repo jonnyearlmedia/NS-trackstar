@@ -85,6 +85,11 @@ configure_runtime() {
   db_name=$(read_setting POSTGRES_DB || true)
   db_user=$(read_setting POSTGRES_USER || true)
   db_password=$(read_setting POSTGRES_PASSWORD || true)
+  # Optional source tokens. They are preserved across reconfigures rather than
+  # rewritten away, and an environment variable wins so a deploy can inject them
+  # without anyone opening the file.
+  bayarea_511_key=${BAYAREA_511_API_KEY:-$(read_setting BAYAREA_511_API_KEY || true)}
+  courtlistener_token=${COURTLISTENER_API_TOKEN:-$(read_setting COURTLISTENER_API_TOKEN || true)}
 
   api_domain=$(pick_setting "$api_domain_override" "Public API hostname (example: api.trackstar.example)" "$current_api_domain")
   cors_origins=$(pick_setting "$web_origin_override" "Deployed web origin (example: https://trackstar.vercel.app)" "$current_cors_origins")
@@ -108,6 +113,12 @@ configure_runtime() {
     echo "API_DOMAIN=$api_domain"
     echo "CORS_ORIGINS=$cors_origins"
     echo "CADDY_ACME_EMAIL=$caddy_email"
+    if [ -n "$bayarea_511_key" ]; then
+      echo "BAYAREA_511_API_KEY=$bayarea_511_key"
+    fi
+    if [ -n "$courtlistener_token" ]; then
+      echo "COURTLISTENER_API_TOKEN=$courtlistener_token"
+    fi
   } > "$temp_file"
   chmod 600 "$temp_file"
   mv "$temp_file" "$env_file"
@@ -130,6 +141,13 @@ show_status() {
   else
     echo "  Database password: missing"
   fi
+  for token in BAYAREA_511_API_KEY COURTLISTENER_API_TOKEN; do
+    if [ -n "$(read_setting "$token")" ]; then
+      echo "  $token: configured (hidden)"
+    else
+      echo "  $token: not set, so its sources cannot run"
+    fi
+  done
 }
 
 case "$mode" in
