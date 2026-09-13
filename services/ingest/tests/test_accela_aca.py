@@ -127,14 +127,20 @@ async def test_collect_preserves_webforms_state_form_action_and_paginates() -> N
     assert first.normalized_payload["cap_id_parts"] == ["26ABC", "00000", "00001"]
 
     assert all("TabName=Building" in url for url in post_urls)
-    search_post = posts[0]
+    # The canary now runs a search of its own to prove the postback is accepted,
+    # so identify the collect search by the date window it asks for rather than by
+    # its position in the sequence.
+    date_field = "ctl00$PlaceHolderMain$generalSearchForm$txtGSStartDate"
+    search_post = next(post for post in posts if post.get(date_field, [""])[0])
     assert search_post["__VIEWSTATE"] == ["state-one"]
     assert search_post["ACA_CS_FIELD"] == ["csrf-one"]
     assert search_post["__EVENTTARGET"] == ["ctl00$PlaceHolderMain$btnNewSearch"]
     assert search_post["ctl00$PlaceHolderMain$generalSearchForm$txtGSStartDate"]
     assert search_post["ctl00$PlaceHolderMain$generalSearchForm$txtGSEndDate"]
 
-    page_post = posts[1]
+    page_post = next(
+        post for post in posts if "gdvPermitList" in post.get("__EVENTTARGET", [""])[0]
+    )
     assert page_post["__VIEWSTATE"] == ["state-two"]
     assert page_post["ACA_CS_FIELD"] == ["csrf-two"]
     assert "gdvPermitList" in page_post["__EVENTTARGET"][0]
@@ -178,3 +184,61 @@ async def test_access_restriction_is_not_retried() -> None:
             await adapter.canary()
 
     assert calls == 1
+
+
+@pytest.mark.asyncio
+async def test_search_post_carries_same_origin_headers_and_reports_aca_error_pages() -> None:
+    """ACA rejects a postback with no Referer/Origin and says so on a 200 error page.
+
+    Reading that page as ordinary HTML is how a rejected search came to be recorded
+    as an empty search surface, so both halves are asserted here: the headers go out,
+    and an error page is raised with the portal's own words rather than returning
+    zero rows.
+    """
+    seen_headers: list[dict[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, text=_SEARCH_HTML)
+        seen_headers.append(dict(request.headers))
+        if "Referer" not in request.headers or "Origin" not in request.headers:
+            return httpx.Response(
+                200,
+                text=(
+                    "<html><body><b>Error!</b></br>Potential cross-site request forgery "
+                    "attacks.The Referer and Origin headers are missing</body></html>"
+                ),
+                request=request,
+            )
+        return httpx.Response(200, text=_PAGE_TWO)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = AccelaAcaAdapter(_config(), client=client)
+        rows = await adapter._search(client, "Building", max_pages=1)
+
+    assert rows, "a search sent with same-origin headers should return rows"
+    assert seen_headers[0]["referer"].endswith("TabName=Building")
+    assert seen_headers[0]["origin"] == "https://aca-prod.accela.test"
+
+
+@pytest.mark.asyncio
+async def test_error_page_is_raised_with_the_portals_own_message() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, text=_SEARCH_HTML)
+        return httpx.Response(
+            302,
+            headers={"Location": "https://aca-prod.accela.test/SOLANOCO/Error.aspx?ErrorId=1"},
+        )
+
+    def with_error(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/Error.aspx"):
+            return httpx.Response(200, text="<html><body><b>Error!</b></br>Session expired</body></html>")
+        return handler(request)
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(with_error), follow_redirects=True
+    ) as client:
+        adapter = AccelaAcaAdapter(_config(), client=client)
+        with pytest.raises(RuntimeError, match="Session expired"):
+            await adapter._search(client, "Building", max_pages=1)

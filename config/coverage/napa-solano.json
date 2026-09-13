@@ -591,15 +591,24 @@
             {
               "source": "napa-county.napa-pipe-development-plan",
               "scope": "project_specific"
+            },
+            {
+              "source": "napa-county.accela",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
             }
-          ]
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
         },
         "permits": {
-          "evidence": [],
-          "blocker": {
-            "reason": "Napa County Accela (NAPACO) public search returns the unchanged search surface over direct HTTP. Zero rows is not treated as success.",
-            "smoke_source": "napa-county.accela-smoke"
-          }
+          "evidence": [
+            {
+              "source": "napa-county.accela",
+              "scope": "recurring_tracker",
+              "role": "building_permits"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
         },
         "government_meetings": {
           "evidence": [
@@ -1390,14 +1399,24 @@
       "kind": "county",
       "categories": {
         "current_development": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "solano-county.accela",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
         },
         "permits": {
-          "evidence": [],
-          "blocker": {
-            "reason": "Solano County Accela (SOLANOCO) public search returns the unchanged search surface over direct HTTP. Zero rows is not treated as success.",
-            "smoke_source": "solano-county.accela-smoke"
-          }
+          "evidence": [
+            {
+              "source": "solano-county.accela",
+              "scope": "recurring_tracker",
+              "role": "building_permits"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
         },
         "government_meetings": {
           "evidence": [

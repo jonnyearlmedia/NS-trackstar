@@ -74,6 +74,28 @@ def _form_values(soup: BeautifulSoup) -> dict[str, str]:
     return data
 
 
+
+def _error_page_message(html: str) -> str:
+    """Lift the message ACA writes into its own error page, so a failure says why.
+
+    ACA writes this two ways depending on the tenant: as real markup, and as an
+    escaped string where ``<b>Error!</b>`` arrives as literal text. Both are read
+    here, because the point is to repeat the portal's own words back.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for node in soup.stripped_strings:
+        if "Error!" not in node:
+            continue
+        cleaned = re.sub(r"<[^>]+>", " ", node).replace("Error!", "").strip()
+        if cleaned:
+            return " ".join(cleaned.split())
+        # Real markup: the message is the text that follows the bold "Error!".
+        tail = re.split(r"Error!\s*", soup.get_text(" ", strip=True), maxsplit=1)
+        if len(tail) == 2 and tail[1].strip():
+            return " ".join(tail[1].split())
+    return "no message on the page"
+
+
 def _postback(tag: Tag | None) -> tuple[str, str] | None:
     if tag is None:
         return None
@@ -81,6 +103,19 @@ def _postback(tag: Tag | None) -> tuple[str, str] | None:
     if href:
         match = re.search(
             r"__doPostBack\(['\"]([^'\"]+)['\"],['\"]([^'\"]*)['\"]\)",
+            href,
+        )
+        if match:
+            return match.group(1), match.group(2)
+        # ASP.NET renders a button that participates in validation as
+        # WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("target", "argument", ...))
+        # rather than a bare __doPostBack. The Napa and Solano tenants both do this
+        # for the Search button, and reading only the bare form is why those two
+        # were recorded as needing a browser session for years: the anchor carries
+        # no name attribute either, so the fallback below returns nothing and the
+        # search is never submitted at all.
+        match = re.search(
+            r"WebForm_PostBackOptions\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"]([^'\"]*)['\"]",
             href,
         )
         if match:
@@ -266,7 +301,11 @@ class AccelaAcaAdapter(CollectorAdapter):
         self._allowed_host = parsed.hostname
 
     def _search_url(self, module: str) -> str:
-        return f"{self.base_url}/Cap/CapHome.aspx?module={module}"
+        # TabName is how ACA switches the module in session state, not decoration.
+        # Without it a second module's search page is served, but the search still
+        # runs against whichever module was asked for first, so collecting Building
+        # and Planning in one run silently returned Building twice.
+        return f"{self.base_url}/Cap/CapHome.aspx?module={module}&TabName={module}"
 
     async def _pace(self) -> None:
         if self.min_interval <= 0 or self._last_request_at is None:
@@ -302,10 +341,22 @@ class AccelaAcaAdapter(CollectorAdapter):
         if parsed.scheme != "https" or parsed.hostname != self._allowed_host:
             raise RuntimeError("Accela ACA request attempted to leave the configured public host")
         await self._pace()
+        # ACA runs its own cross-site check on every postback and answers a request
+        # without these with a 200 error page reading "Potential cross-site request
+        # forgery attacks. The Referer and Origin headers are missing". These are the
+        # headers a browser sends for a same-origin form post, which is exactly what
+        # this is; they are not a spoof of anything.
+        request_headers = (
+            {"Referer": url, "Origin": f"https://{self._allowed_host}"}
+            if method.upper() == "POST"
+            else None
+        )
         try:
             for attempt in range(len(RETRY_DELAYS_SECONDS) + 1):
                 try:
-                    response = await client.request(method, url, data=data)
+                    response = await client.request(
+                        method, url, data=data, headers=request_headers
+                    )
                 except httpx.RequestError as exc:
                     if attempt >= len(RETRY_DELAYS_SECONDS):
                         raise RuntimeError(
@@ -329,6 +380,15 @@ class AccelaAcaAdapter(CollectorAdapter):
                 final_url = urlparse(str(response.url))
                 if final_url.hostname != self._allowed_host:
                     raise RuntimeError("Accela ACA redirected outside the configured public host")
+                # ACA reports its own failures as a 200 redirect to Error.aspx. Reading
+                # that as an ordinary page is how a rejected search came to be recorded
+                # as "the unchanged search surface with no result grid" for months: the
+                # portal was saying what was wrong the whole time.
+                if final_url.path.lower().endswith("/error.aspx"):
+                    raise RuntimeError(
+                        "Accela ACA returned its error page: "
+                        f"{_error_page_message(response.text)}"
+                    )
                 return response.text
         finally:
             self._last_request_at = asyncio.get_running_loop().time()
@@ -504,6 +564,15 @@ class AccelaAcaAdapter(CollectorAdapter):
                         for row in rows
                     ):
                         return False
+                    continue
+
+                # A module with no named record still has to prove the search runs.
+                # Asserting only that the form is present would pass happily while a
+                # rejected postback returned the search page and nothing else, which
+                # is exactly the failure this source spent months in.
+                rows = await self._search(client, module, max_pages=1)
+                if not rows:
+                    return False
         return True
 
     async def collect(self) -> CollectorResult:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from typing import Any
 from urllib.parse import urljoin
 
@@ -14,24 +13,9 @@ from ns_trackstar.adapters.accela_aca import (
     _form_values,
     _next_page_postback,
     _parse_result_rows,
+    _postback,
     _set_control_value,
 )
-
-
-def _live_postback(tag: Tag | None) -> tuple[str, str] | None:
-    if tag is None:
-        return None
-    href = _attribute(tag, "href")
-    if href:
-        for pattern in (
-            r"__doPostBack\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]*)['\"]\)",
-            r"WebForm_PostBackOptions\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]*)['\"]",
-        ):
-            match = re.search(pattern, href)
-            if match:
-                return match.group(1), match.group(2)
-    name = _attribute(tag, "name")
-    return (name, "") if name else None
 
 
 def _form_action_url(soup: BeautifulSoup, fallback_url: str) -> str:
@@ -56,7 +40,7 @@ class AccelaAcaAdapter(BaseAccelaAcaAdapter):
         self._assert_search_contract(soup)
         data = _form_values(soup)
         search_button = _find_control(soup, "btnNewSearch")
-        postback = _live_postback(search_button)
+        postback = _postback(search_button)
         if postback is None:
             raise RuntimeError("Accela ACA search button has no usable postback target")
         data["__EVENTTARGET"], data["__EVENTARGUMENT"] = postback

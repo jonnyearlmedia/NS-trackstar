@@ -36,7 +36,7 @@ Legend: `OK` production and verified · `--` not built · `XX` blocked, reason b
                         dev  permit  meet   cip   gis  ceqa  biz  proc
 Napa                    OK     OK     OK    OK    OK    OK   OK    --
 American Canyon         OK     XX     OK    OK    OK    OK   OK    --
-Napa County (uninc)     OK     XX     OK    OK    OK    OK   OK    --
+Napa County (uninc)     OK     OK     OK    OK    OK    OK   OK    --
 Yountville              --     --     OK    --    OK    OK   OK    --
 St. Helena              OK     --     OK    --    OK    OK   OK    --
 Calistoga               OK     --     OK    ~~    OK    OK   OK    --
@@ -47,15 +47,15 @@ Suisun City             OK     --     OK    --    OK    OK   OK    --
 Vacaville               --     --     OK    --    OK    OK   OK    --
 Dixon                   --     XX     OK    OK    OK    OK   OK    --
 Rio Vista               --     --     OK    --    OK    OK   OK    --
-Solano County (uninc)   --     XX     OK    OK    OK    OK   OK    --
+Solano County (uninc)   OK     OK     OK    OK    OK    OK   OK    --
 ```
 
 `~~` Fairfield development is one project-specific record set, not an inventory.
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **59 strong, 44 partial, 5 blocked,
-32 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **62 strong, 44 partial, 3 blocked,
+31 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -115,8 +115,14 @@ Blocked, with the specific reason:
   same container. Calistoga's development coverage was built as soon as that was
   checked. Before recording a jurisdiction as unreachable, confirm the hostname is
   the one the city actually uses.
-- **Napa County and Solano County Accela** — both tenants answer 200; the public
-  search needs a browser session bootstrap the container cannot run.
+- **Napa County and Solano County Accela** are done, and the entry that had been
+  sitting here was wrong in an instructive way. No browser bootstrap was needed.
+  ACA answers a rejected postback with HTTP 200 and a redirect to its own error
+  page, so a refusal was read as an ordinary page and written down as "the
+  unchanged search surface". The portal had been stating the problem in that page
+  the whole time: the POST was missing the `Referer` and `Origin` headers that any
+  same-origin form post carries. When a source says zero rows, read the page it
+  actually returned before writing down why.
 - **Dixon permits (Tyler Civic Access)** — no longer waiting on a capture; the
   capture was done and answered the question. Dixon has anonymous public record
   search switched off. The portal's own route guard answers `isEnable: false` for
