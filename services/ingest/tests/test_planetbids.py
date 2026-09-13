@@ -233,3 +233,47 @@ async def test_a_capped_run_says_it_is_capped() -> None:
 
     assert result.metadata["pages_capped"] is True
     assert result.metadata["bids_reported_by_agency"] == 5
+
+
+@pytest.mark.asyncio
+async def test_detail_is_fetched_only_for_the_stages_config_names() -> None:
+    """A bid that closed years ago does not need its scope re-read every six hours.
+
+    The live API throttles hard enough that fetching a detail and a document list for
+    every bid in an agency's history turned one run into the better part of an hour,
+    so the stages that still move are named in config and the rest are listed only.
+    """
+    seen_details: list[str] = []
+    closed = {
+        "type": "bids",
+        "id": "99",
+        "attributes": dict(_BID_ROW["attributes"], bidId=99, stageStr="Closed", title="Old job"),
+    }
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/papi/agencies/42510"):
+            return httpx.Response(200, json=_AGENCY)
+        if path == "/papi/bids":
+            return httpx.Response(
+                200, json={"data": [_BID_ROW, closed], "meta": {"totalBids": 2, "totalPages": 1}}
+            )
+        if "bid-details" in path:
+            seen_details.append(path.rsplit("/", 1)[-1])
+            return httpx.Response(200, json=_DETAIL)
+        if path == "/papi/bid-downloadable-files":
+            return httpx.Response(200, json=_FILES)
+        return httpx.Response(404)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
+        adapter = PlanetBidsAdapter(_config(detail_stages=["Bidding"]), client=client)
+        result = await adapter.collect()
+
+    # Both bids are still recorded; only the open one costs a detail request.
+    assert len(result.records) == 2
+    assert seen_details == ["144506"]
+    assert result.metadata["detail_skipped_by_stage"] == 1
+    assert result.metadata["detail_stages"] == ["bidding"]
+    old = next(r for r in result.records if r.normalized_payload["bid_id"] == "99")
+    assert old.normalized_payload["stage"] == "Closed"
+    assert "scope" not in old.normalized_payload

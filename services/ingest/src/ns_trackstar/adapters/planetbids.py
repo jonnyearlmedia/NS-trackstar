@@ -102,6 +102,17 @@ class PlanetBidsAdapter(CollectorAdapter):
         self.max_pages = max(1, int(options.get("max_pages", 20)))
         self.fetch_details = bool(options.get("fetch_details", True))
         self.fetch_documents = bool(options.get("fetch_documents", True))
+        # An agency's whole bid history is worth listing every run; it is not worth
+        # re-reading the scope and attachment list of a solicitation that closed in
+        # 2019 every six hours. Naming the stages that still move is a curation
+        # decision, so it lives in config where it can be read and argued with, and
+        # the number of bids whose detail was skipped is reported so a narrow list
+        # cannot quietly hollow the source out. Empty means every stage.
+        self.detail_stages = {
+            str(stage).strip().casefold()
+            for stage in (options.get("detail_stages") or [])
+            if str(stage).strip()
+        }
         self.min_expected_bids = int(options.get("min_expected_bids", 1))
         # PlanetBids refuses a bare "NS-Trackstar/0.1", "NS-Trackstar-Bot/0.1" and
         # "curl/8.7.1" with HTTP 403, and accepts the conventional
@@ -372,13 +383,20 @@ class PlanetBidsAdapter(CollectorAdapter):
 
             records: list[NormalizedRecord] = []
             skipped = 0
+            detail_skipped = 0
             for row in rows:
-                bid_id = str((row.get("attributes") or {}).get("bidId") or "").strip()
+                attributes = row.get("attributes") or {}
+                bid_id = str(attributes.get("bidId") or "").strip()
+                wanted = not self.detail_stages or str(
+                    attributes.get("stageStr") or ""
+                ).strip().casefold() in self.detail_stages
                 detail: dict[str, Any] = {}
                 documents: list[dict[str, Any]] = []
-                if bid_id and self.fetch_details:
+                if not wanted:
+                    detail_skipped += 1
+                if bid_id and self.fetch_details and wanted:
                     detail = await self._detail(client, bid_id)
-                if bid_id and self.fetch_documents:
+                if bid_id and self.fetch_documents and wanted:
                     documents = await self._documents(client, bid_id)
                 record = self._record(row, detail, documents)
                 if record is None:
@@ -403,6 +421,8 @@ class PlanetBidsAdapter(CollectorAdapter):
                 "bids_reported_by_agency": total_reported,
                 "pages_capped": bool(total_reported and len(rows) < total_reported),
                 "rows_skipped": skipped,
+                "detail_skipped_by_stage": detail_skipped,
+                "detail_stages": sorted(self.detail_stages) or "all",
                 "stages": stages,
                 "throttled_waits": self._throttled,
                 "detail_fetch": self.fetch_details,

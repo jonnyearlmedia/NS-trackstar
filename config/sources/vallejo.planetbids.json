@@ -13,6 +13,11 @@
     "fetch_details": true,
     "fetch_documents": true,
     "min_expected_bids": 1,
-    "min_request_interval_seconds": 1.0
+    "min_request_interval_seconds": 1.0,
+    "detail_stages": [
+      "Bidding",
+      "Award Pending",
+      "Awarded"
+    ]
   }
 }
