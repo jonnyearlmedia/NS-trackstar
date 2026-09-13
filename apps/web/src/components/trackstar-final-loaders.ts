@@ -36,3 +36,18 @@ export async function loadAreaChanges(viewport: MapViewportState, window: TimeWi
   if (!response.ok) throw new Error("Area updates failed");
   return response.json() as Promise<AreaChangesResponse>;
 }
+
+export async function loadAreaBriefingIds(viewport: MapViewportState, window: TimeWindow, signal: AbortSignal) {
+  const params = new URLSearchParams({
+    west: String(viewport.bounds.west),
+    south: String(viewport.bounds.south),
+    east: String(viewport.bounds.east),
+    north: String(viewport.bounds.north),
+    window: window === "all" ? "week" : window,
+    limit: "5",
+  });
+  const response = await fetch(`${API_BASE}/area/briefing?${params}`, { signal });
+  if (!response.ok) throw new Error("Area briefing failed");
+  const rows = await response.json() as Array<{ id: string }>;
+  return rows.map((row) => row.id);
+}
