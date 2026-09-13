@@ -61,6 +61,7 @@ export function ExplorePanel(props: Props) {
           <button onClick={props.onBrowse} type="button">Browse {count ? count.toLocaleString() : ""} projects</button>
           <button onClick={props.onFilters} type="button"><FilterIcon /> More filters</button>
         </div>
+        <a className="trackstarAboutLink" href="/about">About Trackstar & public records</a>
       </section>
     );
   }
@@ -86,6 +87,7 @@ export function ExplorePanel(props: Props) {
           {props.timeWindow !== "all" ? <button onClick={props.onTimeClear} type="button">{props.timeWindow === "today" ? "Changed today" : props.timeWindow === "week" ? "Changed recently" : "Coming up"} ×</button> : null}
         </div>
       ) : null}
+      <a className="trackstarAboutLink" href="/about">About Trackstar</a>
     </section>
   );
 }
