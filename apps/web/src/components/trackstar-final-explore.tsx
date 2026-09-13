@@ -2,7 +2,7 @@
 
 import type { ConsumerCategory, LifecycleFilter, MapProject, MapViewportState, TimeWindow } from "./map-final-model";
 import { CATEGORIES, areaLabel, categoryLabel, lifecycleLabel } from "./trackstar-final-ui";
-import { CategoryIcon, FilterIcon, LocationIcon, PlayIcon } from "./trackstar-final-icons";
+import { ArrowRightIcon, CategoryIcon, FilterIcon, LocationIcon, PlayIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
@@ -57,7 +57,7 @@ export function ExplorePanel(props: Props) {
           ))}
         </div>
         <div className={styles.panelFooter}>
-          <button onClick={props.onBrowse} type="button">Browse projects</button>
+          <button onClick={props.onBrowse} type="button">Browse {count ? count.toLocaleString() : ""} projects</button>
           <button onClick={props.onFilters} type="button"><FilterIcon /> More filters</button>
         </div>
       </section>
@@ -67,17 +67,17 @@ export function ExplorePanel(props: Props) {
   return (
     <section className={styles.freeExploreBar} aria-label="Free Explore controls">
       <button className={styles.areaPill} onClick={props.onExpand} type="button">
-        <span><strong>{label}</strong><small>{props.viewport ? `${count.toLocaleString()} showing` : "Loading projects…"}</small></span><b>↑</b>
+        <span><strong>{label}</strong><small>{props.viewport ? `${count.toLocaleString()} projects` : "Loading projects…"}</small></span><b>↑</b>
       </button>
       <div className={styles.pillScroller}>
         {CATEGORIES.map((item) => (
-          <button className={props.category === item.key ? styles.pillSelected : ""} key={item.key} onClick={() => props.onCategory(item.key)} type="button">{item.label}</button>
+          <button className={props.category === item.key ? styles.pillSelected : ""} data-category={item.key} key={item.key} onClick={() => props.onCategory(item.key)} type="button"><CategoryIcon category={item.key} /><span>{item.label}</span></button>
         ))}
         <button className={styles.filterPill} onClick={props.onFilters} aria-label="Open filters" type="button"><FilterIcon /></button>
       </div>
       <div className={extra.compactFooter}>
-        <button onClick={props.onBrowse} type="button">Browse projects</button>
-        {props.canBrief ? <button className="briefAreaButton" onClick={props.onBrief} type="button"><PlayIcon /> Brief this area</button> : <button onClick={props.onExpand} type="button">Browse this area</button>}
+        <button className="browseProjectsButton" onClick={props.onBrowse} type="button"><span>Browse {count ? count.toLocaleString() : ""} projects</span><ArrowRightIcon /></button>
+        {props.canBrief ? <button className="briefAreaButton" onClick={props.onBrief} type="button"><PlayIcon /> Brief this area</button> : null}
       </div>
       {(props.lifecycle !== "current" || props.timeWindow !== "all") ? (
         <div className={extra.activeChips} aria-label="Active filters">
@@ -109,7 +109,7 @@ export function BrowsePanel({ viewport, category, lifecycle, onClose, onSelect, 
       {tooBroad ? (
         <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button data-category={item.key} key={item.key} onClick={() => onCategory(item.key)} type="button"><i><CategoryIcon category={item.key} /></i><span>{item.label}</span></button>)}</div></>
       ) : (
-        <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button onClick={() => onSelect(project)} type="button"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><span>{project.locationUncertain ? "Approximate location" : "View project"}</span></button></li>)}</ol>
+        <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button className="contentResultRow" onClick={() => onSelect(project)} type="button"><span className="contentResultIcon" data-category={project.consumerCategory}><CategoryIcon category={project.consumerCategory} /></span><span className="contentResultCopy"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><em>{project.locationUncertain ? "Approximate location" : "Open project"}</em></span><span className="contentResultArrow"><ArrowRightIcon /></span></button></li>)}</ol>
       )}
       {viewport && projects.length === 0 ? <div className={styles.emptyUpdates}><strong>No mapped projects match this view.</strong><span>Clear filters or zoom out.</span><button onClick={onClear} type="button">Clear filters</button></div> : null}
     </section>
