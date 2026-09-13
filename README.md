@@ -48,7 +48,7 @@ The implementation source of truth lives in `docs/MASTER_SPEC.md`.
 ## Deployment
 
 Production deployment is defined in `docker-compose.production.yml` and
-[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The Oracle VM setup is interactive:
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The OVHcloud VM setup is interactive:
 it creates a protected environment file, applies tracked migrations, starts the
 API and scheduled collectors behind automatic HTTPS, and verifies `/health`.
 The Vercel project continues to use `apps/web` as its root directory.

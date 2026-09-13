@@ -32,7 +32,7 @@ APPLESCRIPT
 
 raw_target="${1:-}"
 if [[ -z "$raw_target" ]]; then
-  raw_target="$(prompt_text "NS Trackstar Deploy" "Oracle VM address or SSH target. Paste the public IP, or a full target such as ubuntu@203.0.113.10." "")"
+  raw_target="$(prompt_text "NS Trackstar Deploy" "Server address or SSH target. Paste the public IP, or a full target such as ubuntu@203.0.113.10." "")"
 fi
 if [[ "$raw_target" == "__NS_TRACKSTAR_CANCELLED__" || -z "$raw_target" ]]; then
   echo "Deployment cancelled."
@@ -75,11 +75,11 @@ EOF
 
 echo "Checking SSH access..."
 if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$ssh_target" 'true'; then
-  echo "SSH access failed. Make sure this Mac can already SSH into the Oracle VM with its SSH key." >&2
+  echo "SSH access failed. Make sure this Mac can already SSH into the server with its SSH key." >&2
   exit 2
 fi
 
-echo "Bootstrapping Docker/Git on the Oracle VM if needed..."
+echo "Bootstrapping Docker/Git on the server if needed..."
 ssh -o BatchMode=yes "$ssh_target" 'bash -s' <<'REMOTE'
 set -euo pipefail
 if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1; then
@@ -121,7 +121,7 @@ export NS_TRACKSTAR_WEB_ORIGIN="$web_origins"
 export NS_TRACKSTAR_CERT_EMAIL="$cert_email"
 
 if docker info >/dev/null 2>&1; then
-  ./scripts/deploy-oracle.sh
+  ./scripts/deploy-production.sh
 else
   # Fallback for a first session where docker group membership has not propagated.
   sudo -E env \
@@ -129,7 +129,7 @@ else
     NS_TRACKSTAR_WEB_ORIGIN="$web_origins" \
     NS_TRACKSTAR_CERT_EMAIL="$cert_email" \
     PATH="$PATH" \
-    ./scripts/deploy-oracle.sh
+    ./scripts/deploy-production.sh
 fi
 REMOTE
 

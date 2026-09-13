@@ -94,9 +94,12 @@ Playwright is a fallback or session bootstrap mechanism, not the universal colle
 
 ## Initial infrastructure
 
-- Oracle Cloud Free Tier VM: Postgres/PostGIS, collectors, Playwright, Martin, API
+- OVHcloud VM: Postgres/PostGIS, collectors, Playwright, Martin, API
 - Vercel free tier: web frontend initially
-- recurring infrastructure target: $0
+- recurring infrastructure: the OVHcloud VM is the only paid line. OVHcloud has
+  no permanent free tier, so the original $0 target does not survive the move off
+  Oracle Cloud Free Tier. Everything else stays free: Vercel's free tier and
+  public government data.
 - optional AI enrichment: hard cap approximately $5/month
 
 ## AI boundary

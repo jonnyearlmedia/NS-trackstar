@@ -1,27 +1,49 @@
 # Deployment
 
-The production split preserves the existing stack and has no required paid
-service: the Next.js frontend runs on Vercel, while PostgreSQL/PostGIS, the API,
-collectors, and HTTPS reverse proxy run on one Oracle Cloud Free Tier VM.
+The production split preserves the existing stack: the Next.js frontend runs on
+Vercel, while PostgreSQL/PostGIS, the API, collectors, and HTTPS reverse proxy run
+on one OVHcloud VM.
+
+OVHcloud has no permanent free tier, so the VM is a small fixed monthly cost.
+Everything else in the stack remains free: Vercel's free tier for the frontend,
+and public government data for every source.
 
 ## One-time prerequisites
 
-1. Create an Oracle Cloud Free Tier Ubuntu VM. An Ampere ARM instance is preferred
-   for its memory allowance; the production PostGIS image builds for ARM or x86.
-2. Reserve the VM's public IP. In both the Oracle network security list and the
-   VM firewall, expose only SSH (22), HTTP (80), and HTTPS (443). PostgreSQL is
-   intentionally not published.
+1. Create an OVHcloud Ubuntu VM. Postgres with PostGIS plus the collectors want
+   memory more than cores, so prefer the RAM allowance over the vCPU count. The
+   production PostGIS image builds for both ARM and x86, so either architecture
+   works.
+2. Give the VM a stable public IP. In both the OVHcloud control panel firewall
+   and the VM's own firewall, expose only SSH (22), HTTP (80), and HTTPS (443).
+   PostgreSQL is intentionally not published.
 3. Point a DNS hostname such as `api.example.com` at the VM's public IP. Caddy
    obtains and renews the TLS certificate automatically, so the API can be called
    safely from an HTTPS Vercel site.
 4. Install Git and Docker Engine with the Compose plugin on the VM.
+
+## Migrating a server provisioned before the deploy-script rename
+
+`scripts/deploy-oracle.sh` is now a shim that runs `scripts/deploy-production.sh`.
+It exists only because `scripts/install-autodeploy` writes the old path into
+`/usr/local/sbin/ns-trackstar-autodeploy`, which lives outside the repository, so a
+server that installed autodeploy earlier would otherwise pull a commit with no
+deploy script and fail inside a systemd oneshot where nobody sees it.
+
+On each such server, re-run:
+
+```sh
+./scripts/install-autodeploy
+```
+
+then delete `scripts/deploy-oracle.sh` from the repository.
 
 ## Backend deploy
 
 Clone this repository on the VM, check out `build/phase-0-foundation`, then run:
 
 ```sh
-./scripts/deploy-oracle.sh
+./scripts/deploy-production.sh
 ```
 
 On first run, the script asks only for the public API hostname, deployed web
@@ -36,20 +58,20 @@ To change the API hostname, web origin/CORS setting, or certificate email later,
 run:
 
 ```sh
-./scripts/deploy-oracle.sh configure
+./scripts/deploy-production.sh configure
 ```
 
 Press Enter to keep an existing value. The database password is preserved and
 never printed. Check the non-secret deployment settings with:
 
 ```sh
-./scripts/deploy-oracle.sh status
+./scripts/deploy-production.sh status
 ```
 
 Then redeploy with:
 
 ```sh
-./scripts/deploy-oracle.sh
+./scripts/deploy-production.sh
 ```
 
 Useful operations:
@@ -58,7 +80,7 @@ Useful operations:
 docker compose --env-file .env.production -f docker-compose.production.yml ps
 docker compose --env-file .env.production -f docker-compose.production.yml logs -f api collector
 git pull --ff-only
-./scripts/deploy-oracle.sh
+./scripts/deploy-production.sh
 ```
 
 Those Docker commands are maintainer/debug operations; normal setup and
@@ -74,7 +96,7 @@ Create a checksummed custom-format Postgres backup before destructive maintenanc
 ```
 
 The script writes a timestamped `.dump` plus `.sha256` file under ignored
-`backups/` by default. Copy both files off the VM periodically; Oracle Free Tier
+`backups/` by default. Copy both files off the VM periodically; the VM
 does not provide an application-level database backup for Trackstar.
 
 Verify that a backup can actually restore without touching production:
@@ -105,8 +127,8 @@ Do not commit `.env.production` or backup files.
 3. Add `NEXT_PUBLIC_API_BASE_URL=https://<API_DOMAIN>` to Preview and Production
    using Vercel's project settings; no local env file is required.
 4. Deploy. If the final Vercel/custom-domain origin differs from the backend's
-   saved CORS value, run `./scripts/deploy-oracle.sh configure` on the VM, enter
-   the final web origin, then rerun `./scripts/deploy-oracle.sh`.
+   saved CORS value, run `./scripts/deploy-production.sh configure` on the VM, enter
+   the final web origin, then rerun `./scripts/deploy-production.sh`.
 
 Verify the real public path after both sides are deployed:
 

@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate recovery and deployment scripts
-        run: bash -n scripts/backup-production-db.sh scripts/restore-production-db.sh scripts/deploy-oracle.sh
+        run: bash -n scripts/backup-production-db.sh scripts/restore-production-db.sh scripts/deploy-production.sh
       - name: Validate production Compose file
         run: docker compose -f docker-compose.production.yml config --quiet
       - name: Build production backend image

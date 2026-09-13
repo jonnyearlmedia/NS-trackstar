@@ -43,7 +43,7 @@ if [ "\$current" = "\$target" ]; then
   exit 0
 fi
 git reset --hard "\$target"
-./scripts/deploy-oracle.sh
+./scripts/deploy-production.sh
 EOF
 sudo chmod 755 "$RUNNER"
 
