@@ -10,6 +10,7 @@ import "./content-polish.css";
 import "./map-hierarchy-polish.css";
 import "./release-ui-pass.css";
 import "./release-state-fixes.css";
+import "./launch-closure.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
