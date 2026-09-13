@@ -813,7 +813,12 @@
           "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "benicia.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "gis_spatial": {
           "evidence": [

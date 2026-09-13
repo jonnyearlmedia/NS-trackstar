@@ -44,6 +44,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed where a newly posted agenda is the earliest public "
         "signal that a project is about to be decided.",
     ),
+    "benicia.capital-improvement-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's own capital project pages, carrying scope, schedule, cost, "
+        "contractor and the resident impact of each job; engineers edit them as work "
+        "moves.",
+    ),
     "benicia.current-planning-applications": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
         "Current planning application inventory; useful changes are typically municipal business-day edits.",

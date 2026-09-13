@@ -41,7 +41,7 @@ Yountville              --     --     OK    --    OK    OK   XX    --
 St. Helena              OK     --     OK    --    OK    OK   XX    --
 Calistoga               OK     --     OK    ~~    OK    OK   XX    --
 Vallejo                 OK     OK     OK    --    OK    OK   XX    --
-Benicia                 OK     XX     OK    --    OK    OK   XX    --
+Benicia                 OK     XX     OK    OK    OK    OK   XX    --
 Fairfield               ~~     --     XX    OK    OK    OK   XX    --
 Suisun City             OK     --     OK    --    OK    OK   XX    --
 Vacaville               --     --     OK    --    OK    OK   XX    --
@@ -54,8 +54,8 @@ Solano County (uninc)   --     XX     OK    OK    OK    OK   XX    --
 Calistoga CIP is private construction with traffic impact, not the city's own
 capital programme, which is published as a fiscal-year PDF schedule.
 
-Derived totals, September 13, 2026: **42 strong, 44 partial, 19 blocked,
-35 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **43 strong, 44 partial, 19 blocked,
+34 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -83,7 +83,7 @@ Verified reachable and unbuilt, so no excuse exists:
   tenant hostname sat in an iframe `src`, so a link sweep that only reads `href`
   reports "no meeting platform" about a city that has had one for years.
 
-- **Nine jurisdictions have no CIP source.** Fairfield and unincorporated Napa
+- **Eight jurisdictions have no CIP source.** Fairfield and unincorporated Napa
   County were closed by reading each agency's own ArcGIS organisation rather than
   its website: Fairfield publishes 87 capital projects with budget, phase, funding
   and a written status outlook, and the county publishes 24 road and facility

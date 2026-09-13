@@ -17,6 +17,7 @@ from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
 from ns_trackstar.adapters.granicus_rss import GranicusRssAdapter
 from ns_trackstar.adapters.html_table import HtmlTableAdapter
 from ns_trackstar.adapters.legistar import LegistarAdapter
+from ns_trackstar.adapters.linked_project_pages import LinkedProjectPagesAdapter
 from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.opencities_project_list import OpenCitiesProjectListAdapter
@@ -42,6 +43,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "granicus_rss": GranicusRssAdapter,
     "html_table": HtmlTableAdapter,
     "legistar": LegistarAdapter,
+    "linked_project_pages": LinkedProjectPagesAdapter,
     "opencities_map": OpenCitiesMapAdapter,
     "opencities_project_list": OpenCitiesProjectListAdapter,
     "official_document_set": OfficialDocumentSetAdapter,
