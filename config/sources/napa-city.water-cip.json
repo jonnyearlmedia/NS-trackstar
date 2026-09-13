@@ -37,6 +37,15 @@
         "construction_year": "Construction_Year",
         "project_manager": "PRJMAN"
       }
-    }
+    },
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 50,
+    "max_expected_records": 10000,
+    "canary_fields": [
+      "PROJNAME",
+      "CIPSTATUS",
+      "DATESTART",
+      "DATECOMP"
+    ]
   }
 }

@@ -10,6 +10,15 @@
     "id_field": "globalid",
     "out_fields": "*",
     "where": "1=1",
-    "page_size": 1000
+    "page_size": 1000,
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 20000,
+    "max_expected_records": 300000,
+    "canary_fields": [
+      "asmt",
+      "asmtwithdash",
+      "streetaddr",
+      "gis_acres"
+    ]
   }
 }

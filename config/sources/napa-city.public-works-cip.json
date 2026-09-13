@@ -33,6 +33,15 @@
         "completion_date": "ActualCompletionDate",
         "project_page": "Project_Page"
       }
-    }
+    },
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 20,
+    "max_expected_records": 5000,
+    "canary_fields": [
+      "ProjectName",
+      "ProjectStatus",
+      "ProjectNo",
+      "ProjectType"
+    ]
   }
 }

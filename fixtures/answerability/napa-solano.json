@@ -1,0 +1,555 @@
+{
+  "questions": [
+    "what_is_this",
+    "current_status",
+    "latest_change",
+    "next_step",
+    "useful_scale",
+    "location",
+    "related_projects",
+    "official_evidence",
+    "source_freshness"
+  ],
+  "projects": [
+    {
+      "key": "scotts-valley-casino",
+      "name": "Scotts Valley Casino and Tribal Housing",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres",
+        "building_area_sqft"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "environmental",
+        "land_status",
+        "gaming_eligibility"
+      ],
+      "required_relationship_types": [
+        "environmental_review_for",
+        "litigation_about",
+        "spatial_overlap_only"
+      ],
+      "required_evidence_families": [
+        "ceqa_document",
+        "bia_action",
+        "nigc_action",
+        "federal_litigation"
+      ],
+      "note": "Land status, gaming eligibility and litigation are separate dimensions and must never be collapsed into one lifecycle stage."
+    },
+    {
+      "key": "fairview-at-northgate",
+      "name": "Fairview at Northgate / Costco",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units",
+        "building_area_sqft",
+        "site_acres"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start",
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "planning",
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "permit_for",
+        "environmental_review_for"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "ceqa_document",
+        "meeting_agenda_item"
+      ],
+      "note": "The unit count changed during review. The card must show the current figure and the change as an event, not just the latest number."
+    },
+    {
+      "key": "mare-island-specific-plan",
+      "name": "Mare Island Specific Plan",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres",
+        "residential_units"
+      ],
+      "location_fields": [
+        "location_description"
+      ],
+      "next_step_fields": [
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "planning"
+      ],
+      "required_relationship_types": [
+        "parent_child",
+        "related_infrastructure"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "meeting_agenda_item",
+        "ceqa_document"
+      ]
+    },
+    {
+      "key": "solano360",
+      "name": "Solano360",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres",
+        "building_area_sqft"
+      ],
+      "location_fields": [
+        "address"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "parent_child"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "meeting_agenda_item"
+      ]
+    },
+    {
+      "key": "sr29-sonoma-complete-streets",
+      "name": "SR-29 / Sonoma Boulevard Complete Streets",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "length_miles",
+        "estimated_cost"
+      ],
+      "location_fields": [
+        "location_description",
+        "state_highways"
+      ],
+      "next_step_fields": [
+        "construction_year",
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "related_infrastructure"
+      ],
+      "required_evidence_families": [
+        "caltrans_record",
+        "cip_record",
+        "ceqa_document"
+      ]
+    },
+    {
+      "key": "mare-island-causeway-bridge",
+      "name": "Mare Island Causeway Bridge",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "estimated_cost",
+        "length_miles"
+      ],
+      "location_fields": [
+        "location_description"
+      ],
+      "next_step_fields": [
+        "planned_construction_start",
+        "completion_date"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "related_infrastructure"
+      ],
+      "required_evidence_families": [
+        "caltrans_record",
+        "cip_record"
+      ]
+    },
+    {
+      "key": "vallejo-waterfront-specific-plan",
+      "name": "Vallejo Waterfront Specific Plan",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres",
+        "residential_units"
+      ],
+      "location_fields": [
+        "location_description"
+      ],
+      "next_step_fields": [
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "planning"
+      ],
+      "required_relationship_types": [
+        "parent_child",
+        "environmental_review_for"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "meeting_agenda_item"
+      ]
+    },
+    {
+      "key": "downtown-vallejo-specific-plan",
+      "name": "Downtown Vallejo Specific Plan",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres",
+        "residential_units"
+      ],
+      "location_fields": [
+        "location_description"
+      ],
+      "next_step_fields": [
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "planning"
+      ],
+      "required_relationship_types": [
+        "parent_child"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "meeting_agenda_item"
+      ]
+    },
+    {
+      "key": "coral-sea-village-8c",
+      "name": "Coral Sea Village 8C",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units",
+        "site_acres"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "parent_child",
+        "permit_for"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "permit_record"
+      ]
+    },
+    {
+      "key": "vista-cove",
+      "name": "Vista Cove",
+      "jurisdiction": "vallejo",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "permit_for"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "permit_record"
+      ]
+    },
+    {
+      "key": "napa-pipe",
+      "name": "Napa Pipe",
+      "jurisdiction": "napa",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units",
+        "site_acres"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "planning"
+      ],
+      "required_relationship_types": [
+        "parent_child"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "ceqa_document"
+      ]
+    },
+    {
+      "key": "napa-county-current-project",
+      "name": "Napa County current planning project",
+      "jurisdiction": "napa-county",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres"
+      ],
+      "location_fields": [
+        "apn"
+      ],
+      "next_step_fields": [
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "official_tracker_stage"
+      ],
+      "required_relationship_types": [],
+      "required_evidence_families": [
+        "planning_record"
+      ]
+    },
+    {
+      "key": "american-canyon-construction-update",
+      "name": "American Canyon construction project",
+      "jurisdiction": "american-canyon",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units"
+      ],
+      "location_fields": [
+        "address"
+      ],
+      "next_step_fields": [
+        "planned_completion"
+      ],
+      "status_dimensions": [
+        "official_tracker_stage"
+      ],
+      "required_relationship_types": [],
+      "required_evidence_families": [
+        "planning_record"
+      ]
+    },
+    {
+      "key": "benicia-planning-application",
+      "name": "Benicia current planning application",
+      "jurisdiction": "benicia",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "site_acres"
+      ],
+      "location_fields": [
+        "address",
+        "apn"
+      ],
+      "next_step_fields": [
+        "public_hearings"
+      ],
+      "status_dimensions": [
+        "official_tracker_stage"
+      ],
+      "required_relationship_types": [],
+      "required_evidence_families": [
+        "planning_record"
+      ]
+    },
+    {
+      "key": "one-lake-canon-station",
+      "name": "One Lake / Canon Station",
+      "jurisdiction": "fairfield",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "residential_units",
+        "site_acres"
+      ],
+      "location_fields": [
+        "apn"
+      ],
+      "next_step_fields": [
+        "planned_construction_start"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "related_infrastructure",
+        "alias_of"
+      ],
+      "required_evidence_families": [
+        "planning_record",
+        "assessor_record"
+      ]
+    },
+    {
+      "key": "dutch-bros-suisun",
+      "name": "Dutch Bros Suisun City",
+      "jurisdiction": "suisun-city",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "building_area_sqft"
+      ],
+      "location_fields": [
+        "address"
+      ],
+      "next_step_fields": [
+        "planned_completion"
+      ],
+      "status_dimensions": [
+        "official_tracker_stage"
+      ],
+      "required_relationship_types": [],
+      "required_evidence_families": [
+        "planning_record",
+        "permit_record"
+      ],
+      "note": "Tenant identity confidence and opening-stage confidence stay separate; an opening date is only shown when evidence supports one."
+    },
+    {
+      "key": "solano-county-board-item",
+      "name": "Unincorporated Solano County board project",
+      "jurisdiction": "solano-county",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "estimated_cost"
+      ],
+      "location_fields": [
+        "location_description"
+      ],
+      "next_step_fields": [
+        "fiscal_year"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [],
+      "required_evidence_families": [
+        "meeting_agenda_item"
+      ]
+    },
+    {
+      "key": "sr37-sears-point-mare-island",
+      "name": "SR-37 Sears Point to Mare Island",
+      "jurisdiction": "solano-county",
+      "identity_fields": [
+        "description"
+      ],
+      "scale_fields": [
+        "length_miles",
+        "estimated_cost"
+      ],
+      "location_fields": [
+        "location_description",
+        "state_highways"
+      ],
+      "next_step_fields": [
+        "construction_year"
+      ],
+      "status_dimensions": [
+        "delivery_stage"
+      ],
+      "required_relationship_types": [
+        "parent_child"
+      ],
+      "required_evidence_families": [
+        "caltrans_record",
+        "ceqa_document"
+      ]
+    }
+  ],
+  "awaiting_source": [
+    {
+      "jurisdiction": "vacaville",
+      "reason": "No city portal ingested yet; the city host was unreachable from the verification environment and eScribe is the next route in."
+    },
+    {
+      "jurisdiction": "dixon",
+      "reason": "No city development, permit or meeting source implemented yet."
+    },
+    {
+      "jurisdiction": "rio-vista",
+      "reason": "No city development, permit or meeting source implemented yet."
+    },
+    {
+      "jurisdiction": "yountville",
+      "reason": "No city development, permit or meeting source implemented yet."
+    },
+    {
+      "jurisdiction": "st-helena",
+      "reason": "No city development, permit or meeting source implemented yet."
+    },
+    {
+      "jurisdiction": "calistoga",
+      "reason": "No city development, permit or meeting source implemented yet."
+    }
+  ]
+}
