@@ -1,7 +1,7 @@
 "use client";
 
 import type { AppView } from "./trackstar-final-ui";
-import { SearchIcon } from "./trackstar-final-icons";
+import { MapIcon, SearchIcon, UpdatesIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 import extra from "./trackstar-final-extras.module.css";
 
@@ -16,7 +16,10 @@ export function TopChrome({ onReset, onSearch }: { onReset: () => void; onSearch
 }
 
 export function BottomNav({ view, onView }: { view: AppView; onView: (view: AppView) => void }) {
-  return <nav className={styles.bottomNav} aria-label="Trackstar sections"><button className={view === "explore" ? styles.navSelected : ""} onClick={() => onView("explore")} type="button">Explore</button><button className={view === "updates" ? styles.navSelected : ""} onClick={() => onView("updates")} type="button">Updates</button></nav>;
+  return <nav className={styles.bottomNav} aria-label="Trackstar sections">
+    <button aria-current={view === "explore" ? "page" : undefined} className={view === "explore" ? styles.navSelected : ""} onClick={() => onView("explore")} type="button"><MapIcon /><span>Explore</span></button>
+    <button aria-current={view === "updates" ? "page" : undefined} className={view === "updates" ? styles.navSelected : ""} onClick={() => onView("updates")} type="button"><UpdatesIcon /><span>Updates</span></button>
+  </nav>;
 }
 
 export function CoverageNotice({ outside, onReturn }: { outside: boolean; onReturn: () => void }) {
