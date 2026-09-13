@@ -51,7 +51,7 @@ export function ExplorePanel(props: Props) {
         </div>
         <div className={styles.categoryGrid}>
           {CATEGORIES.filter((item) => item.key !== "all").map((item) => (
-            <button className={props.category === item.key ? styles.categorySelected : ""} key={item.key} onClick={() => props.onCategory(item.key)} type="button">
+            <button data-category={item.key} className={props.category === item.key ? styles.categorySelected : ""} key={item.key} onClick={() => props.onCategory(item.key)} type="button">
               <i><CategoryIcon category={item.key} /></i><span>{item.label}</span><small className={extra.categoryCount}>{props.viewport?.categoryCounts[item.key]?.toLocaleString() ?? "—"}</small>
             </button>
           ))}
@@ -107,7 +107,7 @@ export function BrowsePanel({ viewport, category, lifecycle, onClose, onSelect, 
         <div className={styles.projectActions}><button aria-label="Close project list" onClick={onClose} type="button">×</button></div>
       </div>
       {tooBroad ? (
-        <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button key={item.key} onClick={() => onCategory(item.key)} type="button"><i><CategoryIcon category={item.key} /></i><span>{item.label}</span></button>)}</div></>
+        <><p className={styles.stateMessage}>Choose a category or zoom in for a useful local list.</p><div className={styles.categoryGrid}>{CATEGORIES.filter((item) => item.key !== "all").map((item) => <button data-category={item.key} key={item.key} onClick={() => onCategory(item.key)} type="button"><i><CategoryIcon category={item.key} /></i><span>{item.label}</span></button>)}</div></>
       ) : (
         <ol className={styles.updateList}>{projects.map((project) => <li key={project.id}><button onClick={() => onSelect(project)} type="button"><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><strong>{project.name}</strong><span>{project.locationUncertain ? "Approximate location" : "View project"}</span></button></li>)}</ol>
       )}
