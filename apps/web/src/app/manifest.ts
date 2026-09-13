@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Source-backed change intelligence for Napa and Solano Counties.",
     start_url: "/",
     display: "standalone",
-    background_color: "#080b0d",
-    theme_color: "#080b0d",
+    background_color: "#eef5f7",
+    theme_color: "#eef5f7",
     orientation: "portrait-primary",
     icons: [
       {
