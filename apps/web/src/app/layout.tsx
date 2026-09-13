@@ -6,6 +6,7 @@ import "./final-device.css";
 import "./visual-refresh.css";
 import "./editorial-polish.css";
 import "./interaction-polish.css";
+import "./content-polish.css";
 
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
