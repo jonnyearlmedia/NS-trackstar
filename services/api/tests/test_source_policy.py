@@ -1,4 +1,4 @@
-from ns_trackstar_api.cadence import _policy_state
+from ns_trackstar_api import cadence
 from ns_trackstar_api.source_policy import SOURCE_FRESHNESS_POLICIES
 
 
@@ -44,10 +44,10 @@ def test_policy_ranges_are_sane() -> None:
 
 def test_policy_state_reports_within_faster_slower_and_unclassified() -> None:
     source = "napa-city.legistar"
-    assert _policy_state(source, 60)["cadence_policy_state"] == "within_policy"
-    assert _policy_state(source, 30)["cadence_policy_state"] == "faster_than_needed"
-    assert _policy_state(source, 240)["cadence_policy_state"] == "slower_than_recommended"
+    assert cadence._policy_state(source, 60)["cadence_policy_state"] == "within_policy"
+    assert cadence._policy_state(source, 30)["cadence_policy_state"] == "faster_than_needed"
+    assert cadence._policy_state(source, 240)["cadence_policy_state"] == "slower_than_recommended"
 
-    missing = _policy_state("does-not-exist", 60)
+    missing = cadence._policy_state("does-not-exist", 60)
     assert missing["cadence_policy_state"] == "unclassified"
     assert missing["freshness_class"] == "unclassified"
