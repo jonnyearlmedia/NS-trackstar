@@ -29,7 +29,28 @@ async def test_project_detail_exposes_source_links_and_location_accuracy() -> No
                     "environmental": "document_type_eir",
                     "official_tracker_stage": "under_review_or_in_process",
                 },
-                "assertions": [],
+                "assertions": [
+                    {
+                        "field": "description",
+                        "value": (
+                            "A logistics and warehouse campus proposed on vacant land "
+                            "north of the rail line, with truck access improvements."
+                        ),
+                        "source_url": "https://ceqanet.lci.ca.gov/Project/2021010044",
+                    },
+                    {"field": "building_area_sqft", "value": 480000, "source_url": None},
+                    {"field": "apn", "value": "0032-190-140", "source_url": None},
+                ],
+                "recent_events": [
+                    {
+                        "event_type": "environmental_changed",
+                        "title": "Environmental changed to document_type_eir",
+                        "summary": None,
+                        "occurred_at": "2026-07-27T00:00:00+00:00",
+                        "observed_at": "2026-07-27T00:00:00+00:00",
+                        "significance": 0.75,
+                    }
+                ],
                 "sources": [
                     {
                         "source_key": "california.ceqanet.napa-solano",
@@ -60,3 +81,19 @@ async def test_project_detail_exposes_source_links_and_location_accuracy() -> No
     assert result["sources"][0]["relationship_type"] == "environmental_review_for"
     assert result["sources"][0]["evidence"] == {"signals": ["SCH and address"]}
     assert result["sources"][0]["url"].endswith("2021010044")
+
+    # The consumer answer is composed deterministically from the same evidence and
+    # never degrades into generic filler copy.
+    explainer = result["explainer"]
+    assert explainer["what_is_this"].startswith("A logistics and warehouse campus")
+    assert "Napa" not in explainer["what_is_this"]
+    assert explainer["evidence_backed"] is True
+    assert explainer["whats_happening"].startswith("Environmental changed to")
+    assert {fact["field"] for fact in explainer["why_care"]} == {"building_area_sqft"}
+    assert result["summary"] == explainer["what_is_this"]
+
+    # Technical evidence stays available, grouped rather than allowlisted away.
+    sections = {section["key"]: section for section in result["evidence_sections"]}
+    assert sections["scale"]["items"][0]["field"] == "building_area_sqft"
+    assert sections["identifiers"]["items"][0]["field"] == "apn"
+    assert sections["identifiers"]["items"][0]["bureaucratic"] is True

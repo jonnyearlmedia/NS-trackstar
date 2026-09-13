@@ -14,6 +14,10 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
 
+from ns_trackstar_api.area import normalize_lifecycle
+from ns_trackstar_api.categories import SEMANTIC_FIELDS, normalize_consumer_category
+from ns_trackstar_api.narrative import compose_evidence_sections, compose_explainer
+
 LOCAL_TIMEZONE = ZoneInfo("America/Los_Angeles")
 TimeWindow = Literal["today", "week", "upcoming", "all"]
 SEARCH_ASSERTION_FIELDS = (
@@ -599,6 +603,23 @@ async def project_detail(project_id: UUID) -> dict:
              WHERE a.project_id = p.id),
             '[]'::jsonb
           ) AS assertions,
+          COALESCE(
+            (SELECT jsonb_agg(jsonb_build_object(
+              'event_type', pe.event_type,
+              'title', pe.title,
+              'summary', pe.summary,
+              'occurred_at', pe.occurred_at,
+              'observed_at', pe.observed_at,
+              'significance', pe.significance
+            ) ORDER BY COALESCE(pe.occurred_at, pe.observed_at) DESC)
+             FROM (
+               SELECT * FROM project_event
+               WHERE project_id = p.id
+               ORDER BY COALESCE(occurred_at, observed_at) DESC
+               LIMIT 40
+             ) pe),
+            '[]'::jsonb
+          ) AS recent_events,
           (SELECT jsonb_build_object(
              'method', pl.geometry_method,
              'source', pl.geometry_source,
@@ -632,6 +653,31 @@ async def project_detail(project_id: UUID) -> dict:
     row = await cursor.fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    assertions = row["assertions"] or []
+    statuses = row["statuses"] or {}
+    events = row.get("recent_events") or []
+    semantic_values = [
+        str(item["value"])
+        for item in assertions
+        if item.get("field") in SEMANTIC_FIELDS and isinstance(item.get("value"), str)
+    ]
+    consumer_category, _, _ = normalize_consumer_category(
+        project_type=str(row["project_type"]),
+        semantic_values=semantic_values,
+        project_name=str(row["canonical_name"]),
+    )
+    lifecycle_stage, _, _ = normalize_lifecycle(statuses)
+    explainer = compose_explainer(
+        name=str(row["canonical_name"]),
+        project_type=str(row["project_type"]),
+        consumer_category=consumer_category,
+        lifecycle_stage=lifecycle_stage,
+        assertions=assertions,
+        statuses=statuses,
+        events=events,
+    )
+
     return {
         "id": str(row["id"]),
         "name": row["canonical_name"],
@@ -640,11 +686,13 @@ async def project_detail(project_id: UUID) -> dict:
             row["last_activity_at"].isoformat() if row["last_activity_at"] else None
         ),
         "geometry": row["geometry"],
-        "summary": row.get("summary_cache"),
+        "summary": row.get("summary_cache") or explainer.what_is_this,
         "location": row["location"],
-        "statuses": row["statuses"],
-        "assertions": row["assertions"],
+        "statuses": statuses,
+        "assertions": assertions,
         "sources": row["sources"],
+        "explainer": explainer.to_dict(),
+        "evidence_sections": compose_evidence_sections(assertions),
     }
 
 

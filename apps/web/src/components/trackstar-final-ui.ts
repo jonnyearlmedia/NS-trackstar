@@ -12,6 +12,22 @@ export type SelectionOrigin = {
   bounds: ViewportBounds | null;
 };
 
+export type ProjectFact = { label: string; value: string; field: string; source_url: string | null };
+export type ProjectExplainer = {
+  what_is_this: string;
+  whats_happening: string | null;
+  whats_happening_at: string | null;
+  why_care: ProjectFact[];
+  whats_next: string | null;
+  whats_next_basis: string | null;
+  evidence_backed: boolean;
+  basis: string[];
+};
+export type EvidenceSection = {
+  key: string;
+  title: string;
+  items: Array<{ field: string; label: string; value: string; source_url: string | null; bureaucratic: boolean }>;
+};
 export type ProjectDetail = {
   id: string;
   name: string;
@@ -23,6 +39,8 @@ export type ProjectDetail = {
   statuses: Record<string, string>;
   assertions: Array<{ field: string; value: unknown }>;
   sources: Array<{ source_key: string; source_name: string; relationship_type: string; url: string | null }>;
+  explainer?: ProjectExplainer | null;
+  evidence_sections?: EvidenceSection[] | null;
 };
 export type ProjectClassification = {
   project_id: string;
@@ -117,11 +135,16 @@ export function eventHeadline(event: ProjectEvent) {
   if (event.summary && event.summary !== event.title) return event.summary;
   return event.title.replaceAll("_", " ");
 }
+// The backend composes the consumer answer deterministically from structured evidence.
+// The frontend never invents copy: when there is genuinely nothing to say it says that
+// plainly instead of dressing an empty record up as a described project.
 export function projectSummary(detail: ProjectDetail | null, selected: MapProject | null) {
+  const composed = detail?.explainer?.what_is_this?.trim();
+  if (composed) return composed;
   const direct = detail?.summary?.trim();
-  if (direct) return direct.length > 280 ? `${direct.slice(0, 277).trimEnd()}…` : direct;
+  if (direct) return direct.length > 320 ? `${direct.slice(0, 317).trimEnd()}…` : direct;
   if (!selected) return "";
-  return `A ${categoryLabel(selected.consumerCategory).toLowerCase()} project in Napa–Solano. Open details for official records and history.`;
+  return `Trackstar is tracking this ${categoryLabel(selected.consumerCategory).toLowerCase()} record but the agency has not published enough detail to describe it yet. Open details for the official evidence Trackstar does have.`;
 }
 export function locationUncertain(detail: ProjectDetail | null, selected: MapProject | null) {
   if (selected?.locationUncertain) return true;
@@ -130,6 +153,8 @@ export function locationUncertain(detail: ProjectDetail | null, selected: MapPro
   return !["exact_source_geometry", "exact_parcel", "exact_address"].includes(detail.location.accuracy);
 }
 
+// Every incorporated city in the Trackstar service area, so a user zoomed into
+// Vacaville or Calistoga is told where they are instead of "This area".
 const CITY_CENTERS = [
   { name: "American Canyon", lng: -122.2608, lat: 38.1749 },
   { name: "Vallejo", lng: -122.2566, lat: 38.1041 },
@@ -137,6 +162,12 @@ const CITY_CENTERS = [
   { name: "Napa", lng: -122.2869, lat: 38.2975 },
   { name: "Fairfield", lng: -122.0399, lat: 38.2494 },
   { name: "Suisun City", lng: -122.0402, lat: 38.2383 },
+  { name: "Vacaville", lng: -121.9877, lat: 38.3566 },
+  { name: "Dixon", lng: -121.8233, lat: 38.4455 },
+  { name: "Rio Vista", lng: -121.6913, lat: 38.1557 },
+  { name: "Yountville", lng: -122.3608, lat: 38.4016 },
+  { name: "St. Helena", lng: -122.4703, lat: 38.5052 },
+  { name: "Calistoga", lng: -122.5797, lat: 38.5788 },
 ];
 export function areaLabel(viewport: MapViewportState | null) {
   if (!viewport) return "Napa + Solano";
