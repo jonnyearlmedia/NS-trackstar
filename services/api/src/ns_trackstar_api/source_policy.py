@@ -68,6 +68,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed carrying Council, Planning Commission and the city's "
         "standing committees; a newly posted agenda is the earliest public signal.",
     ),
+    "california.abc.napa-solano": SourceFreshnessPolicy(
+        "regulatory_watch", "daily", 720, 1440,
+        "Three statewide licensing reports the state regenerates once a day. Polling "
+        "faster cannot surface a licence sooner than the state publishes it.",
+    ),
     "california.ceqanet.napa-solano": SourceFreshnessPolicy(
         "state_project_watch", "within_day", 360, 720,
         "State environmental filings can materially change project context during the day.",
@@ -80,6 +85,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "active_project_tracker", "within_day", 120, 240,
         "The city's own capital project tracker, carrying phase, budget and a written "
         "status outlook; staff edit it on business days as a project moves.",
+    ),
+    "fairfield.escribe": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Council, Planning Commission and special "
+        "sessions; a newly posted agenda is the earliest public signal that a project "
+        "is about to be decided.",
     ),
     "fairfield.one-lake-assessor-map": SourceFreshnessPolicy(
         "project_specific_record", "rare", 1440, 10080,
@@ -155,6 +166,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "regulatory_watch", "daily", 720, 1440,
         "Federal gaming regulatory record; significant but low-frequency changes.",
     ),
+    "napa-county.accela": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "County building permits and planning cases, where a same-day status change is "
+        "real news. The cadence matches the other permit portals rather than hammering "
+        "a county search surface.",
+    ),
     "napa-county.addresses": SourceFreshnessPolicy(
         "spatial_reference", "rare", 1440, 10080,
         "Address points are the base layer used to place a record, not an activity feed.",
@@ -185,6 +202,12 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "active_project_tracker", "within_day", 120, 240,
         "The city's own hand-maintained planning-project pages. Staff edit them during "
         "the business day when a case is deemed complete or approved.",
+    ),
+    "solano-county.accela": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "County building permits and planning cases, where a same-day status change is "
+        "real news. The cadence matches the other permit portals rather than hammering "
+        "a county search surface.",
     ),
     "solano-county.capital-facility-projects": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
