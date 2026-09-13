@@ -1,9 +1,9 @@
 "use client";
 
-import type { Feature, Point } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import { installFinalLayers, updateMapData, updateSelected, updateUser } from "./map-final-layers";
 import { loadViewportTruth } from "./map-final-data";
+import { markerFeature } from "./map-marker-anchor";
 import { categoryCounts, lifecycleCounts, minimumPriorityForZoom, readSavedViewport, LAST_VIEWPORT_KEY, type ConsumerCategory, type LifecycleFilter, type MapCoverage, type MapProject, type MapViewportState, type TimeWindow, type UserLocation, type ViewportBounds } from "./map-final-model";
 import { INITIAL_CENTER, INITIAL_ZOOM, savedViewportIsReasonable } from "./service-area";
 
@@ -127,7 +127,10 @@ export function MapCanvasFinal(props: Props) {
           const filteredFeatures = consumerFeatures.filter((feature) => ids.has(String(feature.properties?.id ?? "")));
           const priorityFloor = categoryRef.current === "all" && lifecycleRef.current === "current" ? minimumPriorityForZoom(map.getZoom()) : 0;
           const shapes = filteredFeatures.filter((feature) => feature.geometry?.type !== "Point" && Number(feature.properties?.display_priority ?? 0) >= priorityFloor);
-          const points = filteredFeatures.filter((feature): feature is Feature<Point> => feature.geometry?.type === "Point");
+          const points = filteredFeatures.flatMap((feature) => {
+            const marker = markerFeature(feature);
+            return marker ? [marker] : [];
+          });
           updateMapData(map, shapes, points);
           const center = map.getCenter();
           callbacks.current.onViewportChange?.({ bounds: loaded.viewport, zoom: map.getZoom(), center: { lng: center.lng, lat: center.lat }, projects: filtered, categoryCounts: categoryCounts(lifeBase), lifecycleCounts: lifecycleCounts(categoryRef.current === "all" ? allProjects : allProjects.filter((project) => project.consumerCategory === categoryRef.current)) });
