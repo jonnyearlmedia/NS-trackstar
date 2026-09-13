@@ -2,6 +2,7 @@
 
 import type { MapProject } from "./map-final-model";
 import { categoryLabel, eventDate, eventHeadline, lifecycleLabel, type ChangeEvent } from "./trackstar-final-ui";
+import { ArrowRightIcon, CategoryIcon, NextIcon, PauseIcon, PlayIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 
 export function BriefingCard({ project, index, total, change, paused, onPause, onNext, onOpen, onExit }: {
@@ -15,14 +16,23 @@ export function BriefingCard({ project, index, total, change, paused, onPause, o
   onOpen: () => void;
   onExit: () => void;
 }) {
-  return <article className={styles.projectCard} aria-label="Area briefing">
-    <div className={styles.projectCardHandle}><span /></div>
-    <div className={styles.projectTopLine}><span className={styles.breadcrumb}>AREA BRIEFING · {index + 1} OF {total}</span><div className={styles.projectActions}><button aria-label="Exit briefing" onClick={onExit} type="button">×</button></div></div>
+  const progress = Math.max(0, Math.min(100, ((index + 1) / Math.max(total, 1)) * 100));
+  return <article className={`${styles.projectCard} briefingCard`} aria-label="Area briefing">
+    <div className="briefingProgress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+    <div className="briefingTopline">
+      <div className="briefingIdentity"><span className="briefingIcon"><CategoryIcon category={project.consumerCategory} /></span><span><small>AREA BRIEFING</small><strong>{index + 1} of {total}</strong></span></div>
+      <button className="briefingClose" aria-label="Exit briefing" onClick={onExit} type="button">×</button>
+    </div>
     <div className={styles.projectScroll}>
-      <div className={styles.projectTitleBlock}><small>{categoryLabel(project.consumerCategory)} · {lifecycleLabel(project.lifecycleStage)}</small><h2>{project.name}</h2>{project.locationUncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}</div>
-      {change ? <div className={styles.latestBlock}><small>RECENT CHANGE</small><strong>{eventHeadline(change)}</strong><span>{eventDate(change.occurred_at ?? change.observed_at)}</span></div> : <p className={styles.projectLead}>A current project in the map area you chose.</p>}
-      <div className={styles.panelFooter}><button onClick={onPause} type="button">{paused ? "Resume" : "Pause"}</button><button disabled={index >= total - 1} onClick={onNext} type="button">Next</button></div>
-      <button className={styles.detailsButton} onClick={onOpen} type="button">Open this project <span>›</span></button>
+      <div className="briefingKicker">{categoryLabel(project.consumerCategory)} <span>•</span> {lifecycleLabel(project.lifecycleStage)}</div>
+      <h2 className="briefingHeadline">{project.name}</h2>
+      {project.locationUncertain ? <span className={styles.approximateBadge}>Approximate location</span> : null}
+      {change ? <div className="briefingStory"><small>WHAT CHANGED</small><strong>{eventHeadline(change)}</strong><span>{eventDate(change.occurred_at ?? change.observed_at)}</span></div> : <p className="briefingDeck">A current project in the exact map area you chose.</p>}
+      <div className="briefingControls">
+        <button onClick={onPause} type="button">{paused ? <PlayIcon /> : <PauseIcon />}<span>{paused ? "Resume" : "Pause"}</span></button>
+        <button disabled={index >= total - 1} onClick={onNext} type="button"><NextIcon /><span>Next</span></button>
+      </div>
+      <button className="briefingOpen" onClick={onOpen} type="button"><span>Open full project</span><ArrowRightIcon /></button>
     </div>
   </article>;
 }
