@@ -20,6 +20,8 @@ jobs:
       - name: Install release QA browsers
         run: pnpm --filter @ns-trackstar/web exec playwright install --with-deps chromium firefox webkit
       - name: Run cross-browser release QA
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://15-204-82-184.sslip.io
         run: pnpm --filter @ns-trackstar/web qa:e2e
 
   python:
