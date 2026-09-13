@@ -4,7 +4,7 @@
   "jurisdiction": "City of Vallejo",
   "adapter": "tabular_pdf_project_tracker",
   "base_url": "https://www.cityofvallejo.net/our_city/departments_divisions/planning_development_services/planning_division",
-  "poll_minutes": 1440,
+  "poll_minutes": 240,
   "options": {
     "document_url": "https://www.cityofvallejo.net/common/pages/GetFile.ashx?key=37JFAWVM",
     "timezone": "America/Los_Angeles",
