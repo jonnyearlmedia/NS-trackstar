@@ -104,7 +104,7 @@ export function MapCanvasFinal(props: Props) {
       const useSaved = Boolean(saved && savedViewportIsReasonable(saved.center));
       const map = new maplibre.Map({
         container: containerRef.current,
-        style: "https://tiles.openfreemap.org/styles/liberty",
+        style: "https://tiles.openfreemap.org/styles/positron",
         center: useSaved && saved ? saved.center : INITIAL_CENTER,
         zoom: useSaved && saved ? Math.max(9, saved.zoom) : INITIAL_ZOOM,
         attributionControl: false,
