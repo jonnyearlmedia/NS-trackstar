@@ -1,14 +1,10 @@
-import { MapExplorerV6 } from "@/components/map-explorer-v6";
+import { TrackstarFinal } from "@/components/trackstar-final";
 
-export default async function ProjectPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return (
     <main className="shell">
-      <MapExplorerV6 initialProjectId={id} />
+      <TrackstarFinal initialProjectId={id} />
     </main>
   );
 }
