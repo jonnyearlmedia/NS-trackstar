@@ -1,0 +1,24 @@
+{
+  "key": "rio-vista.maintstar",
+  "name": "City of Rio Vista MaintStar Permits and Code Cases",
+  "jurisdiction": "City of Rio Vista",
+  "adapter": "maintstar_public",
+  "base_url": "https://h8.maintstar.co/riovista/portal/",
+  "poll_minutes": 240,
+  "options": {
+    "host": "https://h8.maintstar.co",
+    "tenant": "RioVista",
+    "queries": [
+      "26-",
+      "25-",
+      "PS",
+      "CS"
+    ],
+    "take": 300,
+    "max_pages_per_query": 20,
+    "min_expected_records": 10,
+    "min_request_interval_seconds": 0.5,
+    "timeout_seconds": 45,
+    "user_agent": "Mozilla/5.0 (compatible; NS-Trackstar/0.1; +https://github.com/jonnyearlmedia/NS-trackstar)"
+  }
+}

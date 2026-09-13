@@ -1,0 +1,43 @@
+{
+  "key": "solano-county.capital-facility-projects",
+  "name": "Solano County Capital Facility Improvement Projects",
+  "jurisdiction": "Solano County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.solanocounty.com/depts/gs/default.asp",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://services2.arcgis.com/SCn6czzcqKAFwdGU/arcgis/rest/services/CFIP_Production/FeatureServer/5",
+    "id_field": "OBJECTID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "expected_geometry_type": "esriGeometryPoint",
+    "min_expected_records": 50,
+    "max_expected_records": 5000,
+    "canary_fields": [
+      "ProjectName",
+      "ProjectStatus",
+      "Category",
+      "FundingStatus"
+    ],
+    "project_mapping": {
+      "name_field": "ProjectName",
+      "project_type": "public_works",
+      "authority_type": "issuing_agency_gis",
+      "status_dimension": "delivery_stage",
+      "status_field": "ProjectStatus",
+      "assertions": {
+        "official_status_text": "ProjectStatus",
+        "address": "StreetAddr",
+        "city": "City",
+        "record_type": "Category",
+        "lead_department": "Department",
+        "service_area": "Function_",
+        "priority_criteria": "Criteria",
+        "funding": "FundingStatus",
+        "estimated_cost": "ProjectCosts",
+        "delivery_phase": "ProjectPhase"
+      }
+    }
+  }
+}

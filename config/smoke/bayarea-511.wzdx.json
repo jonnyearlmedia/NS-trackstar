@@ -1,0 +1,24 @@
+{
+  "key": "bayarea-511.wzdx-smoke",
+  "name": "511 SF Bay Work Zone Data Exchange Smoke Test",
+  "jurisdiction": "Napa and Solano Counties",
+  "adapter": "wzdx",
+  "base_url": "https://api.511.org/traffic/wzdx",
+  "poll_minutes": 5,
+  "options": {
+    "endpoint_url": "https://api.511.org/traffic/wzdx",
+    "api_key_env": "BAYAREA_511_API_KEY",
+    "api_key_param": "api_key",
+    "request_params": {
+      "includeAllDefinedEnums": "false"
+    },
+    "timeout_seconds": 30,
+    "bbox": [
+      -122.64,
+      38.03,
+      -121.59,
+      38.87
+    ],
+    "_limitation": "A bounding box cannot separate Napa and Solano from Sonoma. WZDx carries no county label, unlike the traffic-events feed, so this stays in smoke until the features are tested against real county geometry."
+  }
+}

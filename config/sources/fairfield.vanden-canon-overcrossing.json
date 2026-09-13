@@ -1,0 +1,42 @@
+{
+  "key": "fairfield.vanden-canon-overcrossing",
+  "name": "City of Fairfield Council Goals — Vanden/Canon Road Overcrossing",
+  "jurisdiction": "Fairfield",
+  "adapter": "official_document_set",
+  "base_url": "https://transparency.fairfield.ca.gov/",
+  "poll_minutes": 1440,
+  "options": {
+    "allowed_hosts": ["transparency.fairfield.ca.gov"],
+    "canary_external_id": "vanden-canon-overcrossing-2025-q3",
+    "documents": [
+      {
+        "external_id": "vanden-canon-overcrossing-2025-q3",
+        "document_url": "https://transparency.fairfield.ca.gov/wp-content/uploads/2025/04/ClearPoint-Q3-JAN-MAR-2025.pdf",
+        "action_date": "2025-04-29",
+        "agency": "City of Fairfield",
+        "title": "Council Goals FY 2023-25 (Mar-25) Report — Vanden/Canon Road Overcrossing",
+        "project_name": "Vanden/Canon Road Overcrossing",
+        "record_kind": "city_council_goals_progress_report",
+        "right_of_way_status": "complete",
+        "environmental_clearance_status": "in_progress",
+        "design_status": "50_percent_complete",
+        "utility_relocation_status": "in_progress",
+        "related_development": "One Lake",
+        "canary_markers": ["One Lake", "Vanden", "50% design plans"]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "transportation_project",
+      "authority_type": "official_city_progress_report",
+      "status_dimension": "design",
+      "status_field": "design_status",
+      "assertions": {
+        "right_of_way_status": "right_of_way_status",
+        "environmental_clearance_status": "environmental_clearance_status",
+        "utility_relocation_status": "utility_relocation_status",
+        "related_development": "related_development"
+      }
+    }
+  }
+}

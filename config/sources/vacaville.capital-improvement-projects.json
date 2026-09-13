@@ -1,0 +1,46 @@
+{
+  "key": "vacaville.capital-improvement-projects",
+  "name": "City of Vacaville Capital Improvement Projects",
+  "jurisdiction": "Vacaville",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.cityofvacaville.gov/government/public-works",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://services3.arcgis.com/ceLnGXX8aWBjc5h0/arcgis/rest/services/EasyCIP_ProdData/FeatureServer/0",
+    "id_field": "OBJECTID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "expected_geometry_type": "esriGeometryPoint",
+    "min_expected_records": 30,
+    "max_expected_records": 5000,
+    "canary_fields": [
+      "PROJECT_NAME",
+      "PROJECT_ACCOUNT",
+      "PROJECT_DESCRIPTION",
+      "PROJECT_PHASE"
+    ],
+    "project_mapping": {
+      "name_field": "PROJECT_NAME",
+      "project_type": "public_works",
+      "description_field": "PROJECT_DESCRIPTION",
+      "authority_type": "issuing_agency_gis",
+      "status_dimension": "delivery_stage",
+      "status_field": "PROJECT_PHASE",
+      "assertions": {
+        "description": "PROJECT_DESCRIPTION",
+        "project_number": "PROJECT_ACCOUNT",
+        "address": "PROJECT_LOCATION",
+        "funding": "FUNDING_SOURCE",
+        "estimated_cost": "CURRENT_BUDGET",
+        "delivery_phase": "PROJECT_PHASE",
+        "record_type": "PROJECT_CATEGORY",
+        "lead_department": "PROJECT_DEPARTMENT",
+        "construction_start": "CONSTRUCTION_START_DATE",
+        "construction_end": "CONSTRUCTION_COMPLETION_DATE",
+        "contact": "CONTACT",
+        "image_url": "IMAGE_URL_RAW"
+      }
+    }
+  }
+}

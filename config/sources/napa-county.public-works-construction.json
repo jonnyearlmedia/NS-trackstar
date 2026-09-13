@@ -1,0 +1,42 @@
+{
+  "key": "napa-county.public-works-construction",
+  "name": "Napa County Public Works Construction Projects",
+  "jurisdiction": "Unincorporated Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.countyofnapa.org/1607/Current-Projects",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://services1.arcgis.com/Ko5rxt00spOfjMqj/arcgis/rest/services/PWProjectsMgmt_Construction_Viewer_Public/FeatureServer/0",
+    "id_field": "OBJECTID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "canonical_url_field": "Project_Page",
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 10,
+    "max_expected_records": 2000,
+    "canary_fields": [
+      "Name",
+      "Description",
+      "ProjectedStartYear",
+      "Project_Page"
+    ],
+    "project_mapping": {
+      "name_field": "Name",
+      "project_type": "public_works",
+      "description_field": "Details",
+      "authority_type": "issuing_agency_gis",
+      "assertions": {
+        "description": "Details",
+        "work_type": "Description",
+        "project_number": "ProjectID",
+        "expected_start_date": "ProjectedStart",
+        "completion_date": "EstimatedCompletion",
+        "project_page": "Project_Page",
+        "contact_name": "Contact_Name",
+        "contact_phone": "Contact_Phone",
+        "official_additional_info": "Notes"
+      }
+    }
+  }
+}

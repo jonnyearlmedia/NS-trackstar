@@ -1,0 +1,19 @@
+{
+  "key": "solano-county.legistar",
+  "name": "Solano County Legistar Meetings and Agenda Items",
+  "jurisdiction": "Solano County",
+  "adapter": "legistar",
+  "base_url": "https://solano.legistar.com",
+  "poll_minutes": 60,
+  "options": {
+    "api_base": "https://webapi.legistar.com/v1",
+    "client_name": "solano",
+    "portal_url": "https://solano.legistar.com",
+    "lookback_days": 30,
+    "lookahead_days": 120,
+    "page_size": 100,
+    "fetch_event_items": true,
+    "min_request_interval_seconds": 0.5,
+    "timezone": "America/Los_Angeles"
+  }
+}

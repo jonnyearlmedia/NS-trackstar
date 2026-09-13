@@ -1,0 +1,19 @@
+{
+  "key": "napa-city.legistar-smoke",
+  "name": "City of Napa Legistar Smoke Test",
+  "jurisdiction": "City of Napa",
+  "adapter": "legistar",
+  "base_url": "https://napacity.legistar.com",
+  "poll_minutes": 120,
+  "options": {
+    "api_base": "https://webapi.legistar.com/v1",
+    "client_name": "napacity",
+    "portal_url": "https://napacity.legistar.com",
+    "lookback_days": 7,
+    "lookahead_days": 30,
+    "page_size": 100,
+    "fetch_event_items": true,
+    "min_request_interval_seconds": 0.5,
+    "timezone": "America/Los_Angeles"
+  }
+}

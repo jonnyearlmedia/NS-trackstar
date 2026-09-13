@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ns-trackstar-ingest"
+version = "0.1.0"
+description = "Collector and normalization service for NS Trackstar"
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "httpx>=0.28",
+  "pypdf>=6.0",
+  "pydantic>=2.9",
+  "psycopg[binary]>=3.2",
+  "shapely>=2.0",
+  "tenacity>=9.0"
+]
+
+[project.scripts]
+ns-trackstar-ingest = "ns_trackstar.cli:main"
+
+[project.optional-dependencies]
+browser = ["playwright>=1.50"]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100

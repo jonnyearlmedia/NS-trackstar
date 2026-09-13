@@ -1,0 +1,54 @@
+/* Final pre-backend launch closure. Keep trust/help secondary to the map. */
+.projectTrust {
+  padding-top: 16px;
+  border-top: 1px solid rgba(31,55,66,.08);
+}
+.projectTrust p {
+  margin: 0;
+  color: #73848c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.projectTrust > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.projectTrust a,
+.trackstarAboutLink {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border: 1px solid rgba(31,55,66,.09);
+  border-radius: 11px;
+  color: #315d70;
+  background: #f6f9fa;
+  font-size: 12px;
+  font-weight: 720;
+  text-decoration: none;
+}
+.trackstarAboutLink {
+  min-height: 36px;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  color: #657780;
+  font-size: 11.5px;
+}
+.trackstarAboutLink:hover,
+.projectTrust a:hover {
+  color: #0b67c7;
+}
+
+/* A recent-change ring is a secondary cue, not another pin style. */
+.mapRecentRing {
+  pointer-events: none;
+}
+
+@media (max-width: 719px) {
+  .projectTrust a { min-height: 44px; }
+  .trackstarAboutLink { min-height: 40px; }
+}

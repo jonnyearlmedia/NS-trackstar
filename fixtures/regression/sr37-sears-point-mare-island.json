@@ -1,0 +1,69 @@
+{
+  "key": "sr37-sears-point-mare-island",
+  "entities": [
+    {
+      "key": "corridor-project",
+      "name": "State Route 37 Sears Point to Mare Island Improvement Project",
+      "entity_kind": "linear_transportation_project",
+      "apns": [],
+      "identifiers": {
+        "caltrans_ea": "04-1Q7600",
+        "efis": "0418000329",
+        "sch_number": "2020070226",
+        "route": "SR-37",
+        "postmile_sonoma": "2.9/6.2",
+        "postmile_solano": "0.0/R7.4"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.451, 38.216], [-122.257, 38.116]],
+        "geometry_source": "official_route_limits_approximation",
+        "location_accuracy": "street_segment"
+      },
+      "status_dimensions": {
+        "environmental": "final_eir_ea_fonsi",
+        "funding": "partially_funded",
+        "construction": "not_implied_by_funding"
+      }
+    },
+    {
+      "key": "construction-package-1",
+      "name": "Tolay Creek Bridge Replacement and SR 121 Intersection Improvements",
+      "entity_kind": "work_package",
+      "apns": [],
+      "identifiers": {"route": "SR-37", "work_package": "1"},
+      "status_dimensions": {"construction": "separate_package_status_required"}
+    }
+  ],
+  "relationships": [
+    {
+      "from": "corridor-project",
+      "to": "construction-package-1",
+      "type": "parent_child",
+      "collapse_identities": false
+    }
+  ],
+  "match_cases": [
+    {
+      "left": "corridor-project",
+      "right": "construction-package-1",
+      "evidence": {
+        "shared_apns": [],
+        "authoritative_identifiers": {},
+        "explicit_same_project_references": [],
+        "geometry_overlap": true
+      },
+      "expected_relationship": "spatial_overlap_only",
+      "expected_identity_collapse": false
+    }
+  ],
+  "required_event_types": [
+    "funding_authorized",
+    "construction_started",
+    "road_closure_started",
+    "road_closure_ended"
+  ],
+  "sources": [
+    "https://dot.ca.gov/caltrans-near-me/district-4/d4-projects/d4-37-corridor-projects/37-projects"
+  ]
+}

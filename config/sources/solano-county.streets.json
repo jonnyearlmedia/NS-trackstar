@@ -1,0 +1,41 @@
+{
+  "key": "solano-county.streets",
+  "name": "Solano County Public Street Centerlines",
+  "jurisdiction": "Solano County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/Streets_publicview/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://services3.arcgis.com/6CawrotsIAWp4yUX/arcgis/rest/services/Streets_publicview/FeatureServer/0",
+    "id_field": "OBJECTID_1",
+    "out_fields": [
+      "OBJECTID_1",
+      "OBJECTID",
+      "RECNUM",
+      "PREFIX",
+      "PRETYPE",
+      "NAME",
+      "TYPE",
+      "SUFFIX",
+      "FULLNAME",
+      "LFROMADD",
+      "LTOADD",
+      "RFROMADD",
+      "RTOADD",
+      "CITYL",
+      "CITYR"
+    ],
+    "where": "1=1",
+    "page_size": 1000,
+    "expected_geometry_type": "esriGeometryPolyline",
+    "min_expected_records": 20000,
+    "max_expected_records": 200000,
+    "canary_fields": [
+      "OBJECTID_1",
+      "FULLNAME",
+      "CITYL",
+      "CITYR",
+      "LFROMADD"
+    ]
+  }
+}

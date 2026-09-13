@@ -1,0 +1,62 @@
+{
+  "key": "vallejo.value-current-development",
+  "name": "Vallejo Land Use Entitlement (VALUE) — Current Development",
+  "jurisdiction": "City of Vallejo",
+  "adapter": "tabular_pdf_project_tracker",
+  "base_url": "https://www.cityofvallejo.net/our_city/departments_divisions/planning_development_services/planning_division",
+  "poll_minutes": 240,
+  "options": {
+    "document_url": "https://www.cityofvallejo.net/common/pages/GetFile.ashx?key=37JFAWVM",
+    "timezone": "America/Los_Angeles",
+    "min_page_count": 10,
+    "expected_project_count": 60,
+    "canary_markers": [
+      "VALLEJO LAND USE ENTITLEMENT",
+      "Application Status",
+      "Project Number(s)"
+    ],
+    "row_labels": [
+      "Commercial",
+      "Industrial",
+      "Map Amendments",
+      "Mixed Use",
+      "Public and Semi-",
+      "Residential"
+    ],
+    "anchor_max_x": 80,
+    "page_top": 495,
+    "page_bottom": 25,
+    "columns": {
+      "project_type": [0, 80],
+      "name": [80, 158],
+      "applicant": [158, 230],
+      "address": [230, 302],
+      "district": [302, 346],
+      "project_numbers": [346, 405],
+      "description": [405, 605],
+      "unit_count_or_square_footage": [605, 680],
+      "official_status_text": [680, 765],
+      "last_update": [765, 830],
+      "public_hearings": [830, 905],
+      "project_manager": [905, 1008]
+    },
+    "project_mapping": {
+      "name_field": "name",
+      "project_type": "municipal_development",
+      "description_field": "description",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "official_tracker_stage",
+      "status_field": "official_status_text",
+      "assertions": {
+        "source_project_type": "project_type",
+        "planning_cases": "project_numbers",
+        "description": "description",
+        "unit_count_or_square_footage": "unit_count_or_square_footage",
+        "official_status_text": "official_status_text",
+        "official_last_update": "last_update",
+        "public_hearings": "public_hearings",
+        "project_manager": "project_manager"
+      }
+    }
+  }
+}

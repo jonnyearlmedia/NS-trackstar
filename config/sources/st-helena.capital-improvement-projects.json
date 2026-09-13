@@ -1,0 +1,28 @@
+{
+  "key": "st-helena.capital-improvement-projects",
+  "name": "City of St. Helena Capital Improvement Program",
+  "jurisdiction": "City of St. Helena",
+  "adapter": "envisio",
+  "base_url": "https://www.cityofsthelena.gov/490/CIP-Interactive-Dashboard",
+  "poll_minutes": 240,
+  "options": {
+    "sub_domain": "cityofsthelena4607",
+    "dashboard_origin": "https://performance.envisio.com",
+    "dashboard_path": "/dashboard-brandoff",
+    "graphql_endpoint": "https://envisio-pdv2-s-production.herokuapp.com/graphql",
+    "discover_endpoint": true,
+    "allowed_endpoint_hosts": [
+      "envisio-pdv2-s-production.herokuapp.com"
+    ],
+    "description_labels": {
+      "Project Name": "project_name",
+      "Description": "description",
+      "Budget": "budget",
+      "Expenditure": "expenditure",
+      "Project Phase": "project_phase"
+    },
+    "min_expected_projects": 60,
+    "timeout_seconds": 45,
+    "user_agent": "Mozilla/5.0 (compatible; NS-Trackstar/0.1; +https://github.com/jonnyearlmedia/NS-trackstar)"
+  }
+}

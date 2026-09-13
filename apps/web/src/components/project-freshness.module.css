@@ -1,0 +1,76 @@
+.freshnessLine {
+  margin: 12px 1px 0;
+  color: #647983;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.freshnessWarning {
+  margin: 12px 0 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(171, 123, 48, 0.16);
+  border-radius: 14px;
+  color: #765f3d;
+  background: #fbf6ed;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.freshnessWarning strong {
+  color: #674c26;
+}
+
+.freshnessDetail {
+  margin-top: 18px;
+}
+
+.freshnessDetail h3 {
+  margin: 0 0 9px;
+  color: #263e49;
+  font-size: 12px;
+  font-weight: 780;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.freshnessDetail > div {
+  display: grid;
+  gap: 7px;
+}
+
+.freshnessDetail article {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 13px;
+  border: 1px solid rgba(25, 48, 59, 0.08);
+  border-radius: 13px;
+  background: #f7fafb;
+}
+
+.freshnessDetail strong {
+  min-width: 0;
+  color: #304751;
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.4;
+}
+
+.freshnessDetail span {
+  flex: 0 0 auto;
+  max-width: 48%;
+  color: #71838c;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.freshnessDetail span[data-state="stale"] {
+  color: #936d35;
+}
+
+.freshnessDetail span[data-state="current"] {
+  color: #39705a;
+}

@@ -1,0 +1,28 @@
+{
+  "key": "dixon.energov",
+  "name": "City of Dixon Tyler EnerGov Permits, Plans and Code Cases",
+  "jurisdiction": "City of Dixon",
+  "adapter": "energov_css",
+  "base_url": "https://dixonca-energovweb.tylerhost.net/apps/selfservice",
+  "poll_minutes": 240,
+  "options": {
+    "tenant_name": "dixoncaprod",
+    "tenant_id": "1",
+    "tenant_culture": "en-US",
+    "record_types": [
+      "permit",
+      "plan",
+      "code_case",
+      "project"
+    ],
+    "page_size": 100,
+    "max_pages_per_module": 40,
+    "max_pages_per_run": 160,
+    "recency_days": 365,
+    "timezone": "America/Los_Angeles",
+    "min_expected_results": 1,
+    "min_request_interval_seconds": 0.5,
+    "_record_types": "Dixon's Civic Access publishes 92,405 records: 17,192 permits, 142 plans, 269 code cases, 5 projects, 14,817 business licences and 59,980 inspections. The licences and inspections are 81% of that and neither is a project, so they are not collected here. Adding \"license\" or \"inspection\" to record_types turns them on; the agency's full census is reported in run metadata either way.",
+    "_deep_paging": "The search index serves no offset past 10,000 rows, so no single module can be read exhaustively beyond that however high max_pages goes. Dixon's 17,192 permits are over that line, which is why this config is bounded by a one-year recency window rather than by page count alone."
+  }
+}

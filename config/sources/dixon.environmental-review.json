@@ -1,0 +1,25 @@
+{
+  "key": "dixon.environmental-review",
+  "name": "City of Dixon Environmental Review Projects",
+  "jurisdiction": "City of Dixon",
+  "adapter": "heading_project_list",
+  "base_url": "https://www.cityofdixonca.gov/EnvironmentalReviewDocuments",
+  "poll_minutes": 240,
+  "options": {
+    "page_url": "https://www.cityofdixonca.gov/EnvironmentalReviewDocuments",
+    "project_heading_tags": [
+      "h3"
+    ],
+    "section_heading_tags": [
+      "h2"
+    ],
+    "min_expected_projects": 10,
+    "canary_title_contains": "Harvest Master Plan",
+    "document_link_hosts": [
+      "cityofdixonca.gov"
+    ],
+    "section_heading_patterns": [
+      "^[A-Z0-9 ,&'()/-]{10,}$"
+    ]
+  }
+}

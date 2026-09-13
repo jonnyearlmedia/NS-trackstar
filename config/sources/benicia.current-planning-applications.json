@@ -1,0 +1,43 @@
+{
+  "key": "benicia.current-planning-applications",
+  "name": "City of Benicia Current Planning Applications",
+  "jurisdiction": "City of Benicia",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.ci.benicia.ca.us/currentdevelopment",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://services5.arcgis.com/eclQh1J6mUFYeV4m/arcgis/rest/services/CDD_Current_Planning_Applications/FeatureServer/0",
+    "id_field": "FID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "created_at_field": "Date_Submi",
+    "canonical_url_field": "AuxLink",
+    "canary_fields": [
+      "Record__",
+      "Descriptio",
+      "Record_Sta",
+      "Address"
+    ],
+    "project_mapping": {
+      "name_fields": [
+        "Descriptio",
+        "Record__"
+      ],
+      "project_type": "municipal_development",
+      "description_field": "Descriptio",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "planning",
+      "status_field": "Record_Sta",
+      "assertions": {
+        "planning_case": "Record__",
+        "record_type": "Record_Typ",
+        "applicant": "Applicant_",
+        "application_submitted_at": "Date_Submi",
+        "address": "Address",
+        "official_status_text": "Record_Sta",
+        "description": "Descriptio"
+      }
+    }
+  }
+}

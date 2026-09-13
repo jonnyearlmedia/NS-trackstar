@@ -1,0 +1,33 @@
+{
+  "key": "fairfield.one-lake-council-goals",
+  "name": "City of Fairfield Council Goals — One Lake / Vanden-Canon",
+  "jurisdiction": "Fairfield",
+  "adapter": "official_document_set",
+  "base_url": "https://transparency.fairfield.ca.gov/",
+  "poll_minutes": 1440,
+  "options": {
+    "allowed_hosts": ["transparency.fairfield.ca.gov"],
+    "canary_external_id": "one-lake-vanden-canon-2025-q3",
+    "documents": [
+      {
+        "external_id": "one-lake-vanden-canon-2025-q3",
+        "document_url": "https://transparency.fairfield.ca.gov/wp-content/uploads/2025/04/ClearPoint-Q3-JAN-MAR-2025.pdf",
+        "action_date": "2025-04-29",
+        "agency": "City of Fairfield",
+        "title": "Council Goals FY 2023-25 (Mar-25) Report — One Lake / Vanden-Canon Road",
+        "project_name": "One Lake",
+        "record_kind": "city_council_goals_progress_report",
+        "related_infrastructure": "Vanden/Canon Road Overcrossing",
+        "canary_markers": ["One Lake", "Vanden", "50% design plans"]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "municipal_development",
+      "authority_type": "official_city_progress_report",
+      "assertions": {
+        "related_infrastructure": "related_infrastructure"
+      }
+    }
+  }
+}

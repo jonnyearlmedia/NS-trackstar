@@ -1,0 +1,48 @@
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+.pnpm-store/
+apps/web/public/maplibre/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+backups/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Build/test
+# These are anchored on purpose. A bare `coverage/` also matched
+# `config/coverage/` (the jurisdiction coverage manifest) and
+# `apps/web/src/app/admin/coverage/` (the scorecard page), so both were silently
+# untracked while every local check passed against files a clean checkout would
+# not have had. Name the directories that actually hold tool output.
+/coverage/
+apps/web/coverage/
+services/*/coverage/
+dist/
+build/
+
+# Runtime artifacts
+artifacts/
+playwright-report/
+test-results/
+tmp/
+.vercel
+.env*

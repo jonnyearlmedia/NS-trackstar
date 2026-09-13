@@ -1,0 +1,53 @@
+{
+  "key": "napa-city.napa-pipe-amendments",
+  "name": "City of Napa Napa Pipe Amendments",
+  "jurisdiction": "City of Napa",
+  "adapter": "official_document_set",
+  "base_url": "https://napacity.legistar.com/View.ashx?GUID=B222ADD7-B332-4BF2-A1FB-678BB7CAEC3C&ID=8018716&M=F",
+  "poll_minutes": 10080,
+  "options": {
+    "allowed_hosts": ["napacity.legistar.com"],
+    "canary_external_id": "napa-pipe-amendments-2019",
+    "documents": [
+      {
+        "external_id": "napa-pipe-amendments-2019",
+        "document_url": "https://napacity.legistar.com/View.ashx?GUID=B222ADD7-B332-4BF2-A1FB-678BB7CAEC3C&ID=8018716&M=F",
+        "action_date": "2019-12-05",
+        "agency": "City of Napa",
+        "title": "Napa Pipe Amendments Planning Commission Staff Report",
+        "project_name": "Napa Pipe",
+        "record_kind": "official_city_staff_report",
+        "address": "1025 Kaiser Road, Napa, CA",
+        "current_apns": ["046-400-054", "046-400-055", "046-412-006", "046-412-007"],
+        "site_acres": 154,
+        "location_description": "154-acre Napa Pipe property south of Kaiser Road and east of the Napa River",
+        "canary_markers": ["NAPA PIPE AMENDMENTS", "1025 KAISER ROAD", "046-400-054", "046-412-006"]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "municipal_development",
+      "authority_type": "official_city_staff_report",
+      "assertions": {
+        "address": "address",
+        "apn": "current_apns",
+        "location_acres": "site_acres",
+        "location_description": "location_description"
+      },
+      "record_links": {
+        "napa-pipe-amendments-2019": {
+          "source_key": "napa-county.napa-pipe-development-plan",
+          "external_id": "napa-pipe-development-plan-2013",
+          "relationship_type": "evidence_for",
+          "confidence": 1.0,
+          "evidence": {
+            "signals": [
+              "City of Napa staff report identifies the same 154-acre Napa Pipe property at 1025 Kaiser Road",
+              "City of Napa staff report identifies current project-area APNs 046-400-054, 046-400-055, 046-412-006, and 046-412-007"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

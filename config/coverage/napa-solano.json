@@ -1,0 +1,1589 @@
+{
+  "service_area": "Napa County and Solano County, California",
+  "categories": [
+    {
+      "key": "current_development",
+      "title": "Current development and planning",
+      "description": "Active planning applications, entitlements and development trackers."
+    },
+    {
+      "key": "permits",
+      "title": "Permits",
+      "description": "Building, grading, encroachment and tenant-improvement permit records."
+    },
+    {
+      "key": "government_meetings",
+      "title": "Government meetings",
+      "description": "Agendas, minutes and agenda items from councils, commissions and boards."
+    },
+    {
+      "key": "cip_construction",
+      "title": "CIP and construction",
+      "description": "Capital improvement programs and active public construction work."
+    },
+    {
+      "key": "gis_spatial",
+      "title": "GIS and spatial truth",
+      "description": "Parcels, addresses, road centrelines, zoning and jurisdiction boundaries."
+    },
+    {
+      "key": "ceqa_environmental",
+      "title": "CEQA and environmental",
+      "description": "State Clearinghouse filings and local environmental review documents."
+    },
+    {
+      "key": "business_openings",
+      "title": "Business openings",
+      "description": "Evidence that a business is arriving, opening, changing hands or closing."
+    },
+    {
+      "key": "transportation",
+      "title": "Transportation",
+      "description": "State and regional road, transit and work-zone projects and events."
+    },
+    {
+      "key": "procurement",
+      "title": "Procurement",
+      "description": "Bids, awards and contracts that reveal work about to start."
+    },
+    {
+      "key": "specialized_regulatory",
+      "title": "Specialized regulatory and legal",
+      "description": "Federal, tribal, court and agency records that apply to specific projects."
+    }
+  ],
+  "jurisdictions": [
+    {
+      "key": "napa",
+      "name": "City of Napa",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "napa-city.napa-pipe-amendments",
+              "scope": "project_specific"
+            },
+            {
+              "source": "napa-city.etrakit",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "napa-city.etrakit",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Discovery walks the record-number space by prefix and year, because eTRAKiT publishes no recently-changed feed. A record whose number falls outside the configured prefixes is not discovered."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "napa-city.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "napa-city.public-works-cip",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "napa-city.water-cip",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: cityofnapa."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "american-canyon",
+      "name": "American Canyon",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "american-canyon.construction-development-updates",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov storefront is discoverable but anonymous record retrieval was never verified and the deployed client advertises Turnstile on the records index."
+          }
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "american-canyon.granicus-archives",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "american-canyon.granicus-events",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "american-canyon.construction-development-updates",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: cityofamericancanyon."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "yountville",
+      "name": "Yountville",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "yountville.primegov",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "PrimeGov returns no public link for a meeting's compiled agenda document, so a meeting's documents are listed by name and the link points at the portal."
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "st-helena",
+      "name": "St. Helena",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "st-helena.planning-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city publishes planning projects as hand-maintained pages rather than a permit portal, so a project exists in Trackstar only once staff create its page. Three of fifteen carry no street address, because the city wrote a site name or an APN in the location block instead."
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "st-helena.civicclerk",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "st-helena.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Envisio dashboard. Unusually rich for this service area: each project carries budget and expenditure to date, phase, category, dates and a written description, all in the city's own words. The fields are authored by the city as a labelled block rather than being Envisio schema columns, so a page that stops carrying its labels counts as a parse failure rather than going quiet. Two of eighty publish no expenditure figure; that is recorded as absent and never as zero."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "calistoga",
+      "name": "Calistoga",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "calistoga.active-construction-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city lists private development that is already under construction. A project under review or approved but not yet started does not appear, so this is what is being built, not the full pipeline."
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "calistoga.civicweb",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The portal's list page publishes the most recent meetings per body rather than a full archive, so Trackstar carries what Calistoga is deciding now, not its history."
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "calistoga.active-construction-projects",
+              "scope": "reference"
+            }
+          ],
+          "limitation": "Only private construction, and only where it affects traffic and access. The city's own capital improvement program is published as a fiscal-year PDF schedule and is not ingested yet."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "napa-county",
+      "name": "Unincorporated Napa County",
+      "county": "Napa County",
+      "kind": "county",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "napa-county.current-projects-explorer",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "napa-county.napa-pipe-development-plan",
+              "scope": "project_specific"
+            },
+            {
+              "source": "napa-county.accela",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "napa-county.accela",
+              "scope": "recurring_tracker",
+              "role": "building_permits"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "napa-county.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "napa-county.public-works-construction",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "County road and facility construction. City capital programmes inside the county are each city's own and are tracked separately."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            },
+            {
+              "source": "napa-county.zoning",
+              "scope": "reference",
+              "role": "zoning"
+            }
+          ]
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: pending transition, announced on the county's own procurement page."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vallejo",
+      "name": "Vallejo",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "vallejo.value-current-development",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "vallejo.etrakit",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "vallejo.etrakit",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Discovery walks the record-number space by prefix and year, because eTRAKiT publishes no recently-changed feed. A record whose number falls outside the configured prefixes is not discovered."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "vallejo.civicclerk",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [
+            {
+              "source": "vallejo.planetbids",
+              "scope": "recurring_tracker",
+              "role": "bids_and_awards"
+            }
+          ],
+          "limitation": "PlanetBids publishes the agency's whole bid history, not only open solicitations, and the stage word is the agency's own: Bidding, Closed, Awarded, Canceled, Award Pending. All 239 are collected. Per-bid detail (address, scope, contact, attachments) is fetched only for the stages named in config, because the API throttles and re-reading a solicitation that closed years ago costs the agency capacity every run; the count skipped is reported. Attachments are recorded by name, size and upload date, with no download URL synthesised from the server path the API exposes."
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bia.scotts-valley-gaming-decisions",
+              "scope": "project_specific"
+            },
+            {
+              "source": "nigc.scotts-valley-gaming-ordinance",
+              "scope": "project_specific"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "benicia",
+      "name": "Benicia",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "benicia.current-planning-applications",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov storefront is discoverable but anonymous record retrieval was never verified."
+          }
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "benicia.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "benicia.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: beniciaca."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "fairfield",
+      "name": "Fairfield",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "fairfield.one-lake-council-goals",
+              "scope": "project_specific"
+            }
+          ],
+          "limitation": "Only the One Lake / Canon Station record set.",
+          "blocker": {
+            "reason": "The official Development Activity page returns an Akamai 403 to direct HTTP and to a Playwright Chrome session. The adapter stops rather than defeating the access restriction.",
+            "smoke_source": "fairfield.development-activity"
+          }
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "fairfield.escribe",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Fairfield moved off NovusAGENDA, which still serves individual agendas from 2019 by id while its meeting search returns nothing for any date range. The live feed is the eScribe public portal on a host separate from the city website, which still refuses automated requests."
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "fairfield.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "fairfield.vanden-canon-overcrossing",
+              "scope": "project_specific"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "suisun-city",
+      "name": "Suisun City",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "suisun-city.development-calendar",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "suisun-city.dutch-bros-public-notice",
+              "scope": "project_specific"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "suisun-city.energov",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Tyler EnerGov Civic Access, found through the one page on the city's own site that links to it. Narrow by the city's choice rather than by ours: Suisun publishes 121 permits against 9,531 code cases, so most of what is available is code enforcement rather than building activity, and the agency's own totals are reported beside what was kept."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "suisun-city.granicus",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: suisun."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vacaville",
+      "name": "Vacaville",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [],
+          "blocker": {
+            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
+          }
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "Checked from an ordinary residential network on September 13, 2026 rather than assumed. Three routes, all closed: www.cityofvacaville.gov answers 403 from Akamai to a self-identifying client and to a browser user agent alike, so that block belongs to the site and not to our egress; the city's eTRAKiT tenant at vcvll.csqrcloud.com has anonymous search switched off, unlike Vallejo's and Napa's on the same platform; and the city's own ArcGIS server at covgis.cityofvacaville.com, which is reachable while the website is not, publishes an open data catalogue of parcels, addresses, zoning, streets and boundaries with no development, permit or capital project layer in it. Vacaville's meetings are covered through its eScribe portal, which is the one host that answers."
+          }
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "vacaville.escribe",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The portal's calendar publishes the current year only. Its archive sits behind a separate paged endpoint that is not ingested, so Trackstar carries what Vacaville is deciding now, not what it decided in 2024."
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "vacaville.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Found in the city's ArcGIS Online organisation, not on its own GIS server and not on its website, both of which were checked first and carry no project layer. Development and permits remain closed for this city; the capital programme does not."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "dixon",
+      "name": "Dixon",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "dixon.environmental-review",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "Dixon publishes no planning-case database. This is the city's CEQA review page, which is where a Dixon project becomes public: project name, clearinghouse number, location, written proposal and hearing documents. Entries run from 1994 to the present under a single 'under review' heading, so the section label is recorded as a hint and each project's real status is read from its own text."
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "dixon.energov",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Tyler EnerGov Civic Access. Reached only after correcting a wrong conclusion: the city's new Civic Access UI genuinely has record search switched off, but the legacy API is live and needs four tenant headers a browser sends and a hand-built request does not. Without them every payload returns HTTP 500, which is indistinguishable from a retired route. Inspections and licences are deliberately not collected - they are not projects and are 81% of the file. The index serves no offset past 10,000 rows, so a run is a recency window and never the whole file; the agency's own total is reported next to what was kept."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "dixon.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "dixon.capital-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city lists each project by name and links to its own PDF rather than publishing a description, so Trackstar carries what Dixon is building and where the city's document is, not a written scope."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "rio-vista",
+      "name": "Rio Vista",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "rio-vista.maintstar",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "MaintStar, on a host entirely separate from the city's website, which answers 403 from Cloudflare to every client. The portal's own configuration advertises anonymous search as enabled and the collector refuses to proceed if that ever changes, rather than hammering a door the city has closed. Discovery is by substring query because the API publishes no usable total - it returns -1 on every page - so the set of queries walked is config and is reported per run. Every row's description comes back as the literal string '(Confidential)' for anonymous callers; that is recorded as absent and never as a description."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "rio-vista.granicus",
+              "scope": "recurring_tracker",
+              "role": "meetings"
+            }
+          ],
+          "limitation": "The city's published Granicus view. Bodies the city does not publish through Granicus are not covered."
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "solano-county",
+      "name": "Unincorporated Solano County",
+      "county": "Solano County",
+      "kind": "county",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "solano-county.accela",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            },
+            {
+              "source": "solano-county.environmental-review",
+              "scope": "recurring_tracker",
+              "role": "ceqa_review_stage"
+            }
+          ],
+          "limitation": "Accela carries the case; this carries what Accela's result grid does not - which cases are open for public comment, the deadline, and the planner responsible by name and email. Small, eight entries, and it is the county's own curated statement of what is actively in review."
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "solano-county.accela",
+              "scope": "recurring_tracker",
+              "role": "building_permits"
+            }
+          ],
+          "limitation": "Discovery is the portal's own general search over a rolling window, paged. Exact search by record number returns nothing on these two tenants even for a record the general search has just returned, so it is not used and no record number is treated as a canary. Detail pages are not fetched by default."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "solano-county.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "solano-county.capital-facility-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "County facility projects. Many sit at addresses inside the incorporated cities, because that is where county buildings are; they are the county's capital programme and are not counted as any city's."
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [
+            {
+              "source": "california.abc.napa-solano",
+              "scope": "recurring_tracker",
+              "role": "alcohol_licence_activity"
+            }
+          ],
+          "limitation": "California ABC is a statewide source scoped to Napa (county code 28) and Solano (48) by ABC's own county column, so a jurisdiction with no rows in a given window is a real answer about that window, not a gap. It carries alcohol licensing only: a new restaurant with a licence appears, a retail or office tenant does not. Verified from a residential network; www.abc.ca.gov still answers some datacentre clients with a Cloudflare interactive challenge, and the collector reports that as blocked rather than defeating it."
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bayarea-511.traffic-events",
+              "scope": "regional_rollup",
+              "role": "live_traffic_events"
+            }
+          ],
+          "limitation": "Caltrans state projects plus 511's live traffic and construction events on state routes through the two counties. Events are kept by 511's own county label rather than by a bounding box: this endpoint accepts a bbox parameter and ignores it, so a run that trusted it returned Pescadero and Santa Cruz roadwork as Napa and Solano coverage. The 511 work-zone (WZDx) feed carries no county label and stays in smoke, because a rectangle around these two counties necessarily contains part of Sonoma and would place Santa Rosa lane closures on a Napa map."
+        },
+        "procurement": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov Procurement, at procurement.opengov.com. Verified September 13, 2026 from an ordinary residential network: every /portal path answers 403 with cf-mitigated: challenge from Cloudflare, to a self-identifying client and to a browser user agent alike, so the challenge belongs to the vendor rather than to our egress. Every other path on the host serves the application shell, so the portal route is the protected one. The challenge is not defeated. This is now known to be the platform for six of the fourteen jurisdictions, so procurement here turns on one vendor's bot policy rather than on fourteen separate problems. Tenant: solanocounty."
+          }
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

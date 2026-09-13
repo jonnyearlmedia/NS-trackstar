@@ -1,0 +1,51 @@
+{
+  "key": "fairfield.capital-improvement-projects",
+  "name": "City of Fairfield Capital Improvement Projects",
+  "jurisdiction": "Fairfield",
+  "adapter": "arcgis_rest",
+  "base_url": "https://www.fairfield.ca.gov/government/city-departments/public-works",
+  "poll_minutes": 240,
+  "options": {
+    "layer_url": "https://services1.arcgis.com/A14KNJpxNyBTu19J/arcgis/rest/services/EasyCIPProjects/FeatureServer/0",
+    "id_field": "OBJECTID",
+    "out_fields": "*",
+    "where": "1=1",
+    "page_size": 1000,
+    "expected_geometry_type": "esriGeometryPoint",
+    "min_expected_records": 40,
+    "max_expected_records": 5000,
+    "canary_fields": [
+      "ProjectName",
+      "ProjectNumber",
+      "ProjectDescriptionandPurpose",
+      "Status"
+    ],
+    "project_mapping": {
+      "name_field": "ProjectName",
+      "project_type": "public_works",
+      "description_field": "ProjectDescriptionandPurpose",
+      "authority_type": "issuing_agency_gis",
+      "status_dimension": "delivery_stage",
+      "status_field": "Status",
+      "assertions": {
+        "description": "ProjectDescriptionandPurpose",
+        "official_status_text": "ProjectStatusandOutlook",
+        "official_additional_info": "LatesUpdates",
+        "project_number": "ProjectNumber",
+        "address": "ProjectLocation",
+        "funding": "FundingSource",
+        "estimated_cost": "RevisedProjectBudget",
+        "original_budget": "OriginalProjectBudget",
+        "delivery_phase": "Phase",
+        "record_type": "Category",
+        "lead_department": "RequestingDepartment",
+        "expected_start_date": "EstimatedStartDate",
+        "completion_date": "EstimatedCompletion",
+        "construction_start": "ConstructionStart",
+        "construction_end": "ConstructionEnd",
+        "fiscal_year": "ProjectYear",
+        "image_url": "ProjectImage_URL"
+      }
+    }
+  }
+}

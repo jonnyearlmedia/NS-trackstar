@@ -1,0 +1,52 @@
+{
+  "key": "napa-county.napa-pipe-development-plan",
+  "name": "Napa County Napa Pipe Development Plan",
+  "jurisdiction": "Napa County",
+  "adapter": "official_document_set",
+  "base_url": "https://services.napacounty.gov/AgendaNet/DownloadDocument.aspx?doctype=ATTACHMENT&id=32977&type=PlanningAgenda",
+  "poll_minutes": 10080,
+  "options": {
+    "allowed_hosts": ["services.napacounty.gov"],
+    "canary_external_id": "napa-pipe-development-plan-2013",
+    "documents": [
+      {
+        "external_id": "napa-pipe-development-plan-2013",
+        "document_url": "https://services.napacounty.gov/AgendaNet/DownloadDocument.aspx?doctype=ATTACHMENT&id=32977&type=PlanningAgenda",
+        "agency": "Napa County",
+        "title": "Napa Pipe Development Plan Approval Ordinance",
+        "project_name": "Napa Pipe",
+        "record_kind": "official_development_plan_approval",
+        "address": "1025 Kaiser Road, Napa, CA",
+        "site_acres": 154,
+        "apns": ["046-412-005", "046-400-030"],
+        "location_description": "154-acre former industrial site at 1025 Kaiser Road in unincorporated Napa County",
+        "canary_markers": ["NAPA PIPE", "1025 Kaiser Road", "046-400-030", "046-412-005"]
+      }
+    ],
+    "project_mapping": {
+      "name_field": "project_name",
+      "project_type": "municipal_development",
+      "authority_type": "official_county_development_plan",
+      "assertions": {
+        "address": "address",
+        "apn": "apns",
+        "location_acres": "site_acres",
+        "location_description": "location_description"
+      },
+      "record_links": {
+        "napa-pipe-development-plan-2013": {
+          "source_key": "california.ceqanet.napa-solano",
+          "external_id": "2008122111",
+          "relationship_type": "evidence_for",
+          "confidence": 1.0,
+          "evidence": {
+            "signals": [
+              "Napa County development plan approval ordinance identifies the Napa Pipe project at 1025 Kaiser Road",
+              "Napa County development plan approval ordinance identifies APNs 046-400-030 and 046-412-005"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

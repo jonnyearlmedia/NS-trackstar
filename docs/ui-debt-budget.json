@@ -1,0 +1,16 @@
+{
+  "note": "Ceilings enforced by scripts/ui-debt-gate.mjs. Lower is better. These numbers may only go down. If a change pushes one up, the change is wrong, not the budget.",
+  "targets": {
+    "globalCssLayers": 1,
+    "importantDeclarations": 0,
+    "tokenSourceFiles": 1,
+    "orphanedModules": 0
+  },
+  "limits": {
+    "globalCssLayers": 11,
+    "importantDeclarations": 903,
+    "tokenSourceFiles": 4,
+    "orphanedModules": 10,
+    "totalCssLines": 3898
+  }
+}

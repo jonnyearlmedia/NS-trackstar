@@ -1,0 +1,87 @@
+{
+  "key": "scotts-valley-vallejo-casino",
+  "entities": [
+    {
+      "key": "casino-and-tribal-housing",
+      "name": "Scotts Valley Casino and Tribal Housing Project",
+      "entity_kind": "physical_project",
+      "apns": ["0182010010", "0182020020", "0182020080", "0182020010"],
+      "identifiers": {"sch_number": "2024070295"},
+      "status_dimensions": {
+        "environmental": "fonsi_issued",
+        "land_status": "in_trust",
+        "gaming_eligibility": "reconsidered",
+        "litigation": "tracked_separately"
+      }
+    },
+    {
+      "key": "overlapping-parcel-record",
+      "name": "Separate activity sharing the Vallejo site parcels",
+      "entity_kind": "overlapping_activity",
+      "apns": ["0182010010"],
+      "identifiers": {},
+      "status_dimensions": {"planning": "unknown"}
+    },
+    {
+      "key": "ceqa-review",
+      "name": "SCH 2024070295 environmental review",
+      "entity_kind": "environmental_review",
+      "apns": [],
+      "identifiers": {"sch_number": "2024070295"},
+      "status_dimensions": {"environmental": "fonsi_issued"}
+    },
+    {
+      "key": "federal-litigation",
+      "name": "Federal litigation concerning the Vallejo site",
+      "entity_kind": "litigation",
+      "apns": [],
+      "identifiers": {},
+      "status_dimensions": {"litigation": "active_or_historical_docket_evidence_required"}
+    }
+  ],
+  "relationships": [
+    {
+      "from": "overlapping-parcel-record",
+      "to": "casino-and-tribal-housing",
+      "type": "spatial_overlap_only",
+      "collapse_identities": false
+    },
+    {
+      "from": "ceqa-review",
+      "to": "casino-and-tribal-housing",
+      "type": "environmental_review_for",
+      "collapse_identities": false
+    },
+    {
+      "from": "federal-litigation",
+      "to": "casino-and-tribal-housing",
+      "type": "litigation_about",
+      "collapse_identities": false
+    }
+  ],
+  "match_cases": [
+    {
+      "left": "casino-and-tribal-housing",
+      "right": "overlapping-parcel-record",
+      "evidence": {
+        "shared_apns": ["0182010010"],
+        "authoritative_identifiers": {},
+        "explicit_same_project_references": [],
+        "geometry_overlap": true
+      },
+      "expected_relationship": "spatial_overlap_only",
+      "expected_identity_collapse": false
+    }
+  ],
+  "required_evidence_types": [
+    "ceqa_document",
+    "bia_action",
+    "nigc_action",
+    "federal_litigation",
+    "interested_party_statement"
+  ],
+  "sources": [
+    "https://ceqanet.lci.ca.gov/2024070295/2",
+    "https://www.bia.gov/sites/default/files/media_document/2025.03.28_correction_scotts_valley_band_of_pomo_indians_partial_reconsideration_of_01.10.25_deci.pdf"
+  ]
+}

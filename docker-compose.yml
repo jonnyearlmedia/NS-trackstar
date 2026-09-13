@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    # The upstream image is currently amd64-only. Colima/Docker Desktop on
+    # Apple Silicon can run it through their built-in Linux emulation.
+    platform: ${POSTGIS_PLATFORM:-linux/amd64}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nstrackstar}
+      POSTGRES_USER: ${POSTGRES_USER:-nstrackstar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nstrackstar}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nstrackstar} -d ${POSTGRES_DB:-nstrackstar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

@@ -1,0 +1,16 @@
+{
+  "key": "st-helena.civicclerk",
+  "name": "City of St. Helena CivicClerk Meetings and Agendas",
+  "jurisdiction": "City of St. Helena",
+  "adapter": "civicclerk",
+  "base_url": "https://sthelenaca.api.civicclerk.com/v1",
+  "poll_minutes": 120,
+  "options": {
+    "api_base": "https://sthelenaca.api.civicclerk.com/v1",
+    "portal_url": "https://sthelenaca.portal.civicclerk.com",
+    "lookback_days": 30,
+    "lookahead_days": 120,
+    "fetch_agendas": true,
+    "min_request_interval_seconds": 1.0
+  }
+}

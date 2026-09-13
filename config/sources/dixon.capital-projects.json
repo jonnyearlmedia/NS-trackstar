@@ -1,0 +1,33 @@
+{
+  "key": "dixon.capital-projects",
+  "name": "City of Dixon Capital Projects",
+  "jurisdiction": "City of Dixon",
+  "adapter": "linked_project_pages",
+  "base_url": "https://www.cityofdixonca.gov/capitalprojects",
+  "poll_minutes": 240,
+  "options": {
+    "index_url": "https://www.cityofdixonca.gov/capitalprojects",
+    "content_selector": "div.evo_department_middle_column div.fr-view",
+    "item_selector": "ul li a",
+    "index_heading_tags": ["strong", "b", "h2", "h3", "h4"],
+    "same_host_only": false,
+    "fetch_details": false,
+    "max_projects": 60,
+    "min_expected_projects": 8,
+    "min_request_interval_seconds": 0.5,
+    "group_stages": {
+      "active": "under_construction",
+      "recently completed": "completed"
+    },
+    "project_mapping": {
+      "name_fields": ["name"],
+      "project_type": "public_works",
+      "authority_type": "official_curated_project_tracker",
+      "assertions": {
+        "index_section": "index_section",
+        "lifecycle_stage": "index_lifecycle_hint",
+        "project_page": "project_page"
+      }
+    }
+  }
+}

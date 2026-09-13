@@ -1,0 +1,19 @@
+{
+  "key": "napa-county.zoning",
+  "name": "Napa County Zoning",
+  "jurisdiction": "Unincorporated Napa County",
+  "adapter": "arcgis_rest",
+  "base_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Zoning/FeatureServer/0",
+  "poll_minutes": 10080,
+  "options": {
+    "layer_url": "https://gis.napacounty.gov/arcgis/rest/services/Hosted/Zoning/FeatureServer/0",
+    "id_field": "globalid",
+    "out_fields": ["objectid", "globalid", "zoning", "zone_full_descr", "acres"],
+    "where": "1=1",
+    "page_size": 2000,
+    "expected_geometry_type": "esriGeometryPolygon",
+    "min_expected_records": 50,
+    "max_expected_records": 20000,
+    "canary_fields": ["globalid", "zoning", "zone_full_descr"]
+  }
+}
