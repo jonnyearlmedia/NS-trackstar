@@ -365,13 +365,24 @@
       "kind": "city",
       "categories": {
         "current_development": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "st-helena.planning-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The city publishes planning projects as hand-maintained pages rather than a permit portal, so a project exists in Trackstar only once staff create its page. Three of fifteen carry no street address, because the city wrote a site name or an APN in the location block instead."
         },
         "permits": {
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "st-helena.civicclerk",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "cip_construction": {
           "evidence": []

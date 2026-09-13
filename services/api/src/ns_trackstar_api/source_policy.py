@@ -145,6 +145,16 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed where a newly posted agenda is the earliest public "
         "signal that a project is about to be decided.",
     ),
+    "st-helena.civicclerk": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed; a newly posted agenda is the earliest public signal "
+        "that a project is about to be decided.",
+    ),
+    "st-helena.planning-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's own hand-maintained planning-project pages. Staff edit them during "
+        "the business day when a case is deemed complete or approved.",
+    ),
     "solano-county.city-boundaries": SourceFreshnessPolicy(
         "spatial_reference", "rare", 1440, 10080,
         "Incorporated city limits change through annexation, which is a rare and discrete event.",

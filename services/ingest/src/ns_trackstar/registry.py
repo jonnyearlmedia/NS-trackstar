@@ -8,6 +8,7 @@ from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
 from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
 from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
+from ns_trackstar.adapters.civicplus_project_index import CivicPlusProjectIndexAdapter
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
 from ns_trackstar.adapters.federal_register import FederalRegisterAdapter
@@ -27,6 +28,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "accela_aca": AccelaAcaAdapter,
     "arcgis_rest": ArcGISRestAdapter,
     "civicclerk": CivicClerkAdapter,
+    "civicplus_project_index": CivicPlusProjectIndexAdapter,
     "courtlistener": CourtListenerAdapter,
     "ceqanet": CeqanetAdapter,
     "etrakit": ETrakitAdapter,

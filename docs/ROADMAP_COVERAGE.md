@@ -38,7 +38,7 @@ Napa                    OK     OK     OK    OK    OK    OK   XX    --
 American Canyon         OK     XX     OK    OK    OK    OK   XX    --
 Napa County (uninc)     OK     XX     OK    --    OK    OK   XX    --
 Yountville              --     --     --    --    OK    OK   XX    --
-St. Helena              --     --     --    --    OK    OK   XX    --
+St. Helena              OK     --     OK    --    OK    OK   XX    --
 Calistoga               --     --     --    --    OK    OK   XX    --
 Vallejo                 OK     OK     OK    --    OK    OK   XX    --
 Benicia                 OK     XX     OK    --    OK    OK   XX    --
@@ -52,8 +52,8 @@ Solano County (uninc)   --     XX     OK    --    OK    OK   XX    --
 
 `~~` Fairfield development is one project-specific record set, not an inventory.
 
-Derived totals, September 13, 2026: **33 strong, 43 partial, 19 blocked,
-45 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **35 strong, 43 partial, 19 blocked,
+43 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -61,15 +61,16 @@ stops returning records takes the number down with it.
 
 Verified reachable and unbuilt, so no excuse exists:
 
-- **St. Helena** `cityofsthelena.org` answers 200. Development, permits, meetings,
-  CIP all unbuilt.
-- **Five jurisdictions still have no meeting feed.** Reading each city's own
+- **St. Helena permits and CIP.** Meetings and development are now built. The
+  city publishes finaled permits as a page per year rather than a feed, and no
+  CIP page has been found yet.
+- **Four jurisdictions still have no meeting feed.** Reading each city's own
   navigation, rather than guessing hostnames, found Napa County on Legistar
   (`napa.legistar.com`, client `napa`), Suisun City on Granicus
   (`suisuncityca.granicus.com`, view 1) and American Canyon on Granicus
   (`americancanyon.granicus.com`, views 16 and 18). All are now in production.
-  Yountville, St. Helena, Calistoga, Fairfield and Vacaville remain, and three of
-  those five are blocked by this container's egress rather than by the cities.
+  Yountville, Calistoga, Fairfield and Vacaville remain, and three of those four
+  are blocked by this container's egress rather than by the cities.
   American Canyon is the lesson: its tenant hostname sat in an iframe `src`, so a
   sweep that only reads `href` reports "no meeting platform" about a city that has
   had one for years. Read `src` too.
@@ -100,9 +101,9 @@ Blocked, with the specific reason:
 
 ## Order of work
 
-1. Everything reachable from wherever you are, before anything blocked. St. Helena
-   is pure undone work. The meeting sweep is finished for every jurisdiction this
-   container can reach.
+1. Everything reachable from wherever you are, before anything blocked. The
+   meeting sweep and St. Helena are finished for every jurisdiction this container
+   can reach.
 2. 511, because it is one run with a key that already exists.
 3. The browser bootstrap tier: Accela for both counties, then Dixon Tyler. Permits
    is the weakest category and this is most of the fix.

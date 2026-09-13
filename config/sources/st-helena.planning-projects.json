@@ -1,0 +1,47 @@
+{
+  "key": "st-helena.planning-projects",
+  "name": "City of St. Helena Planning Projects",
+  "jurisdiction": "City of St. Helena",
+  "adapter": "civicplus_project_index",
+  "base_url": "https://www.cityofsthelena.org/230/Planning-Projects",
+  "poll_minutes": 240,
+  "options": {
+    "site_url": "https://www.cityofsthelena.org",
+    "identity_label": "Project ID",
+    "max_depth": 3,
+    "max_pages": 120,
+    "min_expected_projects": 8,
+    "min_request_interval_seconds": 0.5,
+    "indexes": [
+      {
+        "url": "/506/Active-Projects",
+        "label": "Active Projects",
+        "lifecycle_stage": "under_review"
+      },
+      {
+        "url": "/507/Approved-Projects",
+        "label": "Approved Projects",
+        "lifecycle_stage": "approved"
+      }
+    ],
+    "project_mapping": {
+      "name_fields": [
+        "name"
+      ],
+      "project_type": "municipal_development",
+      "authority_type": "official_curated_project_tracker",
+      "status_dimension": "planning",
+      "status_field": "project_status",
+      "assertions": {
+        "planning_case": "planning_case",
+        "record_type": "project_type",
+        "official_status_text": "project_status",
+        "application_submitted_at": "date_received",
+        "approved_at": "date_approved",
+        "address": "address",
+        "project_page": "project_page",
+        "index_section": "index_label"
+      }
+    }
+  }
+}
