@@ -168,6 +168,12 @@ summary:focus-visible {
   }
 }
 
+@media (max-width: 600px) {
+  /* Mobile already has native pinch/pan gestures. Hide the desktop +/- chrome so
+     the map reads like an app instead of an embedded web map. */
+  .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { display: none !important; }
+}
+
 @media (max-width: 420px) {
   .statusStrip, .statusGrid { grid-template-columns: 1fr; }
   .mapLegend { right: 8px; left: 8px; }
