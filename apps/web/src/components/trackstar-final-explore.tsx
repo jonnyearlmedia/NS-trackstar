@@ -40,6 +40,7 @@ export function ExplorePanel(props: Props) {
   if (props.browseOpen) return null;
   const label = areaLabel(props.viewport);
   const count = props.viewport?.projects.length ?? 0;
+  const briefingAvailable = Boolean(props.viewport && count >= 2);
 
   if (props.orientation) {
     return (
@@ -77,7 +78,7 @@ export function ExplorePanel(props: Props) {
       </div>
       <div className={extra.compactFooter}>
         <button className="browseProjectsButton" onClick={props.onBrowse} type="button"><span>Browse {count ? count.toLocaleString() : ""} projects</span><ArrowRightIcon /></button>
-        {props.canBrief ? <button className="briefAreaButton" onClick={props.onBrief} type="button"><PlayIcon /> Brief this area</button> : null}
+        {briefingAvailable ? <button className="briefAreaButton" onClick={props.onBrief} type="button"><PlayIcon /> Brief this area</button> : null}
       </div>
       {(props.lifecycle !== "current" || props.timeWindow !== "all") ? (
         <div className={extra.activeChips} aria-label="Active filters">
