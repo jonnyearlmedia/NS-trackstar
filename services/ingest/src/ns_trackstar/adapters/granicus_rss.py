@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime
+from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
 from typing import Any
 from xml.etree import ElementTree
@@ -32,11 +32,18 @@ _TITLE_SPLIT = re.compile(r"^(?P<body>.+)\s+-\s+(?P<tail>[^-]+)$")
 _DATE_FORMATS = ("%b %d, %Y", "%B %d, %Y", "%b %d %Y", "%B %d %Y")
 
 
-def _meeting_date(value: str) -> datetime | None:
+def _meeting_date(value: str) -> date | None:
+    """Return the calendar date a Granicus title carries.
+
+    The title gives a date with no time and no zone. UTC is attached only to satisfy
+    the repository's no-naive-datetime rule and is discarded immediately by ``.date()``,
+    so no timezone ever reaches the stored value.
+    """
+
     cleaned = " ".join(str(value or "").replace("\xa0", " ").split())
     for fmt in _DATE_FORMATS:
         try:
-            return datetime.strptime(cleaned, fmt)
+            return datetime.strptime(cleaned, fmt).replace(tzinfo=UTC).date()
         except ValueError:
             continue
     return None
@@ -149,7 +156,7 @@ class GranicusRssAdapter(CollectorAdapter):
             }
             meeting_date = _meeting_date(date_text or "")
             if meeting_date is not None:
-                normalized["meeting_date"] = meeting_date.date().isoformat()
+                normalized["meeting_date"] = meeting_date.isoformat()
 
             records.append(
                 NormalizedRecord(
