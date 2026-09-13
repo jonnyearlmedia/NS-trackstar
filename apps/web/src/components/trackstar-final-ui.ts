@@ -139,13 +139,19 @@ const CITY_CENTERS = [
   { name: "Suisun City", lng: -122.0402, lat: 38.2383 },
 ];
 export function areaLabel(viewport: MapViewportState | null) {
-  if (!viewport || viewport.zoom < 9.2) return "Napa + Solano";
+  if (!viewport) return "Napa + Solano";
+  const width = Math.abs(viewport.bounds.east - viewport.bounds.west);
+  const height = Math.abs(viewport.bounds.north - viewport.bounds.south);
+  // A regional frame can have its center nearest one city even though the user is
+  // clearly looking at both counties. Don't mislabel that view as a single city.
+  if (viewport.zoom < 10.15 || width > 0.42 || height > 0.34) return "Napa + Solano";
+
   let best: { name: string; distance: number } | null = null;
   for (const city of CITY_CENTERS) {
     const distance = Math.hypot(viewport.center.lng - city.lng, viewport.center.lat - city.lat);
     if (!best || distance < best.distance) best = { name: city.name, distance };
   }
-  return best && best.distance < 0.22 ? best.name : "This area";
+  return best && best.distance < 0.12 ? best.name : "This area";
 }
 export function isViewportOutside(viewport: MapViewportState | null) {
   return viewport ? !isInsideServiceArea(viewport.center) : false;
