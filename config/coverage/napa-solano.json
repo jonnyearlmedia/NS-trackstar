@@ -595,7 +595,13 @@
           ]
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "napa-county.public-works-construction",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "County road and facility construction. City capital programmes inside the county are each city's own and are tracked separately."
         },
         "gis_spatial": {
           "evidence": [
@@ -896,7 +902,12 @@
           "evidence": []
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "fairfield.capital-improvement-projects",
+              "scope": "recurring_tracker"
+            }
+          ]
         },
         "gis_spatial": {
           "evidence": [

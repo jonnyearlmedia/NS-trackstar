@@ -70,6 +70,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "state_project_watch", "within_day", 360, 720,
         "State transportation project updates are valuable same-day but are not minute-by-minute events.",
     ),
+    "fairfield.capital-improvement-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "The city's own capital project tracker, carrying phase, budget and a written "
+        "status outlook; staff edit it on business days as a project moves.",
+    ),
     "fairfield.one-lake-assessor-map": SourceFreshnessPolicy(
         "project_specific_record", "rare", 1440, 10080,
         "Authoritative project-specific reference document; changes are infrequent.",
@@ -117,6 +122,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "County Board of Supervisors and Zoning Administrator feed; this is where "
         "unincorporated Napa County land-use decisions are noticed, so a newly posted "
         "agenda is the earliest public signal.",
+    ),
+    "napa-county.public-works-construction": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "County road and public works construction, which is the work a resident of "
+        "the unincorporated county actually drives through.",
     ),
     "napa-county.current-projects-explorer": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,
