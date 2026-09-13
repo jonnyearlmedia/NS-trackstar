@@ -37,9 +37,9 @@ Legend: `OK` production and verified · `--` not built · `XX` blocked, reason b
 Napa                    OK     OK     OK    OK    OK    OK   XX    --
 American Canyon         OK     XX     OK    OK    OK    OK   XX    --
 Napa County (uninc)     OK     XX     OK    --    OK    OK   XX    --
-Yountville              --     --     --    --    OK    OK   XX    --
+Yountville              --     --     OK    --    OK    OK   XX    --
 St. Helena              OK     --     OK    --    OK    OK   XX    --
-Calistoga               --     --     --    --    OK    OK   XX    --
+Calistoga               --     --     OK    --    OK    OK   XX    --
 Vallejo                 OK     OK     OK    --    OK    OK   XX    --
 Benicia                 OK     XX     OK    --    OK    OK   XX    --
 Fairfield               ~~     --     --    --    OK    OK   XX    --
@@ -52,8 +52,8 @@ Solano County (uninc)   --     XX     OK    --    OK    OK   XX    --
 
 `~~` Fairfield development is one project-specific record set, not an inventory.
 
-Derived totals, September 13, 2026: **36 strong, 43 partial, 19 blocked,
-42 missing** across 14 jurisdictions x 10 categories. These are computed from the
+Derived totals, September 13, 2026: **38 strong, 43 partial, 19 blocked,
+40 missing** across 14 jurisdictions x 10 categories. These are computed from the
 evidence in `config/coverage/napa-solano.json`, not typed in, so a source that
 stops returning records takes the number down with it.
 
@@ -64,19 +64,23 @@ Verified reachable and unbuilt, so no excuse exists:
 - **St. Helena permits and CIP.** Meetings and development are now built. The
   city publishes finaled permits as a page per year rather than a feed, and no
   CIP page has been found yet.
-- **Three jurisdictions still have no meeting feed.** Reading each city's own
-  navigation, rather than guessing hostnames, found Napa County on Legistar
-  (`napa.legistar.com`, client `napa`), Suisun City on Granicus
-  (`suisuncityca.granicus.com`, view 1) and American Canyon on Granicus
-  (`americancanyon.granicus.com`, views 16 and 18). All are now in production.
-  Vacaville followed, on eScribe's public portal at
-  `pub-vacaville.escribemeetings.com`, which is a different host from the
-  staff-facing `vacaville.escribemeetings.com` that earlier passes were probing.
-  Yountville, Calistoga and Fairfield remain, and all three are blocked by this
-  container's egress rather than by the cities.
-  American Canyon is the lesson: its tenant hostname sat in an iframe `src`, so a
-  sweep that only reads `href` reports "no meeting platform" about a city that has
-  had one for years. Read `src` too.
+- **One jurisdiction still has no meeting feed: Fairfield.** Thirteen of fourteen
+  are covered. None of them was found by guessing a hostname. Napa County is on
+  Legistar (`napa.legistar.com`, client `napa`); Suisun City on Granicus
+  (`suisuncityca.granicus.com`, view 1); American Canyon on Granicus
+  (`americancanyon.granicus.com`, views 16 and 18); St. Helena on CivicClerk
+  (tenant `STHELENACA`); Vacaville on eScribe's public portal
+  (`pub-vacaville.escribemeetings.com`); Yountville on PrimeGov
+  (`townofyountville.primegov.com`); Calistoga on CivicWeb
+  (`calistoga.civicweb.net`).
+
+  Three of those were found despite the city's own website being unreachable from
+  this container, which is the point worth keeping: a meeting platform is a
+  separate host from the city site, and "the city site is blocked" was never a
+  reason to record the city as uncovered. American Canyon is the other lesson: its
+  tenant hostname sat in an iframe `src`, so a link sweep that only reads `href`
+  reports "no meeting platform" about a city that has had one for years.
+
 - **Twelve jurisdictions have no CIP source.** Most cities publish a capital
   improvement program as a page or a PDF, and both adapters already exist.
 - **Fourteen have no procurement source.** Untouched entirely.
@@ -84,9 +88,10 @@ Verified reachable and unbuilt, so no excuse exists:
 Blocked, with the specific reason:
 
 - **Vacaville, Yountville, Calistoga city sites** — the remote container's egress
-  refuses CONNECT. Not a fact about those cities. Retest locally. Vacaville's
-  meetings are covered anyway, because its eScribe portal is a separate host that
-  is reachable; the city site is still needed for its development and CIP pages.
+  refuses CONNECT. Not a fact about those cities. Retest locally. All three now
+  have meeting coverage anyway, because each city's meeting platform is a separate
+  host that is reachable; their own sites are still needed for development,
+  permits and CIP.
 - **Napa County and Solano County Accela** — both tenants answer 200; the public
   search needs a browser session bootstrap the container cannot run.
 - **Dixon permits (Tyler EnerGov)** — host, route, field names and both module
@@ -99,6 +104,14 @@ Blocked, with the specific reason:
   datasets, so there is no sanctioned bulk route.
 - **Fairfield and Rio Vista city sites** — challenged 403. Retest from another
   network before concluding anything.
+- **Fairfield meetings (NovusAGENDA)** — the portal is reachable at
+  `fairfield.novusagenda.com/agendapublic/`, unlike the city site. Its meeting list
+  renders empty until an ASP.NET search postback runs, and a plain form post with
+  the page's own `__VIEWSTATE` returns the same empty grid, so the grid is loaded
+  by an async partial postback whose exact request has not been captured. Same
+  class of blocker as Dixon's Tyler portal: it needs one Playwright capture of the
+  portal's own request, not more guessing. The form contract found so far is
+  recorded in `SOURCE_STATUS.md`.
 - **511 live traffic** — collectors written and tested, never run with a key. The
   collector container could not even receive the key until this session; that is
   fixed, so one run settles it.

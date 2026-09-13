@@ -52,6 +52,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "regulatory_watch", "daily", 720, 1440,
         "Federal decision/document set; important when it changes, but sub-hour polling adds little value.",
     ),
+    "calistoga.civicweb": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Council, Planning Commission and the city's "
+        "standing committees; a newly posted agenda is the earliest public signal.",
+    ),
     "california.ceqanet.napa-solano": SourceFreshnessPolicy(
         "state_project_watch", "within_day", 360, 720,
         "State environmental filings can materially change project context during the day.",
@@ -190,6 +195,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "Published meeting feed carrying Council, Planning Commission and the Parks "
         "and Recreation Commission; a newly posted agenda is the earliest public "
         "signal that a project is about to be decided.",
+    ),
+    "yountville.primegov": SourceFreshnessPolicy(
+        "meeting_feed", "same_day", 60, 120,
+        "Published meeting feed carrying Town Council and the Zoning and Design Review "
+        "Board, which is where Yountville land-use decisions are noticed.",
     ),
     "vallejo.civicclerk": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,

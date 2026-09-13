@@ -287,7 +287,13 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "yountville.primegov",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "PrimeGov returns no public link for a meeting's compiled agenda document, so a meeting's documents are listed by name and the link points at the portal."
         },
         "cip_construction": {
           "evidence": []
@@ -466,7 +472,13 @@
           "evidence": []
         },
         "government_meetings": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "calistoga.civicweb",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "The portal's list page publishes the most recent meetings per body rather than a full archive, so Trackstar carries what Calistoga is deciding now, not its history."
         },
         "cip_construction": {
           "evidence": []

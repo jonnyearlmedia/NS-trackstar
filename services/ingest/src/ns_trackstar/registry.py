@@ -9,6 +9,7 @@ from ns_trackstar.adapters.base import CollectorAdapter, SourceConfig
 from ns_trackstar.adapters.ceqanet import CeqanetAdapter
 from ns_trackstar.adapters.civicclerk import CivicClerkAdapter
 from ns_trackstar.adapters.civicplus_project_index import CivicPlusProjectIndexAdapter
+from ns_trackstar.adapters.civicweb import CivicWebAdapter
 from ns_trackstar.adapters.courtlistener import CourtListenerAdapter
 from ns_trackstar.adapters.escribe import EScribeAdapter
 from ns_trackstar.adapters.etrakit import ETrakitAdapter
@@ -19,6 +20,7 @@ from ns_trackstar.adapters.legistar import LegistarAdapter
 from ns_trackstar.adapters.official_documents import OfficialDocumentSetAdapter
 from ns_trackstar.adapters.opencities_map import OpenCitiesMapAdapter
 from ns_trackstar.adapters.pdf_project_tracker import PdfProjectTrackerAdapter
+from ns_trackstar.adapters.primegov import PrimeGovAdapter
 from ns_trackstar.adapters.tabular_pdf_project_tracker import TabularPdfProjectTrackerAdapter
 from ns_trackstar.adapters.transportation import BayArea511TrafficAdapter, WzdxAdapter
 
@@ -30,6 +32,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "arcgis_rest": ArcGISRestAdapter,
     "civicclerk": CivicClerkAdapter,
     "civicplus_project_index": CivicPlusProjectIndexAdapter,
+    "civicweb": CivicWebAdapter,
     "courtlistener": CourtListenerAdapter,
     "ceqanet": CeqanetAdapter,
     "escribe": EScribeAdapter,
@@ -41,6 +44,7 @@ ADAPTERS: dict[str, AdapterFactory] = {
     "opencities_map": OpenCitiesMapAdapter,
     "official_document_set": OfficialDocumentSetAdapter,
     "pdf_project_tracker": PdfProjectTrackerAdapter,
+    "primegov": PrimeGovAdapter,
     "tabular_pdf_project_tracker": TabularPdfProjectTrackerAdapter,
     "bayarea_511_traffic": BayArea511TrafficAdapter,
     "wzdx": WzdxAdapter,
