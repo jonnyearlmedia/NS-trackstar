@@ -1,4 +1,4 @@
-import type { Feature } from "geojson";
+import type { Feature, Geometry } from "geojson";
 import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 
 import {
@@ -19,7 +19,7 @@ export const SOURCES = {
   edge: "trackstar-final-edge",
 } as const;
 
-export const PROJECT_LAYERS = ["final-fill","final-fill-u","final-line","final-line-u","final-point-pins","final-point-hit"];
+export const PROJECT_LAYERS = ["final-fill", "final-fill-u", "final-line", "final-line-u", "final-point-pins", "final-point-hit"];
 
 const categoryColor = [
   "match",
@@ -45,30 +45,33 @@ type MarkerKind = "development" | "roads" | "utilities" | "places";
 
 const markerColors: Record<MarkerKind, string> = {
   development: "#2f7f65",
-  roads: "#e58a2b",
-  utilities: "#238ca4",
-  places: "#5d70d8",
+  roads: "#d97616",
+  utilities: "#18839b",
+  places: "#5567cf",
 };
 
-function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
-  const right = x + width;
-  const bottom = y + height;
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(right - radius, y);
-  ctx.quadraticCurveTo(right, y, right, y + radius);
-  ctx.lineTo(right, bottom - radius);
-  ctx.quadraticCurveTo(right, bottom, right - radius, bottom);
-  ctx.lineTo(x + radius, bottom);
-  ctx.quadraticCurveTo(x, bottom, x, bottom - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
+function pinPath(ctx: CanvasRenderingContext2D) {
+  ctx.beginPath();
+  ctx.moveTo(11, 3);
+  ctx.lineTo(29, 3);
+  ctx.quadraticCurveTo(37, 3, 37, 11);
+  ctx.lineTo(37, 25);
+  ctx.quadraticCurveTo(37, 33, 29, 33);
+  ctx.lineTo(24.5, 33);
+  ctx.lineTo(20, 43);
+  ctx.lineTo(15.5, 33);
+  ctx.lineTo(11, 33);
+  ctx.quadraticCurveTo(3, 33, 3, 25);
+  ctx.lineTo(3, 11);
+  ctx.quadraticCurveTo(3, 3, 11, 3);
+  ctx.closePath();
 }
 
-function drawCategoryGlyph(ctx: CanvasRenderingContext2D, kind: MarkerKind) {
+function drawCategoryGlyph(ctx: CanvasRenderingContext2D, kind: MarkerKind, color: string) {
   ctx.save();
-  ctx.strokeStyle = "#ffffff";
-  ctx.fillStyle = "#ffffff";
-  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
@@ -120,31 +123,43 @@ function markerImage(kind: MarkerKind, color: string) {
   ctx.scale(pixelRatio, pixelRatio);
 
   ctx.save();
-  ctx.shadowColor = "rgba(18, 42, 53, 0.24)";
-  ctx.shadowBlur = 5;
+  ctx.shadowColor = "rgba(24, 45, 56, 0.22)";
+  ctx.shadowBlur = 6;
   ctx.shadowOffsetY = 2;
-  ctx.fillStyle = color;
-  ctx.strokeStyle = "rgba(255,255,255,0.98)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(11, 3);
-  ctx.lineTo(29, 3);
-  ctx.quadraticCurveTo(37, 3, 37, 11);
-  ctx.lineTo(37, 25);
-  ctx.quadraticCurveTo(37, 33, 29, 33);
-  ctx.lineTo(24.5, 33);
-  ctx.lineTo(20, 43);
-  ctx.lineTo(15.5, 33);
-  ctx.lineTo(11, 33);
-  ctx.quadraticCurveTo(3, 33, 3, 25);
-  ctx.lineTo(3, 11);
-  ctx.quadraticCurveTo(3, 3, 11, 3);
-  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.985)";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.4;
+  pinPath(ctx);
   ctx.fill();
   ctx.stroke();
   ctx.restore();
 
-  drawCategoryGlyph(ctx, kind);
+  drawCategoryGlyph(ctx, kind, color);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function clusterImage() {
+  const pixelRatio = 2;
+  const width = 44;
+  const height = 50;
+  const canvas = document.createElement("canvas");
+  canvas.width = width * pixelRatio;
+  canvas.height = height * pixelRatio;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Trackstar cluster canvas unavailable");
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.translate(2, 2);
+  ctx.save();
+  ctx.shadowColor = "rgba(24, 45, 56, 0.20)";
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = "rgba(255,255,255,0.99)";
+  ctx.strokeStyle = "#0b67c7";
+  ctx.lineWidth = 2.4;
+  pinPath(ctx);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
@@ -154,6 +169,21 @@ function registerMarkerImages(map: MapLibreMap) {
     if (map.hasImage(name)) continue;
     map.addImage(name, markerImage(kind, markerColors[kind]), { pixelRatio: 2 });
   }
+  if (!map.hasImage("trackstar-marker-cluster")) map.addImage("trackstar-marker-cluster", clusterImage(), { pixelRatio: 2 });
+}
+
+function projectFromRenderedFeature(feature: Feature): MapProject | null {
+  const project = featureProject(feature);
+  if (!project) return null;
+  const original = feature.properties?.original_geometry;
+  if (typeof original !== "string") return project;
+  try {
+    const geometry = JSON.parse(original) as Geometry;
+    if (geometry && typeof geometry === "object" && typeof geometry.type === "string") return { ...project, geometry };
+  } catch {
+    // A marker still remains selectable even if a malformed helper property is encountered.
+  }
+  return project;
 }
 
 export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, onOne: (project: MapProject) => void, onMany: (projects: MapProject[]) => void) {
@@ -161,7 +191,7 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
   map.addSource(SOURCES.mask, { type: "geojson", data: serviceMask() });
   map.addSource(SOURCES.edge, { type: "geojson", data: serviceEdge() });
   map.addSource(SOURCES.shapes, { type: "geojson", data: emptyCollection() });
-  map.addSource(SOURCES.points, { type: "geojson", data: emptyCollection(), cluster: true, clusterMaxZoom: 12, clusterRadius: 46 });
+  map.addSource(SOURCES.points, { type: "geojson", data: emptyCollection(), cluster: true, clusterMaxZoom: 13, clusterRadius: 58 });
   map.addSource(SOURCES.selected, { type: "geojson", data: emptyCollection() });
   map.addSource(SOURCES.user, { type: "geojson", data: userLocationFeature(user) });
 
@@ -174,36 +204,69 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
   const uncertain = ["==", ["get", "location_uncertain"], true] as ExpressionSpecification;
   const unclustered = ["!", ["has", "point_count"]] as ExpressionSpecification;
 
-  map.addLayer({ id: "final-fill", type: "fill", source: SOURCES.shapes, filter: ["all", ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], exact], paint: { "fill-color": categoryColor, "fill-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.05, 11, 0.14, 15, 0.24] } });
-  map.addLayer({ id: "final-fill-u", type: "fill", source: SOURCES.shapes, filter: ["all", ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], uncertain], paint: { "fill-color": categoryColor, "fill-opacity": 0.06 } });
-  map.addLayer({ id: "final-line", type: "line", source: SOURCES.shapes, filter: exact, paint: { "line-color": categoryColor, "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1, 13, 2.2, 17, 3.6], "line-opacity": 0.74 } });
-  map.addLayer({ id: "final-line-u", type: "line", source: SOURCES.shapes, filter: uncertain, paint: { "line-color": categoryColor, "line-width": 2, "line-opacity": 0.5, "line-dasharray": [2, 2] } });
-
+  // Project geometry is evidence/context, not the primary browse layer. Keep it
+  // quiet until users zoom close; selected geometry remains fully emphasized.
   map.addLayer({
-    id: "final-clusters",
-    type: "circle",
-    source: SOURCES.points,
-    filter: ["has", "point_count"],
+    id: "final-fill",
+    type: "fill",
+    source: SOURCES.shapes,
+    minzoom: 13.6,
+    filter: ["all", ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], exact],
+    paint: { "fill-color": categoryColor, "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13.6, 0.035, 15, 0.08, 17, 0.14] },
+  });
+  map.addLayer({
+    id: "final-fill-u",
+    type: "fill",
+    source: SOURCES.shapes,
+    minzoom: 13.8,
+    filter: ["all", ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], uncertain],
+    paint: { "fill-color": categoryColor, "fill-opacity": 0.035 },
+  });
+  map.addLayer({
+    id: "final-line",
+    type: "line",
+    source: SOURCES.shapes,
+    minzoom: 13.25,
+    filter: exact,
     paint: {
-      "circle-color": "#ffffff",
-      "circle-radius": ["step", ["get", "point_count"], 18, 10, 21, 50, 25, 200, 29],
-      "circle-stroke-color": "#0b67c7",
-      "circle-stroke-width": 2.4,
-      "circle-opacity": 0.98,
-      "circle-stroke-opacity": 0.96,
+      "line-color": categoryColor,
+      "line-width": ["interpolate", ["linear"], ["zoom"], 13.25, 1.1, 15, 1.7, 17, 2.5],
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13.25, 0.24, 15, 0.36, 17, 0.52],
     },
   });
   map.addLayer({
-    id: "final-cluster-count",
+    id: "final-line-u",
+    type: "line",
+    source: SOURCES.shapes,
+    minzoom: 13.5,
+    filter: uncertain,
+    paint: { "line-color": categoryColor, "line-width": 1.4, "line-opacity": 0.24, "line-dasharray": [2, 2] },
+  });
+
+  // Clusters use the same pointer silhouette as projects so they feel like one
+  // map language instead of MapLibre default bubbles dropped into Trackstar.
+  map.addLayer({
+    id: "final-clusters",
     type: "symbol",
     source: SOURCES.points,
     filter: ["has", "point_count"],
-    layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12, "text-font": ["Noto Sans Regular"] },
+    layout: {
+      "icon-image": "trackstar-marker-cluster",
+      "icon-size": ["step", ["get", "point_count"], 0.92, 10, 1, 50, 1.08, 200, 1.16],
+      "icon-anchor": "bottom",
+      "icon-allow-overlap": true,
+      "text-field": ["get", "point_count_abbreviated"],
+      "text-size": 11.5,
+      "text-font": ["Noto Sans Regular"],
+      "text-offset": [0, -1.52],
+      "text-anchor": "center",
+      "text-allow-overlap": true,
+    },
     paint: { "text-color": "#174a70" },
   });
 
-  // Regional view stays quiet. Once users enter a city/neighborhood scale,
-  // these become category-colored notification pins instead of anonymous dots.
+  // Regional view stays quiet. City/neighborhood scale progressively reveals
+  // white pointer pins with category-colored iconography.
   map.addLayer({
     id: "final-point-overview-ring",
     type: "circle",
@@ -226,7 +289,7 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
     paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 4.5, 9.8, 5.8],
       "circle-color": categoryColor,
-      "circle-opacity": ["case", uncertain, 0.62, 1],
+      "circle-opacity": ["case", uncertain, 0.55, 0.92],
       "circle-stroke-color": "rgba(255,255,255,0.96)",
       "circle-stroke-width": 1,
     },
@@ -235,18 +298,16 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
     id: "final-point-pins",
     type: "symbol",
     source: SOURCES.points,
-    minzoom: 9.35,
+    minzoom: 9.55,
     filter: unclustered,
     layout: {
       "icon-image": categoryMarker,
-      "icon-size": ["interpolate", ["linear"], ["zoom"], 9.35, 0.76, 12, 0.9, 15, 1.06],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 9.55, 0.76, 12, 0.9, 15, 1.04],
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
       "icon-ignore-placement": false,
     },
-    paint: {
-      "icon-opacity": ["case", uncertain, 0.68, 1],
-    },
+    paint: { "icon-opacity": ["case", uncertain, 0.64, 1] },
   });
 
   // Invisible interaction halo. Visible markers carry meaning while the touch
@@ -267,27 +328,28 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
     id: "final-labels",
     type: "symbol",
     source: SOURCES.points,
-    minzoom: 13.4,
+    minzoom: 14.15,
     filter: unclustered,
     layout: {
       "text-field": ["get", "name"],
       "text-size": 11.5,
       "text-font": ["Noto Sans Regular"],
-      "text-offset": [0, 1.45],
+      "text-offset": [0, 1.5],
       "text-anchor": "top",
       "text-max-width": 12,
       "text-allow-overlap": false,
     },
     paint: {
       "text-color": "#263b45",
-      "text-halo-color": "rgba(255,255,255,.96)",
-      "text-halo-width": 1.8,
+      "text-halo-color": "rgba(255,255,255,.98)",
+      "text-halo-width": 1.9,
     },
   });
 
-  map.addLayer({ id: "final-selected-fill", type: "fill", source: SOURCES.selected, filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], paint: { "fill-color": "#0b67c7", "fill-opacity": 0.20 } });
-  map.addLayer({ id: "final-selected-line", type: "line", source: SOURCES.selected, paint: { "line-color": "#0b67c7", "line-width": 3.2, "line-opacity": 1 } });
-  map.addLayer({ id: "final-selected-point-halo", type: "circle", source: SOURCES.selected, filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 20, "circle-color": "rgba(11,103,199,.12)", "circle-stroke-color": "rgba(11,103,199,.20)", "circle-stroke-width": 2 } });
+  // Selection wakes the real geometry back up immediately.
+  map.addLayer({ id: "final-selected-fill", type: "fill", source: SOURCES.selected, filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], paint: { "fill-color": "#0b67c7", "fill-opacity": 0.18 } });
+  map.addLayer({ id: "final-selected-line", type: "line", source: SOURCES.selected, paint: { "line-color": "#0b67c7", "line-width": 3.2, "line-opacity": 0.95 } });
+  map.addLayer({ id: "final-selected-point-halo", type: "circle", source: SOURCES.selected, filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 20, "circle-color": "rgba(11,103,199,.10)", "circle-stroke-color": "rgba(11,103,199,.20)", "circle-stroke-width": 2 } });
   map.addLayer({
     id: "final-selected-pin",
     type: "symbol",
@@ -305,7 +367,7 @@ export function installFinalLayers(map: MapLibreMap, user: UserLocation | null, 
   map.on("click", (event) => {
     const unique = new globalThis.Map<string, MapProject>();
     for (const feature of map.queryRenderedFeatures(event.point, { layers: PROJECT_LAYERS })) {
-      const project = featureProject(feature as Feature);
+      const project = projectFromRenderedFeature(feature as Feature);
       if (project) unique.set(project.id, project);
     }
     const projects = [...unique.values()];
