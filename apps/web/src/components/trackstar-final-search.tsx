@@ -5,6 +5,15 @@ import { categoryLabel, lifecycleLabel, type SearchResult } from "./trackstar-fi
 import { ArrowRightIcon, CategoryIcon, SearchIcon } from "./trackstar-final-icons";
 import styles from "./map-explorer-v2.module.css";
 
+function resultContext(result: SearchResult) {
+  if (!result.geometry) {
+    return result.summary
+      ? `${result.summary} · Location not mapped yet`
+      : "Official record found · location not mapped yet";
+  }
+  return result.summary;
+}
+
 export function SearchOverlay({ query, results, state, onQuery, onClose, onSelect }: {
   query: string;
   results: SearchResult[];
@@ -17,11 +26,14 @@ export function SearchOverlay({ query, results, state, onQuery, onClose, onSelec
   return <aside className={styles.searchOverlay} aria-label="Search Trackstar">
     <header><button aria-label="Close search" onClick={onClose} type="button">‹</button><form onSubmit={submit}><SearchIcon /><input autoFocus onChange={(event) => onQuery(event.target.value)} placeholder="Search project, address, road or place" type="search" value={query} /></form></header>
     <div className={styles.searchBody}>
-      {!query.trim() ? <div className={styles.searchHint}><strong>Find something you saw or heard about.</strong><span>Try a project name, road, address, business name, or place.</span></div> : null}
+      {!query.trim() ? <div className={styles.searchHint}><strong>Find something you saw or heard about.</strong><span>Try a project name, business, road, neighborhood, address, permit or place.</span></div> : null}
       {state === "loading" ? <p className={styles.stateMessage}>Searching…</p> : null}
       {state === "error" ? <p className={styles.stateMessage}>Search is temporarily unavailable.</p> : null}
-      {state === "done" && results.length === 0 ? <div className={styles.searchHint}><strong>No Trackstar match found for “{query.trim()}.”</strong><span>Try another name or address. This does not mean no project exists.</span></div> : null}
-      <div className={styles.searchResults}>{results.map((result) => <button className="contentResultRow" key={result.id} onClick={() => onSelect(result)} type="button"><span className="contentResultIcon" data-category={result.consumer_category}><CategoryIcon category={result.consumer_category} /></span><span className="contentResultCopy"><small>{categoryLabel(result.consumer_category)} · {lifecycleLabel(result.lifecycle_stage)}</small><strong>{result.name}</strong>{result.summary ? <em>{result.summary}</em> : null}</span><span className="contentResultArrow"><ArrowRightIcon /></span></button>)}</div>
+      {state === "done" && results.length === 0 ? <div className={styles.searchHint}><strong>No Trackstar match found for “{query.trim()}.”</strong><span>Try another spelling, business name, nearby road or address. This does not mean no project exists.</span></div> : null}
+      <div className={styles.searchResults}>{results.map((result) => {
+        const context = resultContext(result);
+        return <button className="contentResultRow" key={result.id} onClick={() => onSelect(result)} type="button"><span className="contentResultIcon" data-category={result.consumer_category}><CategoryIcon category={result.consumer_category} /></span><span className="contentResultCopy"><small>{categoryLabel(result.consumer_category)} · {lifecycleLabel(result.lifecycle_stage)}</small><strong>{result.name}</strong>{context ? <em>{context}</em> : null}</span><span className="contentResultArrow"><ArrowRightIcon /></span></button>;
+      })}</div>
     </div>
   </aside>;
 }
