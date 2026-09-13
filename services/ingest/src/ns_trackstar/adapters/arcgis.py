@@ -24,6 +24,54 @@ def _arcgis_datetime(value: Any) -> datetime | None:
     return None
 
 
+def coded_value_domains(metadata: dict[str, Any]) -> dict[str, dict[Any, str]]:
+    """Return {field: {code: label}} for every coded-value domain the layer declares.
+
+    An agency often stores a category, a status or a city as an integer or a short
+    code and keeps the human wording in the layer's domain. Publishing the raw code
+    would put "Category 4" in front of a resident, which is the bureaucratic
+    vocabulary this product exists to remove, so the domains are read and applied.
+    """
+
+    domains: dict[str, dict[Any, str]] = {}
+    for field in metadata.get("fields", []):
+        domain = field.get("domain") or {}
+        if domain.get("type") != "codedValue":
+            continue
+        name = field.get("name")
+        values = {
+            entry.get("code"): str(entry.get("name"))
+            for entry in domain.get("codedValues", [])
+            if entry.get("code") is not None and entry.get("name") is not None
+        }
+        if name and values:
+            domains[str(name)] = values
+    return domains
+
+
+def apply_domains(
+    properties: dict[str, Any], domains: dict[str, dict[Any, str]]
+) -> dict[str, Any]:
+    """Replace coded values with the agency's own wording for them.
+
+    Only an exact code match is translated. A value the domain does not list is left
+    as it is rather than guessed at, because an unlisted code means the layer changed
+    and that should look like the anomaly it is instead of quietly becoming a label.
+    The raw feature is preserved separately, so nothing is lost.
+    """
+
+    if not domains:
+        return properties
+    decoded = dict(properties)
+    for field, values in domains.items():
+        if field not in decoded:
+            continue
+        current = decoded[field]
+        if current in values:
+            decoded[field] = values[current]
+    return decoded
+
+
 class ArcGISRestAdapter(CollectorAdapter):
     """Generic ArcGIS FeatureServer/MapServer layer collector.
 
@@ -63,8 +111,24 @@ class ArcGISRestAdapter(CollectorAdapter):
 
     @staticmethod
     def _schema_fingerprint(metadata: dict[str, Any]) -> str:
+        """Fingerprint the fields and their coded-value domains.
+
+        The domain belongs in the fingerprint because it carries meaning: an agency
+        that renumbers a status list changes what every stored record says without
+        changing a single field name, and that has to read as a schema change rather
+        than as a quiet relabelling of history.
+        """
+
         fields = [
-            (field.get("name"), field.get("type"), field.get("length"))
+            (
+                field.get("name"),
+                field.get("type"),
+                field.get("length"),
+                sorted(
+                    (str(entry.get("code")), str(entry.get("name")))
+                    for entry in ((field.get("domain") or {}).get("codedValues") or [])
+                ),
+            )
             for field in metadata.get("fields", [])
         ]
         encoded = json.dumps(fields, separators=(",", ":"), sort_keys=False).encode()
@@ -108,6 +172,7 @@ class ArcGISRestAdapter(CollectorAdapter):
     async def collect(self) -> CollectorResult:
         metadata = await self._get_json(self.layer_url, {"f": "json"})
         schema_fingerprint = self._schema_fingerprint(metadata)
+        domains = coded_value_domains(metadata)
         max_record_count = int(metadata.get("maxRecordCount") or self.page_size)
         page_size = min(self.page_size, max_record_count)
 
@@ -137,7 +202,7 @@ class ArcGISRestAdapter(CollectorAdapter):
             attempted += len(features)
 
             for feature in features:
-                properties = feature.get("properties") or {}
+                properties = apply_domains(feature.get("properties") or {}, domains)
                 external_id = properties.get(self.id_field)
                 if external_id is None:
                     continue
@@ -182,6 +247,7 @@ class ArcGISRestAdapter(CollectorAdapter):
             schema_fingerprint=schema_fingerprint,
             parser_yield=parser_yield,
             metadata={
+                "decoded_domain_fields": sorted(domains),
                 "layer_name": metadata.get("name"),
                 "layer_type": metadata.get("type"),
                 "max_record_count": max_record_count,

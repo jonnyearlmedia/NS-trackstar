@@ -4,7 +4,11 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ns_trackstar.adapters.arcgis import ArcGISRestAdapter
+from ns_trackstar.adapters.arcgis import (
+    ArcGISRestAdapter,
+    apply_domains,
+    coded_value_domains,
+)
 from ns_trackstar.adapters.base import SourceConfig
 from ns_trackstar.models import LocationAccuracy
 
@@ -206,3 +210,97 @@ def test_caltrans_building_ca_config_preserves_identifiers_without_construction_
     assert mapping["status_dimension"] != "construction"
     assert options["expected_geometry_type"] == "esriGeometryMultipoint"
     assert options["min_expected_records"] > 0
+
+
+def test_a_coded_value_is_replaced_by_the_agency_s_own_wording():
+    """An agency stores "4"; the resident has to read what the agency means by it."""
+
+    metadata = {
+        "fields": [
+            {"name": "OBJECTID", "type": "esriFieldTypeOID"},
+            {
+                "name": "Category",
+                "type": "esriFieldTypeInteger",
+                "domain": {
+                    "type": "codedValue",
+                    "codedValues": [
+                        {"code": 4, "name": "Major Improvements to Existing Facilities"},
+                        {"code": 5, "name": "New Building"},
+                    ],
+                },
+            },
+            {
+                "name": "City",
+                "type": "esriFieldTypeString",
+                "domain": {
+                    "type": "codedValue",
+                    "codedValues": [
+                        {"code": "FFD", "name": "Fairfield"},
+                        {"code": "UNC", "name": "Unincorporated"},
+                    ],
+                },
+            },
+            {
+                "name": "Notes",
+                "type": "esriFieldTypeString",
+                "domain": {"type": "range", "range": [0, 10]},
+            },
+        ]
+    }
+    domains = coded_value_domains(metadata)
+
+    assert sorted(domains) == ["Category", "City"]
+    assert "Notes" not in domains
+
+    decoded = apply_domains(
+        {"OBJECTID": 1, "Category": 4, "City": "FFD", "Notes": "kept"}, domains
+    )
+    assert decoded["Category"] == "Major Improvements to Existing Facilities"
+    assert decoded["City"] == "Fairfield"
+    assert decoded["Notes"] == "kept"
+
+
+def test_a_code_the_domain_does_not_list_is_left_alone():
+    """An unlisted code means the layer changed; that must look like the anomaly it is."""
+
+    domains = coded_value_domains(
+        {
+            "fields": [
+                {
+                    "name": "Status",
+                    "domain": {
+                        "type": "codedValue",
+                        "codedValues": [{"code": 1, "name": "On Hold"}],
+                    },
+                }
+            ]
+        }
+    )
+
+    assert apply_domains({"Status": 9}, domains) == {"Status": 9}
+    assert apply_domains({"Status": None}, domains) == {"Status": None}
+    # A layer with no domains is passed through untouched, not copied field by field.
+    assert apply_domains({"Status": 1}, {}) == {"Status": 1}
+
+
+def test_a_renumbered_domain_reads_as_a_schema_change():
+    """Renaming a code changes what every stored record says. It is not cosmetic."""
+
+    def layer(label: str) -> dict:
+        return {
+            "fields": [
+                {
+                    "name": "Status",
+                    "type": "esriFieldTypeInteger",
+                    "length": None,
+                    "domain": {
+                        "type": "codedValue",
+                        "codedValues": [{"code": 1, "name": label}],
+                    },
+                }
+            ]
+        }
+
+    before = ArcGISRestAdapter._schema_fingerprint(layer("On Hold"))
+    after = ArcGISRestAdapter._schema_fingerprint(layer("Paused"))
+    assert before != after

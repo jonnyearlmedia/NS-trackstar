@@ -175,6 +175,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "The city's own hand-maintained planning-project pages. Staff edit them during "
         "the business day when a case is deemed complete or approved.",
     ),
+    "solano-county.capital-facility-projects": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 240,
+        "County facility capital projects with phase, funding status and cost; "
+        "general services staff edit it on business days.",
+    ),
     "solano-county.city-boundaries": SourceFreshnessPolicy(
         "spatial_reference", "rare", 1440, 10080,
         "Incorporated city limits change through annexation, which is a rare and discrete event.",

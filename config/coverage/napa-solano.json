@@ -1352,7 +1352,13 @@
           ]
         },
         "cip_construction": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "solano-county.capital-facility-projects",
+              "scope": "recurring_tracker"
+            }
+          ],
+          "limitation": "County facility projects. Many sit at addresses inside the incorporated cities, because that is where county buildings are; they are the county's capital programme and are not counted as any city's."
         },
         "gis_spatial": {
           "evidence": [
