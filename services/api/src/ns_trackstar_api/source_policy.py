@@ -60,6 +60,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
         "regulatory_watch", "daily", 1440, 1440,
         "Federal Register publication cadence makes daily checks sufficient for local intelligence.",
     ),
+    "napa-city.etrakit": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "Permit and planning case records where a same-day status change is real news; "
+        "discovery is prefix-partitioned so a faster cadence would not find more.",
+    ),
     "napa-city.legistar": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Structured public meeting/agendum feed; same-day agenda and item changes matter.",
@@ -135,6 +140,11 @@ SOURCE_FRESHNESS_POLICIES: dict[str, SourceFreshnessPolicy] = {
     "vallejo.civicclerk": SourceFreshnessPolicy(
         "meeting_feed", "same_day", 60, 120,
         "Meeting/agendum feed where same-day changes matter; current 120-minute polling is temporary while churn is audited.",
+    ),
+    "vallejo.etrakit": SourceFreshnessPolicy(
+        "active_project_tracker", "within_day", 120, 480,
+        "Permit and planning case records where a same-day status change is real news; "
+        "discovery is prefix-partitioned so a faster cadence would not find more.",
     ),
     "vallejo.value-current-development": SourceFreshnessPolicy(
         "active_project_tracker", "within_day", 120, 240,

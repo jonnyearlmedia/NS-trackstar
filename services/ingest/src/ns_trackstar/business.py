@@ -37,10 +37,16 @@ class BusinessEvidenceType(StrEnum):
     SIGN_PERMIT = "sign_permit"
     BUSINESS_LICENSE = "business_license"
     ABC_APPLICATION = "abc_application"
+    ABC_LICENSE_ISSUED = "abc_license_issued"
+    ABC_STATUS_CHANGE = "abc_status_change"
     ENVIRONMENTAL_HEALTH = "environmental_health"
     CONSTRUCTION_INSPECTION = "construction_inspection"
     CERTIFICATE_OF_OCCUPANCY = "certificate_of_occupancy"
     FIRST_PARTY_ANNOUNCEMENT = "first_party_announcement"
+    PROPERTY_OWNER_ANNOUNCEMENT = "property_owner_announcement"
+    # A tenant improvement permit proves work is happening inside a suite. It says
+    # nothing about who is moving in, so it deliberately carries no identity weight.
+    TENANT_IMPROVEMENT_PERMIT = "tenant_improvement_permit"
     PUBLIC_OBSERVATION = "public_observation"
     OFFICIAL_OPERATIONS_RECORD = "official_operations_record"
     OWNERSHIP_FILING = "ownership_filing"
@@ -77,8 +83,10 @@ IDENTITY_EVIDENCE_WEIGHT: dict[BusinessEvidenceType, float] = {
     BusinessEvidenceType.SIGN_PERMIT: 0.8,
     BusinessEvidenceType.BUSINESS_LICENSE: 0.85,
     BusinessEvidenceType.ABC_APPLICATION: 0.78,
+    BusinessEvidenceType.ABC_LICENSE_ISSUED: 0.86,
     BusinessEvidenceType.ENVIRONMENTAL_HEALTH: 0.75,
     BusinessEvidenceType.FIRST_PARTY_ANNOUNCEMENT: 0.82,
+    BusinessEvidenceType.PROPERTY_OWNER_ANNOUNCEMENT: 0.7,
 }
 
 ALLOWED_OPENING_STATES: dict[BusinessEvidenceType, frozenset[BusinessOpeningState]] = {
@@ -87,6 +95,23 @@ ALLOWED_OPENING_STATES: dict[BusinessEvidenceType, frozenset[BusinessOpeningStat
     BusinessEvidenceType.BUILDING_PERMIT_ISSUED: frozenset({BusinessOpeningState.PERMITTED}),
     BusinessEvidenceType.CONSTRUCTION_INSPECTION: frozenset(
         {BusinessOpeningState.UNDER_CONSTRUCTION}
+    ),
+    BusinessEvidenceType.TENANT_IMPROVEMENT_PERMIT: frozenset(
+        {BusinessOpeningState.PERMITTED, BusinessOpeningState.UNDER_CONSTRUCTION}
+    ),
+    BusinessEvidenceType.ABC_APPLICATION: frozenset({BusinessOpeningState.PERMITTED}),
+    BusinessEvidenceType.ABC_LICENSE_ISSUED: frozenset(
+        {BusinessOpeningState.OCCUPANCY_READY, BusinessOpeningState.CONFIRMED_OPEN}
+    ),
+    BusinessEvidenceType.ABC_STATUS_CHANGE: frozenset(
+        {
+            BusinessOpeningState.CONFIRMED_OPEN,
+            BusinessOpeningState.OWNERSHIP_CHANGE,
+            BusinessOpeningState.CLOSED,
+        }
+    ),
+    BusinessEvidenceType.PROPERTY_OWNER_ANNOUNCEMENT: frozenset(
+        {BusinessOpeningState.OPENING_ANNOUNCED}
     ),
     BusinessEvidenceType.FIRST_PARTY_ANNOUNCEMENT: frozenset(
         {BusinessOpeningState.OPENING_ANNOUNCED}
@@ -214,4 +239,79 @@ def assess_business_opening(evidence: Iterable[BusinessEvidence]) -> BusinessAss
         opening_state=opening_state,
         opening_state_confidence=opening_confidence,
         opening_source_keys=opening_sources,
+    )
+
+
+# California ABC report row -> business evidence. The mapping is deliberately narrow:
+# a row only carries a tenant identity when ABC itself printed a "DBA:" trade name, and
+# the opening state it supports is bounded by which of the three reports it came from.
+ABC_REPORT_EVIDENCE: dict[str, tuple[BusinessEvidenceType, BusinessOpeningState]] = {
+    "new_applications": (BusinessEvidenceType.ABC_APPLICATION, BusinessOpeningState.PERMITTED),
+    "issued_licenses": (
+        BusinessEvidenceType.ABC_LICENSE_ISSUED,
+        BusinessOpeningState.OCCUPANCY_READY,
+    ),
+}
+
+# ABC truncates its status codes in the published report ("SURREND", "AUTREV"), so the
+# markers are stems rather than whole words.
+_ABC_SURRENDER_MARKERS = ("surrend", "revok", "autrev", "cancel", "expir")
+_ABC_TRANSFER_MARKERS = ("transfer", "escrow")
+
+
+def _abc_status_change_state(row: dict[str, object]) -> BusinessOpeningState:
+    change = str(row.get("status_changed_from_to") or "").casefold()
+    transfer = str(row.get("transfer_from_to") or "").casefold()
+    if any(marker in change for marker in _ABC_SURRENDER_MARKERS):
+        return BusinessOpeningState.CLOSED
+    if transfer or any(marker in change for marker in _ABC_TRANSFER_MARKERS):
+        return BusinessOpeningState.OWNERSHIP_CHANGE
+    if "active" in change:
+        return BusinessOpeningState.CONFIRMED_OPEN
+    return BusinessOpeningState.UNKNOWN
+
+
+def business_evidence_from_abc_record(
+    row: dict[str, object],
+    *,
+    source_key: str,
+    observed_at: datetime | None = None,
+) -> BusinessEvidence | None:
+    """Turn one normalized ABC report row into business-opening evidence.
+
+    Returns ``None`` for a row whose state the report cannot support, rather than
+    guessing. A licence holder's own name is never treated as a storefront brand:
+    identity is only explicit when ABC printed a DBA.
+    """
+
+    report_type = str(row.get("report_type") or "")
+    dba = row.get("dba_name")
+    tenant_name = str(dba) if isinstance(dba, str) and dba.strip() else None
+
+    if report_type == "status_changes":
+        state = _abc_status_change_state(row)
+        if state is BusinessOpeningState.UNKNOWN:
+            return None
+        evidence_type = BusinessEvidenceType.ABC_STATUS_CHANGE
+    else:
+        mapped = ABC_REPORT_EVIDENCE.get(report_type)
+        if mapped is None:
+            return None
+        evidence_type, state = mapped
+
+    return BusinessEvidence(
+        source_key=source_key,
+        source_family="abc_ca",
+        evidence_type=evidence_type,
+        tenant_name=tenant_name,
+        identity_is_explicit=tenant_name is not None,
+        opening_state=state,
+        observed_at=observed_at,
+        confidence=0.9,
+        details={
+            "license_number": row.get("license_number"),
+            "report_type": report_type,
+            "county": row.get("county"),
+            "city": row.get("city"),
+        },
     )

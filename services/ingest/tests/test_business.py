@@ -175,3 +175,96 @@ def test_every_business_state_from_the_product_contract_is_represented() -> None
         "ownership_change",
         "closed",
     }
+
+
+from ns_trackstar.business import (  # noqa: E402
+    ABC_REPORT_EVIDENCE,
+    BusinessEvidenceType,
+    BusinessOpeningState,
+    business_evidence_from_abc_record,
+)
+
+
+def abc_row(**overrides) -> dict:
+    return {
+        "report_type": "new_applications",
+        "dba_name": "NARDI RESTAURANT",
+        "owner_name": "NARDI RESTAURANT LLC",
+        "license_number": "681826",
+        "city": "VALLEJO",
+        "county": "Solano County",
+        **overrides,
+    }
+
+
+def test_a_new_abc_application_is_permitted_not_open():
+    evidence = business_evidence_from_abc_record(abc_row(), source_key="california.abc")
+    assert evidence is not None
+    assert evidence.evidence_type is BusinessEvidenceType.ABC_APPLICATION
+    assert evidence.opening_state is BusinessOpeningState.PERMITTED
+    assert evidence.tenant_name == "NARDI RESTAURANT"
+    assert evidence.identity_is_explicit
+
+
+def test_a_row_without_a_dba_carries_no_brand_claim():
+    evidence = business_evidence_from_abc_record(
+        abc_row(dba_name=None, owner_name="MOHAMED, BASHAR HASSAN"), source_key="california.abc"
+    )
+    assert evidence is not None
+    assert evidence.tenant_name is None
+    assert evidence.identity_is_explicit is False
+
+
+def test_status_changes_separate_closure_from_transfer_from_activation():
+    closed = business_evidence_from_abc_record(
+        abc_row(report_type="status_changes", status_changed_from_to="ACTIVE SURREND"),
+        source_key="california.abc",
+    )
+    assert closed.opening_state is BusinessOpeningState.CLOSED
+
+    transferred = business_evidence_from_abc_record(
+        abc_row(
+            report_type="status_changes",
+            status_changed_from_to="ACTIVE ACTIVE",
+            transfer_from_to="SMITH INC / JONES LLC",
+        ),
+        source_key="california.abc",
+    )
+    assert transferred.opening_state is BusinessOpeningState.OWNERSHIP_CHANGE
+
+    activated = business_evidence_from_abc_record(
+        abc_row(report_type="status_changes", status_changed_from_to="PEND ACTIVE"),
+        source_key="california.abc",
+    )
+    assert activated.opening_state is BusinessOpeningState.CONFIRMED_OPEN
+
+
+def test_an_unreadable_status_change_produces_nothing_rather_than_a_guess():
+    assert (
+        business_evidence_from_abc_record(
+            abc_row(report_type="status_changes", status_changed_from_to=""),
+            source_key="california.abc",
+        )
+        is None
+    )
+    assert business_evidence_from_abc_record(
+        abc_row(report_type="some_other_report"), source_key="california.abc"
+    ) is None
+
+
+def test_a_tenant_improvement_permit_can_never_name_a_business():
+    """The explicit product rule: do not infer a brand from a generic permit."""
+
+    from ns_trackstar.business import IDENTITY_EVIDENCE_WEIGHT
+
+    assert BusinessEvidenceType.TENANT_IMPROVEMENT_PERMIT not in IDENTITY_EVIDENCE_WEIGHT
+    assert BusinessEvidenceType.PERMIT_NARRATIVE not in IDENTITY_EVIDENCE_WEIGHT
+    assert BusinessEvidenceType.CONSTRUCTION_INSPECTION not in IDENTITY_EVIDENCE_WEIGHT
+
+
+def test_abc_reports_never_claim_a_business_is_open_on_an_application_alone():
+    for report_type, (_evidence_type, state) in ABC_REPORT_EVIDENCE.items():
+        if report_type == "new_applications":
+            assert state is BusinessOpeningState.PERMITTED
+        else:
+            assert state is not BusinessOpeningState.CONFIRMED_OPEN

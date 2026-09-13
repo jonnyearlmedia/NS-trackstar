@@ -1,0 +1,1324 @@
+{
+  "service_area": "Napa County and Solano County, California",
+  "categories": [
+    {
+      "key": "current_development",
+      "title": "Current development and planning",
+      "description": "Active planning applications, entitlements and development trackers."
+    },
+    {
+      "key": "permits",
+      "title": "Permits",
+      "description": "Building, grading, encroachment and tenant-improvement permit records."
+    },
+    {
+      "key": "government_meetings",
+      "title": "Government meetings",
+      "description": "Agendas, minutes and agenda items from councils, commissions and boards."
+    },
+    {
+      "key": "cip_construction",
+      "title": "CIP and construction",
+      "description": "Capital improvement programs and active public construction work."
+    },
+    {
+      "key": "gis_spatial",
+      "title": "GIS and spatial truth",
+      "description": "Parcels, addresses, road centrelines, zoning and jurisdiction boundaries."
+    },
+    {
+      "key": "ceqa_environmental",
+      "title": "CEQA and environmental",
+      "description": "State Clearinghouse filings and local environmental review documents."
+    },
+    {
+      "key": "business_openings",
+      "title": "Business openings",
+      "description": "Evidence that a business is arriving, opening, changing hands or closing."
+    },
+    {
+      "key": "transportation",
+      "title": "Transportation",
+      "description": "State and regional road, transit and work-zone projects and events."
+    },
+    {
+      "key": "procurement",
+      "title": "Procurement",
+      "description": "Bids, awards and contracts that reveal work about to start."
+    },
+    {
+      "key": "specialized_regulatory",
+      "title": "Specialized regulatory and legal",
+      "description": "Federal, tribal, court and agency records that apply to specific projects."
+    }
+  ],
+  "jurisdictions": [
+    {
+      "key": "napa",
+      "name": "City of Napa",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "napa-city.napa-pipe-amendments",
+              "scope": "project_specific"
+            },
+            {
+              "source": "napa-city.etrakit",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "napa-city.etrakit",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Discovery walks the record-number space by prefix and year, because eTRAKiT publishes no recently-changed feed. A record whose number falls outside the configured prefixes is not discovered."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "napa-city.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "napa-city.public-works-cip",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "napa-city.water-cip",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "american-canyon",
+      "name": "American Canyon",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "american-canyon.construction-development-updates",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov storefront is discoverable but anonymous record retrieval was never verified and the deployed client advertises Turnstile on the records index."
+          }
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": [
+            {
+              "source": "american-canyon.construction-development-updates",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "yountville",
+      "name": "Yountville",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "st-helena",
+      "name": "St. Helena",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "calistoga",
+      "name": "Calistoga",
+      "county": "Napa County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "County zoning covers unincorporated Napa County. City of Napa zoning is not published in the county GIS org and is not ingested."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "napa-county",
+      "name": "Unincorporated Napa County",
+      "county": "Napa County",
+      "kind": "county",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "napa-county.current-projects-explorer",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "napa-county.napa-pipe-development-plan",
+              "scope": "project_specific"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "Napa County Accela (NAPACO) public search returns the unchanged search surface over direct HTTP. Zero rows is not treated as success.",
+            "smoke_source": "napa-county.accela-smoke"
+          }
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "napa-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "napa-county.addresses",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "napa-county.road-centerlines",
+              "scope": "reference",
+              "role": "corridors"
+            },
+            {
+              "source": "napa-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            },
+            {
+              "source": "napa-county.zoning",
+              "scope": "reference",
+              "role": "zoning"
+            }
+          ]
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vallejo",
+      "name": "Vallejo",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "vallejo.value-current-development",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "vallejo.etrakit",
+              "scope": "recurring_tracker",
+              "role": "planning_cases"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [
+            {
+              "source": "vallejo.etrakit",
+              "scope": "recurring_tracker",
+              "role": "permits"
+            }
+          ],
+          "limitation": "Discovery walks the record-number space by prefix and year, because eTRAKiT publishes no recently-changed feed. A record whose number falls outside the configured prefixes is not discovered."
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "vallejo.civicclerk",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "bia.scotts-valley-gaming-decisions",
+              "scope": "project_specific"
+            },
+            {
+              "source": "nigc.scotts-valley-gaming-ordinance",
+              "scope": "project_specific"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "benicia",
+      "name": "Benicia",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "benicia.current-planning-applications",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "OpenGov storefront is discoverable but anonymous record retrieval was never verified."
+          }
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "fairfield",
+      "name": "Fairfield",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "fairfield.one-lake-council-goals",
+              "scope": "project_specific"
+            }
+          ],
+          "limitation": "Only the One Lake / Canon Station record set.",
+          "blocker": {
+            "reason": "The official Development Activity page returns an Akamai 403 to direct HTTP and to a Playwright Chrome session. The adapter stops rather than defeating the access restriction.",
+            "smoke_source": "fairfield.development-activity"
+          }
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            },
+            {
+              "source": "fairfield.vanden-canon-overcrossing",
+              "scope": "project_specific"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "suisun-city",
+      "name": "Suisun City",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": [
+            {
+              "source": "suisun-city.development-calendar",
+              "scope": "recurring_tracker"
+            },
+            {
+              "source": "suisun-city.dutch-bros-public-notice",
+              "scope": "project_specific"
+            }
+          ]
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vacaville",
+      "name": "Vacaville",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "dixon",
+      "name": "Dixon",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "rio-vista",
+      "name": "Rio Vista",
+      "county": "Solano County",
+      "kind": "city",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": []
+        },
+        "government_meetings": {
+          "evidence": []
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "solano-county",
+      "name": "Unincorporated Solano County",
+      "county": "Solano County",
+      "kind": "county",
+      "categories": {
+        "current_development": {
+          "evidence": []
+        },
+        "permits": {
+          "evidence": [],
+          "blocker": {
+            "reason": "Solano County Accela (SOLANOCO) public search returns the unchanged search surface over direct HTTP. Zero rows is not treated as success.",
+            "smoke_source": "solano-county.accela-smoke"
+          }
+        },
+        "government_meetings": {
+          "evidence": [
+            {
+              "source": "solano-county.legistar",
+              "scope": "recurring_tracker"
+            }
+          ]
+        },
+        "cip_construction": {
+          "evidence": []
+        },
+        "gis_spatial": {
+          "evidence": [
+            {
+              "source": "solano-county.parcels",
+              "scope": "reference",
+              "role": "parcels"
+            },
+            {
+              "source": "solano-county.streets",
+              "scope": "reference",
+              "role": "address_level"
+            },
+            {
+              "source": "solano-county.city-boundaries",
+              "scope": "reference",
+              "role": "boundaries"
+            }
+          ],
+          "limitation": "Solano County's public GIS org publishes no countywide zoning layer, so zoning context is not available for Solano jurisdictions."
+        },
+        "ceqa_environmental": {
+          "evidence": [
+            {
+              "source": "california.ceqanet.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        },
+        "business_openings": {
+          "evidence": [],
+          "blocker": {
+            "reason": "California ABC publishes daily new-application, issued-licence and status-change reports as anonymous public pages, and the adapter parses them, but Cloudflare answers automated clients with an interactive bot challenge. Trackstar reports that as blocked rather than defeating it.",
+            "smoke_source": "california.abc.napa-solano-smoke"
+          }
+        },
+        "transportation": {
+          "evidence": [
+            {
+              "source": "caltrans.building-ca.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ],
+          "limitation": "Caltrans state projects only. Live traffic events and work zones are implemented but unpromoted.",
+          "blocker": {
+            "reason": "511 SF Bay requires an API token. The endpoint answers 401 without one and the token is held outside the repository, so the two collectors could not be verified against live data and were not promoted.",
+            "smoke_source": "bayarea-511.traffic-events-smoke"
+          }
+        },
+        "procurement": {
+          "evidence": []
+        },
+        "specialized_regulatory": {
+          "evidence": [
+            {
+              "source": "federal-register.napa-solano",
+              "scope": "regional_rollup"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

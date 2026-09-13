@@ -264,6 +264,8 @@ class ETrakitAdapter(CollectorAdapter):
         self.base_url = str(config.options.get("base_url") or config.base_url).rstrip("/")
         self.searches = list(config.options.get("searches") or [])
         self.explicit_records = list(config.options.get("explicit_records") or [])
+        self.discovery_partitions = list(config.options.get("discovery_partitions") or [])
+        self.max_candidates_per_run = int(config.options.get("max_candidates_per_run", 600))
         self.canary_kinds = list(config.options.get("canary_kinds") or ["permit", "project"])
         self.max_result_pages = int(config.options.get("max_result_pages", 10))
         self.min_interval = float(config.options.get("min_request_interval_seconds", 1.0))
@@ -493,6 +495,38 @@ class ETrakitAdapter(CollectorAdapter):
         html = await self._request(client, "GET", url)
         return self._detail_record(kind, number, html, url)
 
+    def _partition_queries(self, *, today: datetime | None = None) -> list[dict[str, Any]]:
+        """Expand recurring discovery into bounded, dated prefix searches.
+
+        eTRAKiT has no "what changed recently" endpoint, so discovery has to walk the
+        record-number space. Walking it blindly would mean an unbounded crawl of a small
+        city's server. Instead each partition is one record-number prefix for one year,
+        with its own page cap, so a run is the same predictable size every time and the
+        set moves forward on its own in January without anyone editing the config.
+        """
+
+        reference = today or datetime.now(self.timezone)
+        queries: list[dict[str, Any]] = []
+        for partition in self.discovery_partitions:
+            kind = str(partition["kind"])
+            self._validate_kind(kind)
+            year_format = str(partition.get("year_format", "%y"))
+            years_back = int(partition.get("years_back", 1))
+            years = [reference.year - offset for offset in range(years_back + 1)]
+            for prefix in partition.get("prefixes") or []:
+                for year in years:
+                    stamp = datetime(year, 1, 1, tzinfo=self.timezone).strftime(year_format)
+                    queries.append(
+                        {
+                            "kind": kind,
+                            "search_by_value": partition["search_by_value"],
+                            "operator_value": "BEGINS WITH",
+                            "value": f"{prefix}{stamp}",
+                            "max_pages": int(partition.get("max_pages", 3)),
+                        }
+                    )
+        return queries
+
     async def collect(self) -> CollectorResult:
         candidates: list[tuple[str, str]] = []
         for item in self.explicit_records:
@@ -503,23 +537,31 @@ class ETrakitAdapter(CollectorAdapter):
             if candidate not in candidates:
                 candidates.append(candidate)
 
+        partition_queries = self._partition_queries()
+        truncated = False
+
         async with self._session() as client:
-            for query_value in self.searches:
+            for query_value in [*self.searches, *partition_queries]:
                 query = dict(query_value)
                 for candidate in await self._search_ids(client, query):
                     if candidate not in candidates:
                         candidates.append(candidate)
+                if len(candidates) >= self.max_candidates_per_run:
+                    # Stop discovering rather than fetching an unbounded detail list.
+                    # The next run picks up where the budget ran out.
+                    truncated = True
+                    break
 
             records: list[NormalizedRecord] = []
             missing = 0
-            for kind, number in candidates:
+            for kind, number in candidates[: self.max_candidates_per_run]:
                 record = await self._fetch_record(client, kind, number)
                 if record is None:
                     missing += 1
                     continue
                 records.append(record)
 
-        attempted = len(candidates)
+        attempted = min(len(candidates), self.max_candidates_per_run)
         parser_yield = len(records) / attempted if attempted else 1.0
         return CollectorResult(
             records=records,
@@ -528,6 +570,8 @@ class ETrakitAdapter(CollectorAdapter):
                 "candidates": attempted,
                 "records_missing": missing,
                 "search_queries": len(self.searches),
+                "discovery_partitions": len(partition_queries),
                 "explicit_records": len(self.explicit_records),
+                "candidate_budget_reached": truncated,
             },
         )

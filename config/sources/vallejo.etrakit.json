@@ -1,0 +1,54 @@
+{
+  "key": "vallejo.etrakit",
+  "name": "City of Vallejo eTRAKiT Permits and Planning Projects",
+  "jurisdiction": "City of Vallejo",
+  "adapter": "etrakit",
+  "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
+  "poll_minutes": 240,
+  "options": {
+    "base_url": "https://vall-trk.aspgov.com/eTRAKiT",
+    "canary_kinds": ["permit", "project"],
+    "explicit_records": [],
+    "searches": [],
+    "discovery_partitions": [
+      {
+        "kind": "permit",
+        "search_by_value": "Permit_Main.PERMIT_NO",
+        "prefixes": ["BP", "PL", "ME", "EL"],
+        "year_format": "%y",
+        "years_back": 1,
+        "max_pages": 5
+      },
+      {
+        "kind": "project",
+        "search_by_value": "Project_Main.PROJECT_NO",
+        "prefixes": ["AP"],
+        "year_format": "%y",
+        "years_back": 2,
+        "max_pages": 3
+      }
+    ],
+    "max_candidates_per_run": 500,
+    "min_request_interval_seconds": 1.0,
+    "timezone": "America/Los_Angeles",
+    "project_mapping": {
+      "project_type": "municipal_development",
+      "authority_type": "government_record",
+      "name_fields": ["name", "description", "record_number"],
+      "description_field": "description",
+      "status_dimension": "official_tracker_stage",
+      "status_field": "status",
+      "assertions": {
+        "description": "description",
+        "address": "address",
+        "apn": "apn",
+        "source_project_type": "type",
+        "record_type": "subtype",
+        "official_status_text": "status",
+        "application_submitted_at": "applied_date",
+        "planner": "planner",
+        "project_number": "record_number"
+      }
+    }
+  }
+}
