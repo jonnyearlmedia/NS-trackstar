@@ -30,7 +30,6 @@ export default async function ReportPage({ searchParams }: { searchParams: Searc
       "## Helpful evidence",
       "If possible, paste the official public-record link or describe what the official source currently says.",
     ].filter(Boolean).join("\n"),
-    labels: "data-report",
   });
   const issueUrl = `https://github.com/jonnyearlmedia/NS-trackstar/issues/new?${issueParams.toString()}`;
 
